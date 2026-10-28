@@ -30,18 +30,18 @@
   "archivedCount": 6,
   "archiveProof": [
     {
-      "id": "T-1404",
-      "spec": "docs/features/t1404-tab-navigation-performance-fixes.md",
-      "evidence": "docs/verification/t1404/FRONTEND_VALIDATION.md",
+      "id": "T-1425",
+      "spec": "docs/features/t1425-tab-navigation-performance-fixes.md",
+      "evidence": "docs/verification/t1425/FRONTEND_VALIDATION.md",
       "evidenceSha256": "51cb1ab67f765566fca99c9fc746c586d05971ddd04c939b64a77598bfc1c54d",
       "originalRowSha256": "04f45d8ee33e4ee3a7f18148bd1cf235a78b144cab287cd8a3d59976a8b90d53",
       "completeEvent": {
         "ts": "2026-10-24T13:48:15.752Z",
         "actor": "taskctl",
         "action": "complete",
-        "task": "T-1404",
-        "evidence": "docs/verification/t1404/FRONTEND_VALIDATION.md",
-        "report": "docs/verification/t1404/FRONTEND_VALIDATION.md",
+        "task": "T-1425",
+        "evidence": "docs/verification/t1425/FRONTEND_VALIDATION.md",
+        "report": "docs/verification/t1425/FRONTEND_VALIDATION.md",
         "report_sha": "51cb1ab67f76",
         "acceptance_checks": [
           "TAB-CYCLE",

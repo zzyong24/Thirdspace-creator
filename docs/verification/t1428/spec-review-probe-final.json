@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "独立代理/root/t1427_contract_review第三轮最终增量复核，SPEC SHA256 e1b986306ebc2364bdee7396eb5c4bdb1a30e6552a3d59462e46a878a49bac97。两次只读反馈先发现IPC丢code，再核最小精确固定消息白名单恢复方案；新增定向修订解决finding，原反馈保留probe-review-feedback-open.json。未执行实现/真实业务，不宣称402恢复。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-140903",
+        "quote": "将AI_CREDIT_EXHAUSTED与CHANNEL_MODEL_PAYMENT_REQUIRED固定诊断原样给CLI/UI"
+      },
+      "acceptance_anchor": {
+        "id": "AC-140904",
+        "quote": "允许用公开settings.models.test最小官方探针核因"
+      },
+      "where": "docs/features/t1428-managed-pi-payment-diagnostics.md:42",
+      "failure_mode": "公开探针并不把 worker 原错误对象直接传给 textModelProbe。model-probe-worker-entry 仅发送状态码和消息字符串，IPC schema 不含领域码，request-io.service 重建普通 Error；因此 CHANNEL_MODEL_PAYMENT_REQUIRED 的 code 在进入 frontend 前已经丢失。safeModelFailureMessage 按 err.code 查白名单，直接调用会再次降为通用提示。当前增量没有定义该丢码边界的安全恢复方式，直接 mock 带领域码异常的测试可以通过而真实公开探针仍失败。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "ai-worker/src/io/model-probe-worker-entry.ts:35-39；contract/src/internal/model-probe-io.ts:8-12；backend/src/modules/ai-runtime/request-io.service.ts:22-27；frontend/src/server/persistence-client.ts:6783；ai-worker/src/runtime/error-diagnostics.ts:87-90,115-121",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:42:701643285256f718",
+      "suggestion": "明确领域分类如何安全跨过探针 IPC：可保留严格白名单领域码，或仅从已知固定消息的精确白名单恢复，不允许把任意 provider 文案当安全诊断。同步对应精确写集，并要求回归经过真实 IPC 投影和普通 Error 重建，验证泛 402、明确额度、自配错误及未知正文；探针不得增加调用次数或消耗原任务 attempt。",
+      "resolution_evidence": "SPEC44–48行明确contract统一两条固定提示、仅channel-managed完整匹配、只剥离原worker单个规范HTTP前缀（支付仅402）、命中返回常量，未知安全降级；真实原worker打包经createModelProbeIoService/IPC/Error重建/runModelConnectionTest测试单次HTTP与清理，现有写集充分，不扩IPC生产路径。仅规格销账。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

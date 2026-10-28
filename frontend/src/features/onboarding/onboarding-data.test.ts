@@ -35,7 +35,17 @@ describe('T-964 引导真实数据与持久进度',()=>{
   client.getOnboarding.mockResolvedValue({...record(),completedSteps:['first-project'],updatedAt:'2026-09-13'});client.listProjects.mockRejectedValue(Error('offline'));expect((await loadState()).completedSteps).toContain('first-project');
  });
  it('保存失败可识别且不假称落库',async()=>{
-  client.patchOnboarding.mockRejectedValue(Error('offline'));expect((await loadState()).persistenceError).toContain('暂未保存');
+  client.getPositioningCenter.mockResolvedValue({profile:{id:'positioning-ready'}});
+  client.patchOnboarding.mockRejectedValue(Error('offline'));
+  const state=await loadState();
+  expect(client.patchOnboarding).toHaveBeenCalledTimes(1);
+  expect(client.patchOnboarding).toHaveBeenCalledWith({params:{accountId:'a'},query:undefined,body:{completedSteps:['positioning-profile'],origin:null}});
+  expect(state.hasPositioningProfile).toBe(true);expect(state.persistenceError).toContain('暂未保存');
+  expect(state.completedSteps).toEqual([]);expect(state.preferences?.completedSteps).toEqual([]);expect(state.preferences?.updatedAt).toBeNull();
+ });
+ it('只有已绑定账号但无新增必做完成信号时不写入进度',async()=>{
+  const state=await loadState();expect(state.douyinLoggedIn).toBe(true);expect(state.hasPositioningProfile).toBe(false);
+  expect(client.patchOnboarding).not.toHaveBeenCalled();expect(state.completedSteps).toEqual([]);expect(state.persistenceError).toBeUndefined();
  });
  it('旧全局偏好仅迁入第一个当前账号',async()=>{
   window.localStorage.setItem('creatoros:onboarding:hidden','1');expect((await loadState()).preferences?.hidden).toBe(true);expect(window.localStorage.getItem('creatoros:onboarding:legacy-migrated-account')).toBe('a');current.mockReturnValue('b');client.getOnboarding.mockResolvedValue({...record(),accountId:'b'});client.getAccount.mockResolvedValue({id:'b'});client.patchOnboarding.mockImplementation(async({body})=>({...record(),accountId:'b',...body}));expect((await loadState()).preferences?.hidden).toBe(false);
@@ -52,14 +62,14 @@ it('T1345已有组或旧账号的无身份恢复不误当新用户，读取错�
  expect(await loadState()).toMatchObject({needsFirstGroup:false});publicReads.mockRejectedValueOnce(Error('groups offline'));await expect(loadState()).rejects.toThrow('groups offline');
 });
 
-it('T1403 旧账号读取仍带真实accountId，失败不伪称无对标选题',async()=>{
+it('T1424 旧账号读取仍带真实accountId，失败不伪称无对标选题',async()=>{
  client.getIntelligenceWorkspace.mockResolvedValue({sources:[{id:'benchmark',type:'creator_profile',monitorEnabled:true,status:'active'}]});
  client.listIntelligenceItems.mockRejectedValue(Error('offline'));
  expect(await loadRadarSignals()).toEqual({hasBenchmarkMonitor:true,hasBenchmarkTopic:undefined});
  expect(client.listIntelligenceItems).toHaveBeenCalledWith({params:undefined,query:{accountId:'a',sourceId:'benchmark',page:1,pageSize:1,sort:'newest',topicState:'converted'},body:undefined});
 });
 
-it('T1403 旧账号的已完成对标选题不重扫，当前信号保持未知且里程碑保留',async()=>{
+it('T1424 旧账号的已完成对标选题不重扫，当前信号保持未知且里程碑保留',async()=>{
  client.getOnboarding.mockResolvedValue({...record(),completedSteps:['import-account','benchmark-topic']});
  client.getIntelligenceWorkspace.mockResolvedValue({sources:[{id:'benchmark',type:'creator_profile',monitorEnabled:false,status:'active'}]});
  const state=await loadState();expect(client.listIntelligenceItems).not.toHaveBeenCalled();expect(state.hasBenchmarkTopic).toBeUndefined();

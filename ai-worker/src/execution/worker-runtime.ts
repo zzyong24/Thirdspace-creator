@@ -21,6 +21,7 @@ import {
 import { z } from "zod";
 import type { runAgenticInWorker } from "./agentic-worker-run";
 import { GenerationFailure } from "./generation-error";
+import {withModelStreamObservation} from '../runtime/model-stream-observation';
 
 const modelCheckpointSchema = z.object({
   revision:z.number().int().nonnegative(), ledgerSequence:z.number().int().nonnegative(),
@@ -392,7 +393,9 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           if (!sameExecution(active.execution, message.execution)) send({version: 1, type: "stopped", requestId: message.requestId, execution: message.execution, reason: "failed"});
           return;
         }
-        void codexWorkerPorts.run((port,data,signal)=>call(message.execution,port,data,signal),()=>execute(message.execution,message.deadlineAt,message.requestId,message.receiptProtocol));
+        void withModelStreamObservation(message.execution.executionTaskId,event=>{
+          if(!closed && active && sameExecution(active.execution,message.execution) && !active.controller.signal.aborted)deps.observeException?.(event);
+        },()=>codexWorkerPorts.run((port,data,signal)=>call(message.execution,port,data,signal),()=>execute(message.execution,message.deadlineAt,message.requestId,message.receiptProtocol)));
       }
     },
     close() {

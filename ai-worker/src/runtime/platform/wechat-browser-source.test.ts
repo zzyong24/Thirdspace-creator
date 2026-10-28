@@ -152,7 +152,7 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
  it.each([
   ['page.evaluate: Execution context was destroyed, most likely because of a navigation.\nCookie=fixture-private','EXECUTION_CONTEXT_DESTROYED'],
   ['page.goto: Navigation to "https://channels.weixin.qq.com/platform?token=fixture-private" is interrupted by another navigation to "https://channels.weixin.qq.com/?token=fixture-private"\nCall log: fixture-private','NAVIGATION_INTERRUPTED'],
- ] as const)('T1403身份协议分类 %# 仅发固定类别，诊断失败也不改变错误或关闭',async(message,failureKind)=>{
+ ] as const)('T1424身份协议分类 %# 仅发固定类别，诊断失败也不改变错误或关闭',async(message,failureKind)=>{
   for(const phase of ['isLoggedOut','read'] as const)for(const throwing of [false,true]){
    const f=fixture(),onDiagnostic=vi.fn(()=>{if(throwing)throw Error('fixture-private diagnostic failure');});f.page.isClosed=()=>true; // 本族仅核不满足恢复条件时的诊断，不把可恢复瞬态固定成失败。
    vi.mocked(f.identityWitness[phase]).mockRejectedValueOnce(Error(message));
@@ -170,7 +170,7 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   Error('page.goto: Navigation to "x" is interrupted by another navigation tomorrow'),
   Object.assign(Error('fixture-private unknown failure'),{code:'NAVIGATION_INTERRUPTED'}),
   Object.assign(Error('page.goto: Timeout 120000ms exceeded. fixture-private'),{name:'TimeoutError'}),
- ])('T1403身份协议近似或未知错误 %# 不推断类别、不透传code/私密信息',async error=>{
+ ])('T1424身份协议近似或未知错误 %# 不推断类别、不透传code/私密信息',async error=>{
   const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockRejectedValueOnce(error);
   await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED',message:'微信账号身份暂未核对完成，请查看原任务'});
   expect(onDiagnostic).toHaveBeenCalledExactlyOnceWith({platform:'wechatVideo',stage:'readIdentity',code:'BROWSER_OPERATION_FAILED',exceptionName:error.name});
@@ -480,7 +480,7 @@ describe('T1110 受信私有失败图候选（实际/tmp文件+合成Page）',()
 });
 
 
-describe('T1403 视频号原600000身份包络与登录预检',()=>{
+describe('T1424 视频号原600000身份包络与登录预检',()=>{
  const contextError=()=>Error('page.evaluate: Execution context was destroyed, most likely because of a navigation.\nCall log: fixture-private');
  it.each([false,true])('预检瞬态后真实loggedOut=%s，不把未知当false',async loggedOut=>{
   const f=fixture();f.page.isClosed=()=>false;vi.mocked(f.identityWitness.isLoggedOut).mockRejectedValueOnce(contextError()).mockResolvedValueOnce(loggedOut);
@@ -508,7 +508,7 @@ describe('T1403 视频号原600000身份包络与登录预检',()=>{
 });
 
 // 合成异常只验证资格/期限分支；真实上下文销毁机制在dom-witness的Chromium三例单独核验。
-describe('T1403 身份恢复资格及原取消/清理边界',()=>{
+describe('T1424 身份恢复资格及原取消/清理边界',()=>{
  const exact='page.evaluate: Execution context was destroyed, most likely because of a navigation.';
  it.each([
   Error('业务提示：'+exact),Error(exact+'oops'),Error('page.evaluateHandle: Execution context was destroyed, most likely because of a navigation.'),
@@ -556,7 +556,7 @@ describe('T1403 身份恢复资格及原取消/清理边界',()=>{
 });
 
 function identityObservationFixture():WechatIdentityObservation{return {routeClass:'identity',loginPromptVisible:null,qrLoginFrameRaw:null,qrLoginFrameVisible:null,routeUnchanged:true,readyState:'complete',rootScan:'complete',frameCount:0,foreignFrameCount:0,unknownShadowCount:0,truncated:false,roots:[{kind:'top',parent:null,visible:true,uidRaw:0,uidVisible:0,nameRaw:0,nameVisible:0,uidIdRaw:0,uidIdVisible:0,nameClassRaw:0,nameClassVisible:0,idTextPresent:null,copyPresent:null,copyMatches:null,namePresent:null,uidInRoot:null,nameInRoot:null}]};}
-describe('T1403 正常身份流程附有限shape诊断',()=>{
+describe('T1424 正常身份流程附有限shape诊断',()=>{
  it('每次identity首次加变化最多4条，同形不重复，prepare不继承',async()=>{
   const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{
    for(const count of [0,0,1,0,2,3,4,5])op.onIdentityObservation?.({...identityObservationFixture(),frameCount:count});
@@ -582,7 +582,7 @@ describe('T1403 正常身份流程附有限shape诊断',()=>{
  });
 });
 
-describe('T1403 shape附加隔离边界',()=>{
+describe('T1424 shape附加隔离边界',()=>{
  it('新调用独立限量，身份结束及prepare不接纳旧sink',async()=>{
   const f=fixture(),onDiagnostic=vi.fn();let prior:((value:WechatIdentityObservation)=>void)|undefined;
   vi.mocked(f.identityWitness.read).mockImplementation(async(_page,platform,op)=>{prior=op.onIdentityObservation;for(let n=0;n<6;n++)prior?.({...identityObservationFixture(),frameCount:n});return {platform,platformIdentity:'fixture-platform-id',displayName:'fixture',sourcePath:'/platform'};});
@@ -614,14 +614,14 @@ describe('T1403 shape附加隔离边界',()=>{
  });
 });
 
-describe('T1403 EXP2 shape新白名单',()=>{
+describe('T1424 EXP2 shape新白名单',()=>{
  it('固定route/login布尔可观察，true不放松原expected身份',async()=>{
   const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.identityWitness.read).mockImplementationOnce(async(_page,platform,op)=>{op.onIdentityObservation?.({...identityObservationFixture(),routeClass:'official_root',rootScan:'not_run',frameCount:null,foreignFrameCount:null,unknownShadowCount:null,roots:[],loginPromptVisible:true} as never);return {platform,platformIdentity:'wrong-fixture-id',displayName:'fixture',sourcePath:'/platform'};});
   await expect(f.source.readIdentity('wechatVideo','/synthetic-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'WRONG_PLATFORM_IDENTITY'});expect(onDiagnostic.mock.calls.filter(([event])=>event.code==='IDENTITY_OBSERVATION')).toHaveLength(1);expect(f.close).toHaveBeenCalledOnce();expect(f.reportWitness.prepare).not.toHaveBeenCalled();
  });
 });
 
-describe('T1403 修复受信身份核验模式',()=>{
+describe('T1424 修复受信身份核验模式',()=>{
  it.each(['readIdentity','collectNativeReports','login'] as const)('%s只正常视频号核验启用，interactive login保留',async method=>{
   const f=fixture();await (method==='login'?f.source.login('wechatVideo','/synthetic-profile',f.controls):f.source[method]('wechatVideo','/synthetic-profile','fixture-platform-id',f.controls));
   expect(vi.mocked(f.identityWitness.read).mock.calls[0]![2]).toMatchObject({identityVerification:method==='login'?'interactiveLogin':'boundIdentity'});

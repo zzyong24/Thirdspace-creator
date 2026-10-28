@@ -89,7 +89,7 @@
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-manifest-final.json",
         "sha256": "246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153"
       },
-      "verificationStatus": "T1403_NATIVE_CONTRACT_CONSUMERS_RED_GREEN_94_TESTS_416_ASSERTIONS_717_SOURCE_STANDARD_U0_F0_TWO_IDENTICAL_PRODUCTION_BUILDS_ZOD_COOKED_EQUIVALENT_HOST_38_TESTS_UI_PENDING",
+      "verificationStatus": "T1424_NATIVE_CONTRACT_CONSUMERS_RED_GREEN_94_TESTS_416_ASSERTIONS_717_SOURCE_STANDARD_U0_F0_TWO_IDENTICAL_PRODUCTION_BUILDS_ZOD_COOKED_EQUIVALENT_HOST_38_TESTS_UI_PENDING",
       "t1062TitleRepairCurrentManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native31-current-binding.json",
         "sha256": "944f259e707c9579a321ede8b2655e51f3e3b36c9841fd0f16b640edc73d28b6"
@@ -136,8 +136,8 @@
         "installedApplicationChanged": false,
         "report": "outputs/CreatorOS-impeccable-report.json"
       },
-      "t1403Recovery": {
-        "task": "T-1403",
+      "t1424Recovery": {
+        "task": "T-1424",
         "evidenceDirectory": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation",
         "sourceManifest": {
           "path": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/format-final-source-manifest-v2.json",
@@ -155,8 +155,8 @@
         "fixture": false,
         "realUi": "ROOT_OWNED_NOT_CLAIMED"
       },
-      "t1403PreFormatRecovery": {
-        "task": "T-1403",
+      "t1424PreFormatRecovery": {
+        "task": "T-1424",
         "evidenceDirectory": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation",
         "sourceManifest": {
           "path": "/Users/zyongzhu/terminals/cos-ux-closure/evidence/editor-implementation/final-source-manifest.json",

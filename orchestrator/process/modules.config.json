@@ -19856,8 +19856,8 @@
         ]
       }
     },
-    "T-1401": {
-      "task_id": "T-1401",
+    "T-1408": {
+      "task_id": "T-1408",
       "archetype": [
         "orchestration"
       ],
@@ -19866,14 +19866,102 @@
       ],
       "depends_on": [],
       "write_set": [
-        "docs/features/t1401-trial-device-model-benefits.md",
-        "docs/features/t1401-trial-device-model-benefits.T-1401.review.md",
-        "docs/verification/t1401/**",
+        "frontend/src/features/positioning/**",
+        "frontend/src/features/copilot/positioning-conversation*",
+        "frontend/src/features/copilot/ai-copilot-content*",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/copilot/chat-task-control*",
+        "frontend/src/server/chat-execution-recovery.ts",
+        "frontend/src/server/chat-observation-recovery.integration.test.ts",
+        "frontend/src/app/api/chat/route*",
+        "backend/src/modules/ai-runtime/positioning-runner*",
+        "backend/src/modules/ai-runtime/positioning-without-platform.integration.test.ts",
+        "backend/src/modules/ai/calibration-positioning-adoption.service.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/integration/calibration-positioning-adoption.test.ts",
+        "ai-worker/src/prompt/templates/chatbox-surfaces*",
+        "ai-worker/src/prompt/templates/positioning-generate*",
+        "ai-worker/src/runtime/model-stream-observation*",
+        "ai-worker/src/runtime/pi-provider*",
+        "ai-worker/src/execution/worker-runtime*",
+        "docs/features/t1408-positioning-without-douyin-login.md",
+        "docs/features/t1408-positioning-without-douyin-login.review.md",
+        "docs/verification/t1408/**",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1408.md",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "backend/src/modules/ai/ai.positioning-confirm.integration.test.ts",
+        "frontend/src/features/onboarding/onboarding-card*",
+        "frontend/src/features/onboarding/onboarding-steps*",
+        "frontend/src/features/onboarding/group-onboarding-card.test.tsx",
+        "frontend/src/features/platform-account/account-group-manager*",
+        "frontend/src/components/shell/zero-account-guidance*",
+        "frontend/src/server/chat-execution-stream.test.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "PROJECT.md",
+        "orchestrator/.lessons-stats.json",
+        "frontend/src/features/platform-account/account-manager-interactions.test.tsx",
+        "frontend/src/features/onboarding/onboarding-data.test.ts"
+      ],
+      "read_set": [
+        "docs/features/t1408-positioning-without-douyin-login.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/engineering/agent-rules.md",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "backend/src/modules/ai-runtime/chat-structured-tool-nodes.ts",
+        "backend/src/modules/ai-runtime/creative-context.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/modules/positioning/positioning.service.ts",
+        "frontend/playwright.config.ts",
+        "frontend/src/server/verdict-token-gate.ts",
+        "frontend/scripts/desktop/package.mjs",
+        "frontend/src-tauri/build.rs"
+      ],
+      "exclusive_resources": [
+        "t1408-isolated-local-worktree-disjoint-product-writes",
+        "t1408-central-process-files-parent-authorized-serial-integration",
+        "preserve-original-installers-business-data-and-browser-profiles",
+        "user-authorized-feature-source-push-and-main-merge-after-required-checks-no-new-keys-or-integrity-bypass",
+        "real-provider-only-in-new-isolated-workspace-after-configured-no-old-secret-access"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/onboarding/onboarding-card.test.tsx src/features/onboarding/onboarding-steps.test.ts src/features/onboarding/group-onboarding-card.test.tsx src/features/platform-account/account-group-manager.test.tsx src/components/shell/zero-account-guidance.test.tsx src/features/positioning src/features/copilot/positioning-conversation.test.ts src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-task-control.test.ts src/server/chat-observation-recovery.integration.test.ts src/server/chat-execution-stream.test.ts src/app/api/chat/route.test.ts src/server/ai-runtime/live-chat-session.consumer.test.tsx src/features/platform-account/account-manager-interactions.test.tsx src/features/onboarding/onboarding-data.test.ts --retry=0",
+          "pnpm --dir backend exec vitest run src/modules/ai-runtime/positioning-without-platform.integration.test.ts src/modules/ai-runtime/positioning-runner.test.ts src/modules/ai/ai.positioning-confirm.integration.test.ts src/integration/calibration-positioning-adoption.test.ts --maxWorkers=1 --retry=0",
+          "pnpm --dir ai-worker exec vitest run src/prompt/templates/chatbox-surfaces.test.ts src/prompt/templates/positioning-generate.test.ts src/runtime/pi-provider-diagnostic.test.ts src/runtime/model-stream-observation.test.ts src/execution/worker-runtime.test.ts --retry=0",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "pnpm --dir backend exec tsc --noEmit",
+          "pnpm --dir ai-worker exec tsc --noEmit",
+          "pnpm --dir ai-worker run build",
+          "pnpm --dir frontend run build",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1422": {
+      "task_id": "T-1422",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "write_set": [
+        "docs/features/t1422-trial-device-model-benefits.md",
+        "docs/features/t1422-trial-device-model-benefits.T-1422.review.md",
+        "docs/verification/t1422/**",
         "BACKLOG.md",
         "orchestrator/DECISION_LOG.md",
         "orchestrator/process/modules.config.json",
         "orchestrator/progress.json",
-        "orchestrator/context/T-1401.md",
+        "orchestrator/context/T-1422.md",
         "orchestrator/events.ndjson",
         "orchestrator/review-events.ndjson",
         "frontend/src/server/activation/model-benefit.server.ts",
@@ -19897,8 +19985,8 @@
         "frontend/src/app/activate/page.tsx"
       ],
       "exclusive_resources": [
-        "t1401-isolated-creator-worktree",
-        "t1401-private-pglite-test-data",
+        "t1422-isolated-creator-worktree",
+        "t1422-private-pglite-test-data",
         "growth-t250-owned-separately",
         "activity-local-only-specific-user-approval-no-cross-writes"
       ],
@@ -19912,8 +20000,8 @@
         ]
       }
     },
-    "T-1402": {
-      "task_id": "T-1402",
+    "T-1423": {
+      "task_id": "T-1423",
       "archetype": [
         "orchestration"
       ],
@@ -19922,15 +20010,15 @@
       ],
       "depends_on": [],
       "write_set": [
-        "docs/features/t1402-legacy-license-one-click-upgrade.md",
-        "docs/features/t1402-legacy-license-one-click-upgrade.T-1402.review.md",
-        "docs/verification/t1402/**",
+        "docs/features/t1423-legacy-license-one-click-upgrade.md",
+        "docs/features/t1423-legacy-license-one-click-upgrade.T-1423.review.md",
+        "docs/verification/t1423/**",
         "BACKLOG.md",
         "PROJECT.md",
         "orchestrator/DECISION_LOG.md",
         "orchestrator/process/modules.config.json",
         "orchestrator/progress.json",
-        "orchestrator/context/T-1402.md",
+        "orchestrator/context/T-1423.md",
         "orchestrator/events.ndjson",
         "orchestrator/review-events.ndjson",
         "frontend/src-tauri/src/license_restore.rs",
@@ -19965,7 +20053,7 @@
       ],
       "read_set": [
         "orchestrator/SYSTEM_ARCHITECTURE.md",
-        "docs/features/t1401-trial-device-model-benefits.md",
+        "docs/features/t1422-trial-device-model-benefits.md",
         "frontend/src-tauri/src/license.rs",
         "frontend/src/features/settings/channel-model-configuration.tsx",
         "frontend/src/server/activation/model-benefit.server.ts",
@@ -19973,8 +20061,8 @@
         "frontend/src/app/api/v1/local/client-config/route.ts"
       ],
       "exclusive_resources": [
-        "t1402-isolated-worktree",
-        "t1402-private-pglite",
+        "t1423-isolated-worktree",
+        "t1423-private-pglite",
         "native-license-activation-root-only",
         "activity-growth-source-approved-six-file-isolated-candidate"
       ],
@@ -19988,8 +20076,8 @@
         ]
       }
     },
-    "T-1404": {
-      "task_id": "T-1404",
+    "T-1425": {
+      "task_id": "T-1425",
       "archetype": [
         "orchestration"
       ],
@@ -19998,7 +20086,7 @@
       ],
       "depends_on": [],
       "read_set": [
-        "docs/features/t1404-tab-navigation-performance-fixes.md",
+        "docs/features/t1425-tab-navigation-performance-fixes.md",
         "docs/research/2026-10-24-tab-switch-performance.md",
         "docs/产品定位.md",
         "orchestrator/SYSTEM_ARCHITECTURE.md",
@@ -20007,9 +20095,9 @@
         "backend/src/modules/artifacts/**"
       ],
       "write_set": [
-        "docs/features/t1404-tab-navigation-performance-fixes.md",
-        "docs/features/t1404-tab-navigation-performance-fixes.T-1404.review.md",
-        "docs/verification/t1404/**",
+        "docs/features/t1425-tab-navigation-performance-fixes.md",
+        "docs/features/t1425-tab-navigation-performance-fixes.T-1425.review.md",
+        "docs/verification/t1425/**",
         "backend/src/modules/articles/articles.service.ts",
         "frontend/src/features/article/article-workbench.tsx",
         "frontend/src/features/article/doocs-article-editor.tsx",
@@ -20048,8 +20136,8 @@
       },
       "scope_note": "2026-10-24用户明确要求全面修复源码调查确认的问题；独立SPEC复核后执行，保组归属/未保存状态/原保存导出，不安装发布。"
     },
-    "T-1405": {
-      "task_id": "T-1405",
+    "T-1426": {
+      "task_id": "T-1426",
       "archetype": [
         "orchestration"
       ],
@@ -20058,8 +20146,8 @@
       ],
       "depends_on": [],
       "read_set": [
-        "docs/features/t1405-chat-model-combination-fixes.md",
-        "docs/verification/t1403/RESULT.md",
+        "docs/features/t1426-chat-model-combination-fixes.md",
+        "docs/verification/t1424/RESULT.md",
         "docs/features/t1278-unified-license-capability-routing.md",
         "docs/产品定位.md",
         "orchestrator/SYSTEM_ARCHITECTURE.md",
@@ -20076,7 +20164,7 @@
         "ai-worker/src/runtime/provider-factory.test.ts",
         "ai-worker/src/runtime/error-diagnostics.ts",
         "ai-worker/src/runtime/error-diagnostics.test.ts",
-        "docs/research/2026-10-25-t1405-t1407-frontend-gate-applicability.md"
+        "docs/research/2026-10-25-t1426-t1407-frontend-gate-applicability.md"
       ],
       "write_set": [
         "backend/src/modules/ai-runtime/chat-assembly-types.ts",
@@ -20092,18 +20180,18 @@
         "ai-worker/src/runtime/provider-factory.test.ts",
         "ai-worker/src/runtime/error-diagnostics.ts",
         "ai-worker/src/runtime/error-diagnostics.test.ts",
-        "docs/features/t1405-chat-model-combination-fixes.md",
-        "docs/features/t1405-chat-model-combination-fixes.T-1405.review.md",
-        "docs/verification/t1405/**",
+        "docs/features/t1426-chat-model-combination-fixes.md",
+        "docs/features/t1426-chat-model-combination-fixes.T-1426.review.md",
+        "docs/verification/t1426/**",
         "BACKLOG.md",
         "PROJECT.md",
         "orchestrator/DECISION_LOG.md",
         "orchestrator/process/modules.config.json",
         "orchestrator/progress.json",
-        "orchestrator/context/T-1405.md",
+        "orchestrator/context/T-1426.md",
         "orchestrator/events.ndjson",
         "orchestrator/review-events.ndjson",
-        "docs/research/2026-10-25-t1405-t1407-frontend-gate-applicability.md"
+        "docs/research/2026-10-25-t1426-t1407-frontend-gate-applicability.md"
       ],
       "verify_commands": {
         "implementation": [
@@ -20114,7 +20202,7 @@
           "node --test tools/quality/quality.test.mjs"
         ]
       },
-      "scope_note": "2026-10-24用户要求修复T1403真实CLI问题；独立规格评审后实施，不越源、不更改钱包或原未知任务。 2026-10-25独立适用性复核：仅server/worker/backend改动，UI journey不适用；保原CLI/组合根/安装验收，见DEC-140502。"
+      "scope_note": "2026-10-24用户要求修复T1424真实CLI问题；独立规格评审后实施，不越源、不更改钱包或原未知任务。 2026-10-25独立适用性复核：仅server/worker/backend改动，UI journey不适用；保原CLI/组合根/安装验收，见DEC-140502。"
     },
     "T-1407": {
       "task_id": "T-1407",
@@ -20127,8 +20215,8 @@
       "depends_on": [],
       "read_set": [
         "docs/features/t1407-local-integration-install-merge-preparation.md",
-        "docs/verification/t1405/RESULT.md",
-        "docs/verification/t1405/combined-candidate-manifest.json",
+        "docs/verification/t1426/RESULT.md",
+        "docs/verification/t1426/combined-candidate-manifest.json",
         "docs/engineering/agent-rules.md"
       ],
       "write_set": [
@@ -20169,70 +20257,70 @@
         "docs/engineering-notes/pitfalls.md",
         "docs/engineering/agent-rules.md",
         "docs/features/t1401-ai-credit-link-errors.md",
-        "docs/features/t1401-trial-device-model-benefits.md",
-        "docs/features/t1402-legacy-license-one-click-upgrade.T-1402.review.md",
-        "docs/features/t1402-legacy-license-one-click-upgrade.md",
+        "docs/features/t1422-trial-device-model-benefits.md",
+        "docs/features/t1423-legacy-license-one-click-upgrade.T-1423.review.md",
+        "docs/features/t1423-legacy-license-one-click-upgrade.md",
         "docs/features/t1402-windows-positioning-pi-core.md",
-        "docs/features/t1403-cli-chat-combination-acceptance.md",
-        "docs/features/t1403-cos-ux-closure.T-1403.review.md",
-        "docs/features/t1403-cos-ux-closure.md",
-        "docs/features/t1405-chat-model-combination-fixes.T-1405.review.md",
-        "docs/features/t1405-chat-model-combination-fixes.md",
+        "docs/features/t1424-cli-chat-combination-acceptance.md",
+        "docs/features/t1424-cos-ux-closure.T-1424.review.md",
+        "docs/features/t1424-cos-ux-closure.md",
+        "docs/features/t1426-chat-model-combination-fixes.T-1426.review.md",
+        "docs/features/t1426-chat-model-combination-fixes.md",
         "docs/features/t1406-official-account-binding-failure.T-1406.review.md",
         "docs/features/t1406-official-account-binding-failure.md",
         "docs/features/t1407-local-integration-install-merge-preparation.T-1407.review.md",
         "docs/features/t1407-local-integration-install-merge-preparation.md",
         "docs/research/2026-10-24-tab-switch-performance.md",
-        "docs/verification/t1402/ACTIVITY_FINAL_HANDOFF.md",
-        "docs/verification/t1402/ACTIVITY_WIRE.md",
-        "docs/verification/t1402/AUTOMATIC_CONTRACT_REVIEW.md",
-        "docs/verification/t1402/AUTOMATIC_IMPLEMENTATION_REVIEW.md",
-        "docs/verification/t1402/AUTOMATIC_LOCAL_VALIDATION.md",
-        "docs/verification/t1402/CLIENT_WIRE.md",
-        "docs/verification/t1402/LOCAL_VALIDATION.md",
-        "docs/verification/t1402/MERGE_VALIDATION.json",
-        "docs/verification/t1402/MERGE_VALIDATION.md",
-        "docs/verification/t1402/activity-contract-audit.md",
-        "docs/verification/t1402/activity-final-independent-review.json",
-        "docs/verification/t1402/activity-package-repack-receipt.json",
-        "docs/verification/t1402/activity-restore-issued-fixtures.json",
-        "docs/verification/t1402/automatic-review-packet.json",
-        "docs/verification/t1402/client-contract-audit.md",
-        "docs/verification/t1402/contract-independent-review.md",
-        "docs/verification/t1402/fixtures/growth-formal-v1-economy-r1.json",
-        "docs/verification/t1402/fixtures/node-observation-v1.json",
-        "docs/verification/t1402/generate-node-observation-fixture.mts",
-        "docs/verification/t1402/growth-fixture-manifest.json",
-        "docs/verification/t1402/merge-incremental-independent-review.json",
-        "docs/verification/t1402/native-final-independent-review.json",
-        "docs/verification/t1402/package-validation-audit.md",
-        "docs/verification/t1402/review-input-r2.json",
-        "docs/verification/t1402/review-input.json",
-        "docs/verification/t1402/ts-final-independent-review.json",
-        "docs/verification/t1402/ts-implementation-evidence.json",
-        "docs/verification/t1402/ts-implementation-evidence.md",
-        "docs/verification/t1402/ts-source-before-directory-fix.json",
-        "docs/verification/t1402/validation.json",
-        "docs/verification/t1402/wire-independent-review.md",
-        "docs/verification/t1404/FRONTEND_VALIDATION.md",
-        "docs/verification/t1404/backend-red.log",
-        "docs/verification/t1404/backend-red.log.gz",
-        "docs/verification/t1404/browser-final-verify.log",
-        "docs/verification/t1404/browser-final-verify.log.gz",
-        "docs/verification/t1404/browser-gate-result.json",
-        "docs/verification/t1404/browser-script-save.json",
-        "docs/verification/t1404/browser-verification.md",
-        "docs/verification/t1404/browser-verify.mjs",
-        "docs/verification/t1404/editor-red.log",
-        "docs/verification/t1404/editor-red.log.gz",
-        "docs/verification/t1404/frontend-contract.md",
-        "docs/verification/t1404/frontend-visible-copy.json",
-        "docs/verification/t1404/integration-focused.log",
-        "docs/verification/t1404/integration-focused.log.gz",
-        "docs/verification/t1404/raw-log-archives.json",
-        "docs/verification/t1404/root-red.log",
-        "docs/verification/t1404/root-red.log.gz",
-        "docs/verification/t1405/**",
+        "docs/verification/t1423/ACTIVITY_FINAL_HANDOFF.md",
+        "docs/verification/t1423/ACTIVITY_WIRE.md",
+        "docs/verification/t1423/AUTOMATIC_CONTRACT_REVIEW.md",
+        "docs/verification/t1423/AUTOMATIC_IMPLEMENTATION_REVIEW.md",
+        "docs/verification/t1423/AUTOMATIC_LOCAL_VALIDATION.md",
+        "docs/verification/t1423/CLIENT_WIRE.md",
+        "docs/verification/t1423/LOCAL_VALIDATION.md",
+        "docs/verification/t1423/MERGE_VALIDATION.json",
+        "docs/verification/t1423/MERGE_VALIDATION.md",
+        "docs/verification/t1423/activity-contract-audit.md",
+        "docs/verification/t1423/activity-final-independent-review.json",
+        "docs/verification/t1423/activity-package-repack-receipt.json",
+        "docs/verification/t1423/activity-restore-issued-fixtures.json",
+        "docs/verification/t1423/automatic-review-packet.json",
+        "docs/verification/t1423/client-contract-audit.md",
+        "docs/verification/t1423/contract-independent-review.md",
+        "docs/verification/t1423/fixtures/growth-formal-v1-economy-r1.json",
+        "docs/verification/t1423/fixtures/node-observation-v1.json",
+        "docs/verification/t1423/generate-node-observation-fixture.mts",
+        "docs/verification/t1423/growth-fixture-manifest.json",
+        "docs/verification/t1423/merge-incremental-independent-review.json",
+        "docs/verification/t1423/native-final-independent-review.json",
+        "docs/verification/t1423/package-validation-audit.md",
+        "docs/verification/t1423/review-input-r2.json",
+        "docs/verification/t1423/review-input.json",
+        "docs/verification/t1423/ts-final-independent-review.json",
+        "docs/verification/t1423/ts-implementation-evidence.json",
+        "docs/verification/t1423/ts-implementation-evidence.md",
+        "docs/verification/t1423/ts-source-before-directory-fix.json",
+        "docs/verification/t1423/validation.json",
+        "docs/verification/t1423/wire-independent-review.md",
+        "docs/verification/t1425/FRONTEND_VALIDATION.md",
+        "docs/verification/t1425/backend-red.log",
+        "docs/verification/t1425/backend-red.log.gz",
+        "docs/verification/t1425/browser-final-verify.log",
+        "docs/verification/t1425/browser-final-verify.log.gz",
+        "docs/verification/t1425/browser-gate-result.json",
+        "docs/verification/t1425/browser-script-save.json",
+        "docs/verification/t1425/browser-verification.md",
+        "docs/verification/t1425/browser-verify.mjs",
+        "docs/verification/t1425/editor-red.log",
+        "docs/verification/t1425/editor-red.log.gz",
+        "docs/verification/t1425/frontend-contract.md",
+        "docs/verification/t1425/frontend-visible-copy.json",
+        "docs/verification/t1425/integration-focused.log",
+        "docs/verification/t1425/integration-focused.log.gz",
+        "docs/verification/t1425/raw-log-archives.json",
+        "docs/verification/t1425/root-red.log",
+        "docs/verification/t1425/root-red.log.gz",
+        "docs/verification/t1426/**",
         "docs/verification/t1407/**",
         "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
         "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.json",
@@ -20315,8 +20403,8 @@
         "orchestrator/DECISION_LOG.md",
         "orchestrator/context/T-1071.md",
         "orchestrator/context/T-1278.md",
-        "orchestrator/context/T-1402.md",
-        "orchestrator/context/T-1405.md",
+        "orchestrator/context/T-1423.md",
+        "orchestrator/context/T-1426.md",
         "orchestrator/context/T-1407.md",
         "orchestrator/events.ndjson",
         "orchestrator/process/modules.config.json",
@@ -20346,8 +20434,8 @@
       },
       "scope_note": "用户2026-10-25恢复安装并要求整理相关代码和准备合并推送；现安装源码、本任务补丁与主干的可追溯整合，不push或公开发布，不代签来源任务旧FAIL。"
     },
-    "T-1408": {
-      "task_id": "T-1408",
+    "T-1427": {
+      "task_id": "T-1427",
       "archetype": [
         "orchestration"
       ],
@@ -20356,7 +20444,7 @@
       ],
       "depends_on": [],
       "read_set": [
-        "docs/features/t1408-official-pi-acceptance-and-push.md",
+        "docs/features/t1427-official-pi-acceptance-and-push.md",
         "AGENTS.md",
         "docs/engineering/agent-rules.md",
         "backend/src/modules/cli-invocations/cli-invocations.service.ts",
@@ -20368,16 +20456,16 @@
       "write_set": [
         "contract/src/workspace-operation-scope.ts",
         "backend/src/modules/cli-invocations/cli-workbench-inspection.test.ts",
-        "docs/features/t1408-official-pi-acceptance-and-push.md",
-        "docs/features/t1408-official-pi-acceptance-and-push.T-1408.review.md",
-        "docs/verification/t1408/**",
+        "docs/features/t1427-official-pi-acceptance-and-push.md",
+        "docs/features/t1427-official-pi-acceptance-and-push.T-1427.review.md",
+        "docs/verification/t1427/**",
         "docs/research/2026-10-25-official-pi-and-acceptance-repair.md",
         "BACKLOG.md",
         "BACKLOG-archive.md",
         "orchestrator/DECISION_LOG.md",
         "orchestrator/process/modules.config.json",
         "orchestrator/progress.json",
-        "orchestrator/context/T-1408.md",
+        "orchestrator/context/T-1427.md",
         "orchestrator/events.ndjson",
         "orchestrator/review-events.ndjson",
         "backend/src/integration/group-workbench-capabilities.integration.test.ts"
@@ -20393,7 +20481,7 @@
       },
       "scope_note": "2026-10-25用户要求修复官方Pi与未通过验收后正常推送。分根因精确补充规格并独审；禁止凭修改文案或换源宣称恢复。"
     },
-    "T-1409": {
+    "T-1428": {
       "archetype": [
         "orchestration"
       ],
@@ -20410,9 +20498,9 @@
           "node --test tools/quality/quality.test.mjs"
         ]
       },
-      "task_id": "T-1409",
+      "task_id": "T-1428",
       "read_set": [
-        "docs/features/t1409-managed-pi-payment-diagnostics.md",
+        "docs/features/t1428-managed-pi-payment-diagnostics.md",
         "docs/产品定位.md",
         "orchestrator/SYSTEM_ARCHITECTURE.md",
         "contract/src/provider-error-detail.ts",
@@ -20441,14 +20529,14 @@
         "ai-worker/src/runtime/error-diagnostics.test.ts",
         "backend/src/modules/execution/model-engine-error.ts",
         "backend/src/modules/execution/execution-worker-outcome.service.test.ts",
-        "docs/features/t1409-managed-pi-payment-diagnostics.md",
-        "docs/features/t1409-managed-pi-payment-diagnostics.T-1409.review.md",
-        "docs/verification/t1409/**",
+        "docs/features/t1428-managed-pi-payment-diagnostics.md",
+        "docs/features/t1428-managed-pi-payment-diagnostics.T-1428.review.md",
+        "docs/verification/t1428/**",
         "BACKLOG.md",
         "orchestrator/DECISION_LOG.md",
         "orchestrator/process/modules.config.json",
         "orchestrator/progress.json",
-        "orchestrator/context/T-1409.md",
+        "orchestrator/context/T-1428.md",
         "orchestrator/events.ndjson",
         "orchestrator/review-events.ndjson",
         "frontend/src/server/settings-model-test-wrap.ts",
@@ -20578,7 +20666,7 @@
       "task_id": "T-1411",
       "read_set": [
         "docs/features/t1411-model-probe-auth-parity.md",
-        "docs/verification/t1408/official-pi-request-diagnosis.md",
+        "docs/verification/t1427/official-pi-request-diagnosis.md",
         "contract/src/internal/model-probe-io.ts",
         "backend/src/modules/ai-runtime/model-probe-io.service.ts",
         "frontend/src/server/settings-model-test-wrap.ts",
@@ -20601,7 +20689,7 @@
         "orchestrator/events.ndjson",
         "orchestrator/review-events.ndjson"
       ],
-      "scope_note": "T1408诊断发现probe丢失鉴权方式；仅修既有请求投影，不宣称402恢复。"
+      "scope_note": "T1427诊断发现probe丢失鉴权方式；仅修既有请求投影，不宣称402恢复。"
     },
     "T-1412": {
       "task_id": "T-1412",

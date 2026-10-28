@@ -16,6 +16,6 @@ it.each([
  [{error:'insufficient balance'},'http_402: insufficient balance'],
  [{error:{type:'insufficient_quota',message:'余额不足'}},'http_402: insufficient_quota: 余额不足'],
  [{error:{code:'billing_check',type:'payment_required',message:'核对支付'}},'http_402: billing_check: payment_required: 核对支付'],
-])('T1409 字符串error及error.type保留边界内分类事实：%j',(body,expected)=>{
+])('T1428 字符串error及error.type保留边界内分类事实：%j',(body,expected)=>{
  expect(providerErrorDetail(402,'402 '+JSON.stringify(body))).toBe(expected);
 });

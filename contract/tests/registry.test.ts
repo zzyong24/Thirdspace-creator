@@ -126,6 +126,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   // 知识与素材
   ["GET", "/knowledge"],
   ["POST", "/knowledge"],
+  ["POST", "/knowledge-distill/receipt"],
+  ["POST", "/knowledge-distill/adopt"],
   ["GET", "/knowledge/:knowledgeId"],
   ["POST", "/knowledge/:knowledgeId/revisions"],
   ["GET", "/knowledge/:knowledgeId/revisions"],

@@ -1,8 +1,8 @@
 # T-1410 阶段清单日期与备注独立复核
 
-日期：2026-10-25。评审者：`/root/t1408_pi_diagnosis`。本代理只读源码、当前控制面与已发生的验证证据；仅写本报告及对应正式 recheck JSON，不修改 manifest、SPEC、module/context 或审核事件。
+日期：2026-10-25。评审者：`/root/t1427_pi_diagnosis`。本代理只读源码、当前控制面与已发生的验证证据；仅写本报告及对应正式 recheck JSON，不修改 manifest、SPEC、module/context 或审核事件。
 
-**结论：当前已补齐的精确 SPEC 增量可通过独立复审，未发现新增规格 finding。** Root 可在正常录入本轮复审后，仅更新实际核对日期并向两处阶段 notes 追加事实。此结论不签 T-1408/1409/1410/1411 总完成，不改变发布状态。
+**结论：当前已补齐的精确 SPEC 增量可通过独立复审，未发现新增规格 finding。** Root 可在正常录入本轮复审后，仅更新实际核对日期并向两处阶段 notes 追加事实。此结论不签 T-1427/1409/1410/1411 总完成，不改变发布状态。
 
 ## 审核绑定与范围纠正
 
@@ -37,14 +37,14 @@
 
 保留原 notes 内容，在其后以“2026-10-25 本次核对”另起追加文本。原 44ERROR、旧安装与失败历史不能覆盖或删除；新文本明确区分历史数字与本次结果。
 
-`4-build` 追加内容应包含：T1408 组诊断入口修复已在安装版回读成功；T1409 泛402安全诊断与明确额度分类已具本地红绿及安装回执，仍不证明服务恢复；T1410 review receipt/event chain 审计通过，已机械压缩但 health 的剩余硬限/历史矛盾保留；T1411 鉴权传递真实IPC/HTTP红绿共83项、类型/超时/边界与独立代码复核通过，尚待后续提交/打包安装。BUILD 继续 draft。证据指向：
+`4-build` 追加内容应包含：T1427 组诊断入口修复已在安装版回读成功；T1428 泛402安全诊断与明确额度分类已具本地红绿及安装回执，仍不证明服务恢复；T1410 review receipt/event chain 审计通过，已机械压缩但 health 的剩余硬限/历史矛盾保留；T1411 鉴权传递真实IPC/HTTP红绿共83项、类型/超时/边界与独立代码复核通过，尚待后续提交/打包安装。BUILD 继续 draft。证据指向：
 
-- `docs/verification/t1408/local-package/installed-retest-report.md`
-- `docs/verification/t1409/implementation-report.md` 与 `independent-code-review.json`
+- `docs/verification/t1427/local-package/installed-retest-report.md`
+- `docs/verification/t1428/implementation-report.md` 与 `independent-code-review.json`
 - `docs/verification/t1410/review-audit-final.txt`、`backlog-health-applied.json`、`backlog-preview-20261025-apply/apply-receipt.json`
 - `docs/verification/t1411/implementation-report.md`、`verification-results.json`、`independent-code-review.md`
 
-`5-ship` 追加内容应包含：源码 `778ea4559850b0d8dfbf279c312dc4c21d72866e` 已本机安装，default 最小探针成功；新完整官方 Pi 首轮仍 `waiting_user / CHANNEL_MODEL_PAYMENT_REQUIRED`，未得到正常 assistant 回复，记忆/工具轮未执行，原任务最后一次恢复预算保留；`copilot.assist` 连接测试返回不支持，不能记作模型成功。T1411 尚未在安装版验收，T1408 的全部源码/安装/UI/跨系统条件继续按原任务跟踪。SHIP 继续 draft，不签全平台发布、官方Pi恢复或可推送。
+`5-ship` 追加内容应包含：源码 `778ea4559850b0d8dfbf279c312dc4c21d72866e` 已本机安装，default 最小探针成功；新完整官方 Pi 首轮仍 `waiting_user / CHANNEL_MODEL_PAYMENT_REQUIRED`，未得到正常 assistant 回复，记忆/工具轮未执行，原任务最后一次恢复预算保留；`copilot.assist` 连接测试返回不支持，不能记作模型成功。T1411 尚未在安装版验收，T1427 的全部源码/安装/UI/跨系统条件继续按原任务跟踪。SHIP 继续 draft，不签全平台发布、官方Pi恢复或可推送。
 
 日期值使用本轮真实核对日 `2026-10-25`，不回填到旧失败发生日，不取未来日期。不得改 `reconciliation.date` 等历史字段。
 

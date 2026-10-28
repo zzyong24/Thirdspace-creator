@@ -304,7 +304,7 @@ describe('T1110 公众号两段身份读取真实source合成链',()=>{
 });
 
 
-describe.sequential('T1403 视频号真实Chromium同Page身份导航恢复',()=>{
+describe.sequential('T1424 视频号真实Chromium同Page身份导航恢复',()=>{
  let browser:import('@playwright/test').Browser;
  beforeAll(async()=>{const {chromium}=await import('@playwright/test');browser=await chromium.launch({headless:true,timeout:120000,args:['--disable-background-networking','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost']});},120000);
  afterAll(async()=>{await browser?.close();},120000);
@@ -327,7 +327,7 @@ describe.sequential('T1403 视频号真实Chromium同Page身份导航恢复',()=
   const source=createWechatBrowserSource({...createVerifiedWechatDomWitnesses(),openProfile:async()=>{opened++;return protectedContext;}});
   try{
    let result:unknown,error:unknown;try{result=await source.readIdentity('wechatVideo','/synthetic-isolated-profile','synthetic-video-id',{deadlineAt:new Date(Date.now()+1970000).toISOString()});}catch(caught){error=caught;}
-   console.info('T1403 synthetic Chromium identity',{phase,contextLosses:losses,opened,closed});
+   console.info('T1424 synthetic Chromium identity',{phase,contextLosses:losses,opened,closed});
    expect(losses).toBe(phase==='normal'?0:1);expect(error).toBeUndefined();expect(result).toMatchObject({platformIdentity:'synthetic-video-id',displayName:'合成视频号'});expect(opened).toBe(1);expect(closed).toBe(1);expect(page.isClosed()).toBe(true);
   }finally{await context.close();}
  },120000);
@@ -346,7 +346,7 @@ function videoFieldsFixture(onRead:()=>void,options:{closed?:boolean;afterUrl?:s
  let reads=0,current=channels+'/platform';const page={url:()=>current,isClosed:()=>options.closed??false,goto:vi.fn(async()=>{}),evaluate:async(fn:Function,arg:unknown)=>{reads++;if(options.afterUrl)current=options.afterUrl;onRead();return dom.page.evaluate(fn as never,arg as never);}} as unknown as Page;
  return {page,reads:()=>reads,dispose:()=>dom.dom.window.close()};
 }
-describe('T1403 视频号字段观察同end/协议边界（合成DOM）',()=>{
+describe('T1424 视频号字段观察同end/协议边界（合成DOM）',()=>{
  it.each(['','.', '.\r\nCall log: fixture-private'])('固定字段协议%s只继续原observe，不重做goto',async suffix=>{
   let calls=0;const f=videoFieldsFixture(()=>{if(++calls===1)throw contextLost(suffix);});
   try{await expect(createVerifiedWechatDomWitnesses().identityWitness.read(f.page,'wechatVideo',controls)).resolves.toMatchObject({platformIdentity:'synthetic-video-id'});expect(f.reads()).toBe(2);expect(f.page.goto).toHaveBeenCalledOnce();}finally{f.dispose();}
@@ -372,7 +372,7 @@ describe('T1403 视频号字段观察同end/协议边界（合成DOM）',()=>{
  });
 });
 
-describe('T1403 身份原同次evaluate的脱敏shape',()=>{
+describe('T1424 身份原同次evaluate的脱敏shape',()=>{
  const html=visible+'<h2 class="finder-nickname">random-private-name-27</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="random-private-id-83">random-private-id-83</span>';
  it('原成功identity不变、一次evaluate同时得到精确/宽selector计数且不输出值',async()=>{
   const s=surface(html,channels+'/platform?token=random-private-query-19'),observation=vi.fn();s.page.evaluate=vi.fn(s.page.evaluate);
@@ -392,7 +392,7 @@ describe('T1403 身份原同次evaluate的脱敏shape',()=>{
  });
 });
 
-describe('T1403 shape不改变身份等价表与诊断失败边界',()=>{
+describe('T1424 shape不改变身份等价表与诊断失败边界',()=>{
  const id='<span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="private-copy-602">private-copy-602</span>',name='<h2 class="finder-nickname">private-name-791</h2>';
  it.each(['missing','duplicate','hidden','empty','mismatch','emptyName','broadOnly'] as const)('%s保持原null，只有固定计数/布尔观察',async mode=>{
   const markup=mode==='missing'?name:mode==='duplicate'?id+id+name:mode==='hidden'?'<div hidden>'+id+'</div>'+name:mode==='empty'?id.replaceAll('private-copy-602','')+name:mode==='mismatch'?id.replace('>private-copy-602','>private-other-298')+name:mode==='emptyName'?id+name.replace('private-name-791',''):id.replace(' class="finder-uniq-id"','')+name.replaceAll('h2','div');
@@ -426,7 +426,7 @@ describe('T1403 shape不改变身份等价表与诊断失败边界',()=>{
  });
 });
 
-describe('T1403 root扫描有限归属',()=>{
+describe('T1424 root扫描有限归属',()=>{
  it('foreign frame不读取子DOM，openShadow多根限8并标limited',async()=>{
   const s=surface(visible+'<iframe src="https://private-cross-origin.invalid/secret"></iframe>'+Array.from({length:10},()=>'<div class="host"></div>').join(''),channels+'/platform'),observation=vi.fn();
   try{for(const host of s.dom.window.document.querySelectorAll('.host'))host.attachShadow({mode:'open'}).innerHTML='<h2 class="finder-nickname">private shadow</h2>';
@@ -435,14 +435,14 @@ describe('T1403 root扫描有限归属',()=>{
  });
 });
 
-describe('T1403 聚合count截断诚实性',()=>{
+describe('T1424 聚合count截断诚实性',()=>{
  it('1001custom-tag未知shadow封顶必须limited而非完整1000',async()=>{
   const s=surface(visible+'<private-host></private-host>'.repeat(1001),channels+'/platform'),observation=vi.fn();
   try{expect(await readWechatIdentityDom(s.page,'wechatVideo',observation)).toBeNull();expect(observation.mock.calls[0]![0]).toMatchObject({unknownShadowCount:1000,truncated:true,rootScan:'limited'});}finally{s.dom.window.close();}
  });
 });
 
-describe('T1403 EXP2 官方wrongpath有限诊断（不改变身份门）',()=>{
+describe('T1424 EXP2 官方wrongpath有限诊断（不改变身份门）',()=>{
  function wrongSurface(html:string,url=channels+'/'){
   const s=surface(visible+html,url),times:number[]=[];
   const page={...s.page,url:()=>s.dom.window.location.href,isClosed:()=>false,goto:vi.fn(async()=>{}),evaluate:vi.fn(async(fn:Function,arg:unknown)=>{times.push(Date.now());return s.page.evaluate(fn as never,arg as never);})} as unknown as Page;
@@ -462,7 +462,7 @@ describe('T1403 EXP2 官方wrongpath有限诊断（不改变身份门）',()=>{
  });
 });
 
-describe('T1403 EXP2 独评最小边界',()=>{
+describe('T1424 EXP2 独评最小边界',()=>{
  function fixture(html='<p>普通内容</p>',url=channels+'/'){
   const s=surface(visible+html,url),times:number[]=[];
   const page={...s.page,url:()=>s.dom.window.location.href,isClosed:()=>false,goto:vi.fn(async()=>{}),evaluate:vi.fn(async(fn:Function,arg:unknown)=>{times.push(Date.now());return s.page.evaluate(fn as never,arg as never);})} as unknown as Page;
@@ -504,7 +504,7 @@ describe('T1403 EXP2 独评最小边界',()=>{
  });
 });
 
-describe('T1403 EXP2 二维码iframe固定src元数据',()=>{
+describe('T1424 EXP2 二维码iframe固定src元数据',()=>{
  const endpoint='https://open.weixin.qq.com/connect/qrconnect?appid=private-app-673&state=private-state-824';
  it.each([['visible','<iframe src="'+endpoint+'"></iframe>',1,1],['hidden','<div style="display:none"><iframe src="'+endpoint+'"></iframe></div>',1,0],['near','<iframe src="https://open.weixin.qq.com.evil.invalid/connect/qrconnect"></iframe><iframe src="https://open.weixin.qq.com/connect/qrconnect/next"></iframe><iframe src="http://open.weixin.qq.com/connect/qrconnect"></iframe><iframe src="https://private-user:private-pass@open.weixin.qq.com/connect/qrconnect"></iframe>',0,0]] as const)('%s只投影raw/visible，不读frameDOM或登录放行',async(_kind,html,raw,seen)=>{
   const s=surface(visible+html,channels+'/'),onObservation=vi.fn();
@@ -519,7 +519,7 @@ describe('T1403 EXP2 二维码iframe固定src元数据',()=>{
  });
 });
 
-describe('T1403 EXP2 二维码计数故障保持unknown',()=>{
+describe('T1424 EXP2 二维码计数故障保持unknown',()=>{
  it.each(['attribute','visible'] as const)('%s失败不伪造0或半份计数，保留已知route/prompt',async mode=>{
   const s=surface(visible+'<iframe src="https://open.weixin.qq.com/connect/qrconnect?state=private-state"></iframe>',channels+'/'),iframe=s.dom.window.document.querySelector('iframe')!,onObservation=vi.fn();
   if(mode==='attribute')iframe.getAttribute=()=>{throw Error('private attr failure');};else Object.defineProperty(iframe,'getClientRects',{value(){throw Error('private rect failure');}});
@@ -527,7 +527,7 @@ describe('T1403 EXP2 二维码计数故障保持unknown',()=>{
  });
 });
 
-describe('T1403 修复goto后官方登录见证及时needsAuth',()=>{
+describe('T1424 修复goto后官方登录见证及时needsAuth',()=>{
  const qr='<iframe src="https://open.weixin.qq.com/connect/qrconnect?appid=synthetic-private-app&state=synthetic-private-state"></iframe>';
  it.each(['none','throw','pending'] as const)('source预检false后重定向可见qr，diagnostic %s不能决定业务',async observer=>{
   const s=surface(visible+'<p>普通入口</p>',channels+'/'),controller=new AbortController(),reason=Error('synthetic RED deadline'),prepare=vi.fn(),onReport=vi.fn();let closed=false;
@@ -541,7 +541,7 @@ describe('T1403 修复goto后官方登录见证及时needsAuth',()=>{
  });
 });
 
-describe('T1403 修复业务见证必要反证',()=>{
+describe('T1424 修复业务见证必要反证',()=>{
  const qr='<iframe src="https://open.weixin.qq.com/connect/qrconnect?state=synthetic-private"></iframe>',identity='<h2 class="finder-nickname">synthetic-name</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-id">synthetic-id</span>';
  const bound={...controls,timeoutMs:(value?:number)=>value??120000,identityVerification:'boundIdentity' as const};
  function fields(html:string,url=channels+'/synthetic-login'){
@@ -590,7 +590,7 @@ describe('T1403 修复业务见证必要反证',()=>{
 });
 
 // 路由单测只核导航拒绝/短路；三份文件和真实事务由channels公共Chromium族证明。
-describe('T1403 固定官方报表导航边界',()=>{
+describe('T1424 固定官方报表导航边界',()=>{
  function navigation(start=channels+'/platform',options:{landed?:string;status?:number;loggedOut?:boolean;afterGoto?:()=>void;error?:Error}={}){
   let current=start;const entered=Error('synthetic report root reached');
   const goto=vi.fn(async(url:string)=>{if(options.error)throw options.error;current=options.landed??url;options.afterGoto?.();return {status:()=>options.status??200};});
@@ -633,7 +633,7 @@ describe('T1403 固定官方报表导航边界',()=>{
  });
 });
 
-describe('T1403 固定报表导航复用原可信QR业务见证',()=>{
+describe('T1424 固定报表导航复用原可信QR业务见证',()=>{
  const qr='<iframe src="https://open.weixin.qq.com/connect/qrconnect?appid=synthetic&state=synthetic"></iframe>';
  it.each(['normal','cancel','deadline','foreign'] as const)('%s：无顶层登录文案的QR重定向，父取消/期限及官方origin优先',async mode=>{
   const s=surface(visible+qr,channels+'/fixture-login'),controller=new AbortController(),reason=Object.assign(Error('synthetic original stop'),{code:'EXECUTION_DEADLINE_EXCEEDED'});let current=channels+'/platform',calls=0,expired=false;

@@ -77,10 +77,10 @@ export function buildPositioningPrompt(
 ): string {
   const current = context.positioningBrief
     ? context.positioningBrief
-    : "（创作者尚未设置定位——请基于其抖音账号画像与赛道,给出一份从 0 到 1 的定位提案）";
+    : "（创作者尚未设置定位——请基于本人自述与可用本地资料给出可编辑提案，未知项留空或标待验证）";
   const accounts = context.accountsBrief
-    ? `\n【创作者抖音账号画像】\n${context.accountsBrief}`
-    : "\n（创作者尚未连接平台账号——按通用赛道判断即可）";
+    ? `\n【创作者已连接平台账号画像】\n${context.accountsBrief}`
+    : "\n（无需登录抖音或连接平台账号即可定位；以本人自述、已有定位及可用本地资料为依据，不推断平台实绩）";
   const works = opts?.worksBrief?.trim()
     ? `\n\n【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】\n${opts.worksBrief.trim()}`
     : "";
@@ -97,6 +97,7 @@ ${current}${accounts}${works}${extra}
   }」${
     extra ? "，并**优先遵循上方本次生成指令**" : ""
   }，产出一份**清晰、差异化、能直接支持选题与写稿**的定位提案。
+- 无需登录抖音、扫码或同步作品；未绑定不等于从零开始，不得据此忽略已有定位。本人自述与本地资料可直接作为依据，不得编造粉丝量、播放量或经营实绩。
 - optimize：保留被本轮目标和作品共同支持的内核，再补清受众场景、差异化、内容供给与信任来源。
 - pivot：旧定位和旧作品只用于识别可迁移能力、可信证明与自然表达，不得延续旧赛道、旧人群或旧商业目标。
 - scratch：只能使用本轮用户提供的信息，不读取、不引用、不延续旧定位、账号画像或旧作品。
@@ -122,7 +123,7 @@ ${current}${accounts}${works}${extra}
   "projectRule":"项目规则（立项/节奏约束，含变现约束）",
   "forbidRule":"禁止事项（绝对红线/绝不做什么）",
   "expressionRule":"表达风格规则（统一语气的硬约束/表达红线）"}}
-keywords 必须正好 3 个。capabilities 给 2-5 个。facets 的五项稳定定位要填；
+keywords 必须正好 3 个。capabilities 给 2-5 个。facets 的五项稳定定位已知则填，未知留空；
 statusNote 是已停用的旧兼容字段，必须返回空字符串，作品数量、发布状态、项目阶段等动态事实不得写入定位。
 downstreamRules 是**下游硬约束**（选题/写稿/项目节点会把它当铁律执行）：只从创作者**明确聊到/材料里真实存在**的约束提炼（不做什么、表达红线、题材边界、效果要求、变现约束），没聊到的键**留空字符串**，绝不编造、绝不用泛泛套话凑数。`;
 }
@@ -139,10 +140,10 @@ export function positioningFacets(
   return {
     current: context.positioningBrief
       ? context.positioningBrief
-      : "（创作者尚未设置定位——请基于其抖音账号画像与赛道,给出一份从 0 到 1 的定位提案）",
+      : "（创作者尚未设置定位——请基于本人自述与可用本地资料给出可编辑提案，未知项留空或标待验证）",
     accounts: context.accountsBrief
-      ? `\n【创作者抖音账号画像】\n${context.accountsBrief}`
-      : "\n（创作者尚未连接平台账号——按通用赛道判断即可）",
+      ? `\n【创作者已连接平台账号画像】\n${context.accountsBrief}`
+      : "\n（无需登录抖音或连接平台账号即可定位；以本人自述、已有定位及可用本地资料为依据，不推断平台实绩）",
     works: worksBrief.trim()
       ? `\n\n【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】\n${worksBrief.trim()}`
       : "",

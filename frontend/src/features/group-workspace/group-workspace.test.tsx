@@ -43,7 +43,7 @@ it("总览嵌入已有标题的页面时不重复标题，指标与管理入口�
  expect(screen.getByRole("link",{name:"管理账号组"})).toHaveAttribute("href","/accounts");
 });
 
-it('T1403总览同屏区分已纳入汇总的作品与系统发布记录，提供精确账号入口',()=>{
+it('T1424总览同屏区分已纳入汇总的作品与系统发布记录，提供精确账号入口',()=>{
  const data:GroupWorkspace={...workspace,platform:'xiaohongshu',accountId:null,publicationCount:0,accounts:[{id:'xhs-id',name:'小红书账号',platform:'xiaohongshu',historical:false,archived:false}],collected:{state:'ready',catalogWorkCount:11,unattributableWorkCount:0,deduplicatedWorkCount:0,metrics:[]}};
  render(<GroupOverview workspace={data}/>);
  expect(screen.getByRole('heading',{name:'平台采集数据'})).toBeVisible();expect(screen.getByText('所选日期内已纳入汇总 11 条平台作品')).toBeVisible();

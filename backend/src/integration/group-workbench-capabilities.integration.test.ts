@@ -85,7 +85,7 @@ describe('纯组工作台目录的正式 CLI gateway 与 transport 组合',()=>{
  it.each([
   guardedEndpoint(ENDPOINTS.inspectWorkbenchTask,{params:{taskId:'catalog-original-execution'},query:{afterSequence:0,limit:50},body:undefined}),
   guardedEndpoint(ENDPOINTS.readWorkbenchEvents,{params:{taskId:'catalog-original-execution'},query:{afterSequence:0,limit:64},body:undefined}),
- ])('T1408 $endpoint.id CLI与公开读取支持真实纯组任务，跨组归属仍拒绝',async({endpoint,request})=>{
+ ])('T1427 $endpoint.id CLI与公开读取支持真实纯组任务，跨组归属仍拒绝',async({endpoint,request})=>{
   const before=await businessSnapshot(),audit=await db.select().from(cliInvocations),calls=capabilities.mock.calls.length;
   const begun=await gateway.begin(group,{operation:endpoint.id,effect:getCliOperationPolicy(endpoint.id)!.effect,clientId:'isolated-cli',idempotencyKey:null,inputHash:'sha256:group-task-read',targetRefs:[]});
   expect(begun.kind).toBe('execute');if(begun.kind!=='execute')throw Error('诊断读取应创建真实审计');

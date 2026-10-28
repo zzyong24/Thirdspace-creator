@@ -1,5 +1,5 @@
-//! T-1402：只恢复本机保存的原授权，许可与经济履约分开。
-//! 完整合同：docs/verification/t1402/CLIENT_WIRE.md。
+//! T-1423：只恢复本机保存的原授权，许可与经济履约分开。
+//! 完整合同：docs/verification/t1423/CLIENT_WIRE.md。
 
 use crate::license::{self, LicenseConfig, LicenseHttpResponse, LicenseSnapshot};
 use base64::Engine as _;
@@ -901,7 +901,7 @@ mod tests {
             v: 1,
             allowed: true,
             status: "active".into(),
-            code: "SYNTHETIC-T1402".into(),
+            code: "SYNTHETIC-T1423".into(),
             machine_id: "fixture-machine".into(),
             license_mode: "TIME".into(),
             project_key: "creatoros".into(),
@@ -1526,7 +1526,7 @@ mod tests {
     #[test]
     fn actual_activity_issuer_vectors_pass_the_real_strict_native_consumer() {
         let fixture: Value = serde_json::from_str(include_str!(
-            "../../../docs/verification/t1402/activity-restore-issued-fixtures.json"
+            "../../../docs/verification/t1423/activity-restore-issued-fixtures.json"
         ))
         .unwrap();
         let mut config = cfg();
@@ -1574,7 +1574,7 @@ mod tests {
     }
     fn node_fixture() -> Value {
         serde_json::from_str(include_str!(
-            "../../../docs/verification/t1402/fixtures/node-observation-v1.json"
+            "../../../docs/verification/t1423/fixtures/node-observation-v1.json"
         ))
         .unwrap()
     }

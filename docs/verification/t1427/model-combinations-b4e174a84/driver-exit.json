@@ -1,0 +1,8 @@
+{
+  "command": "python3 -u docs/verification/t1427/model-combinations-b4e174a84/run-installed-retest.py",
+  "execSessionId": 56040,
+  "exitCode": 0,
+  "exitObservedAt": "2026-10-25T13:05:47.349843+00:00",
+  "logSha256": "9103ea9427a41db7e7accda38ef94553a4372ab6a4ac0e63816dabe3d1b3d024",
+  "meaning": "驱动正常结束；模型业务结果另以summary及原始回执为准，不代表官方Pi通过"
+}

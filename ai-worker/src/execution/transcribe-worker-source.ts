@@ -6,6 +6,7 @@ import path from 'node:path';
 import {resolveDouyinProfileIdentity} from '../runtime/browser/profile-directory';
 import {openDouyinProfileContext} from '../runtime/browser/douyin-profile-context';
 import {fetchDouyinVideoUrlViaDetail} from '../runtime/douyin-transcribe-detail';
+import {fetchDouyinVideoUrlAnonymously,openAnonymousDouyinContext} from '../runtime/douyin-transcribe-anonymous';
 import {DouyinNotLoggedInError} from '../runtime/douyin-errors';
 import {GenerationFailure} from './generation-error';
 type Call=(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>;
@@ -39,6 +40,14 @@ export function createTranscribeWorkerSource(signal:AbortSignal,call:Call){
  const fetchSource=(awemeId:string)=>fetchDouyinVideoSource({awemeId,authDir:'authorized-account-profile',signal},{
   channel:channel(awemeId,'iesdouyin'),
   fetchViaDetail:async()=>{
+   // 游客作品页不经过 creator-center：这条通道按账号冷却。游客验证码若上报，会把登录回落挡住约 2 分钟；游客成功又会清掉已有冷却。
+   // 失败(验证码/风控/接口变更)直接改走已授权登录账号，登录路径仍使用 creator-center。
+   try{
+    return await fetchDouyinVideoUrlAnonymously({awemeId,signal},{
+     openContext:()=>openAnonymousDouyinContext(),
+     channel:async(run)=>{signal.throwIfAborted();return run();},
+    });
+   }catch{signal.throwIfAborted();}
    const profile=await invoke(transcribeProfileSchema,'acquireTranscribeProfile',{awemeId});
    // SEMANTIC_BOUNDARY_ALLOW: 规范目录和摘要协议一致性，不作账号语义选择。
    const identity=await resolveDouyinProfileIdentity(path.dirname(profile.authDir),path.basename(profile.authDir),signal);

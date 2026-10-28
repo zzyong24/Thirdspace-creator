@@ -11,9 +11,9 @@
 - 已安装 sidecar SHA-256：`67e32ad6ca8d4044fd71a306f58508b43352aaaf88a4270ba8206cb145085980`。
 - 固定 `desktop:package-local` 入口 exit0，hdiutil 校验、ad-hoc codesign 校验、安装产物与构建一致、真实启动和公开 CLI full 连通均通过；未公证。
 
-本地集成包含自身对话修复 `93a972b9`、主干 T-1404 Tab 性能修复、来源 `f7147fd71` 的无感许可代码、`origin/main` 的已有修复，以及现安装 72 项冻结源码的正常提交 `f3e8e24ec`。普通 merge 保留双方改动，没有 rebase、force 或跳过 hooks。来源工作树原始未提交内容保持不动，产品改动已通过精确快照纳入本地提交，不丢其后续处理依据。
+本地集成包含自身对话修复 `93a972b9`、主干 T-1425 Tab 性能修复、来源 `f7147fd71` 的无感许可代码、`origin/main` 的已有修复，以及现安装 72 项冻结源码的正常提交 `f3e8e24ec`。普通 merge 保留双方改动，没有 rebase、force 或跳过 hooks。来源工作树原始未提交内容保持不动，产品改动已通过精确快照纳入本地提交，不丢其后续处理依据。
 
-控制面采用主目录规范事件链，外部分支独有原事件另存 `imported-control/`，没有拼接分叉审核链或覆盖重号任务。T-1402 使用现安装来源最新规格，重新独立审核并记录有效新收据。T-1404 原本仅在本机 ignore 目录的真实界面验收工件已逐字保全；原始日志 gzip 解压可还原，不重写时间、原提交或 PASS。
+控制面采用主目录规范事件链，外部分支独有原事件另存 `imported-control/`，没有拼接分叉审核链或覆盖重号任务。T-1423 使用现安装来源最新规格，重新独立审核并记录有效新收据。T-1425 原本仅在本机 ignore 目录的真实界面验收工件已逐字保全；原始日志 gzip 解压可还原，不重写时间、原提交或 PASS。
 
 ## 初次整合安装版六组合实测（8f757）
 
@@ -73,4 +73,4 @@
 
 最终包证明与逐轮汇总：`windows-pi-final/installed-candidate-proof.json`、`windows-pi-final/FINAL_CLI_SUMMARY.json`。两批测试与包指纹分别绑定原候选，不混记。
 
-任务状态保持真实：`taskctl complete T-1407` 实际拒绝了普通 CLI 报告，原因是验收列“待验”要求 `frontend-validation` UI 旅程 JSON；本轮没有这份标准 UI 证据，没有伪造或降低验收。已用 taskctl 将 T-1407 标为阻塞，安装和本地合并的实际完成事实、CLI 成功/失败结果仍照实保留。T-1405 因官方 Pi 原任务 HTTP 402 未解决也保持阻塞。
+任务状态保持真实：`taskctl complete T-1407` 实际拒绝了普通 CLI 报告，原因是验收列“待验”要求 `frontend-validation` UI 旅程 JSON；本轮没有这份标准 UI 证据，没有伪造或降低验收。已用 taskctl 将 T-1407 标为阻塞，安装和本地合并的实际完成事实、CLI 成功/失败结果仍照实保留。T-1426 因官方 Pi 原任务 HTTP 402 未解决也保持阻塞。

@@ -1,0 +1,19 @@
+{
+  "schema": "source-validation/v1",
+  "workspace_typecheck": "5/5通过：workspace-typecheck-final.log中contract/worker/mcp/backend为0，frontend两处测试字面量修正后frontend-typecheck-final.log退出0",
+  "test_regressions": {
+    "T1427": 30,
+    "T1428": 211,
+    "post_type_adjustments": {
+      "T1427": 3,
+      "worker": 26,
+      "frontend": 66
+    },
+    "package": 58,
+    "quality": 17
+  },
+  "boundary": "基线5，无新增",
+  "timeout_policy": "通过",
+  "official_pi_runtime": "仍未通过，待新包公开CLI核因",
+  "scope": "局部修复和构建候选，不作整体验收或推送放行"
+}

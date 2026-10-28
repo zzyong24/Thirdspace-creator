@@ -2,7 +2,7 @@
   "candidateCommit": "8f757a153060067747bfaf664c46155d8b318ff2",
   "tree": "3497d1689a0d17f7aa12cc457c1fcc4b4165d269",
   "branch": "codex/t1407-integration-ready",
-  "worktree": "/Users/zyongzhu/.codex/worktrees/t1405-chat-model-fixes/Thirdspace-creator",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1426-chat-model-fixes/Thirdspace-creator",
   "remoteMain": "fd9108b2b79c72e153259085ca0098cd36705795",
   "priorMain": "bb52d58461a311b2e38f399283c3878179569f1b",
   "installedSidecarBefore": "9db6e42887db0c469cea36e51351a9782baa1e26f874344c6ee2e6637290c3c8",
@@ -143,5 +143,5 @@
     "reference-editors/opencut-classic/native/native.js": "d53ca25f62bfffe205edcda8bbdfe48daf8889a3b0131103fe985ae1f3162dcc"
   },
   "codeReviewCommit": "4eaf7946a2c2d4fb02ad543a05f8765652feaf5a",
-  "additionalChanges": "仅保全T1404既有验收工件和绑定；126产品文件与代码审核候选字节一致"
+  "additionalChanges": "仅保全T1425既有验收工件和绑定；126产品文件与代码审核候选字节一致"
 }

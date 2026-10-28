@@ -12,6 +12,8 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const reviewRules = pgTable("review_rules", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  /** NULL 保留系统/历史用户共享层；新自定义规则仅从真实ctx写入组。 */
+  groupId: text("group_id"),
   /** 'official_hard'(公约条文确定性投影)| 'empirical'(经验限流)| 'doudplus'(投放特有)。 */
   tier: text("tier").notNull(),
   /** 导流/绝对化/降权词/营销词/情绪类/隐私/复用/其他。 */
@@ -57,6 +59,7 @@ export const REVIEW_GATE_DDL = `
 CREATE TABLE IF NOT EXISTS review_rules (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  group_id TEXT,
   tier TEXT NOT NULL,
   category TEXT NOT NULL,
   match_type TEXT NOT NULL,

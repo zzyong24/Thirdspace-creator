@@ -6,6 +6,11 @@ import {
 
 describe("chatbox.positioning — T-707 Copilot 自适应定位", () => {
   const sys = CHATBOX_POSITIONING_TEMPLATE.system;
+  it("T1408 默认无需登录抖音，不把未绑定当成scratch或虚构平台实绩",()=>{
+    expect(sys).toContain("无需登录抖音");expect(sys).toContain("未绑定不等于从零开始");
+    expect(sys).toContain("本人自述");expect(sys).toContain("不得编造粉丝量、播放量");
+    expect(sys).toContain("每轮最多追问一个");expect(sys).toContain("暂不确定和跳过");
+  });
 
   it("先做三路场景判断，但信息清楚时不重复确认", () => {
     expect(sys).toContain("基于当前账号继续深入");

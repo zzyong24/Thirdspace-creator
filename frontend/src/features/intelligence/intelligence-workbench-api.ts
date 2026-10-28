@@ -66,8 +66,9 @@ export function defaultApi(scope?:RadarScope): RadarApi {
         params: { sourceId: input.sourceId },
         query: undefined,
         body: {
-          monitorEnabled: input.monitorEnabled,
-          syncPolicy: input.syncPolicy,
+          ...(input.monitorEnabled === undefined ? {} : { monitorEnabled: input.monitorEnabled }),
+          ...(input.syncPolicy === undefined ? {} : { syncPolicy: input.syncPolicy }),
+          ...(input.collectorAccountId === undefined ? {} : { collectorAccountId: input.collectorAccountId }),
           expectedVersion: input.expectedVersion,
         },
       }) as Promise<RadarSource>,

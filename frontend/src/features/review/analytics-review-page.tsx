@@ -132,7 +132,7 @@ export function AnalyticsReviewPage({
           {/* [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘)。空指标态也照渲 ——
               已锁定盲预测、数据还没回流,正是「等待回流」该被看见的时刻。 */}
           {predictionComparison !== undefined ? (
-            <PredictionComparisonSection vm={predictionComparison} />
+            <PredictionComparisonSection vm={predictionComparison} publicationScoped={publicationIds !== undefined} />
           ) : null}
           {/* [T-247] 已回流校准(待采纳):复盘裁决产生的评分维度建议 → 采纳/驳回门。 */}
           <CalibrationSuggestionsCard />

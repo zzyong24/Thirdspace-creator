@@ -143,6 +143,14 @@ describe("parseSuggestion (tolerant JSON object parse — chat 文本兜底路�
 });
 
 describe("定位准备与候选投影",()=>{
+ it("T1408 未绑定平台以本人资料为依据并保留已有定位，不自动切从零开始",async()=>{
+  const current="已有定位：为实体门店讲清经营方法";
+  const facets=positioningFacets({positioningBrief:current,accountsBrief:""});
+  expect(facets.current).toBe(current);expect(facets.accounts).toContain("无需登录抖音");
+  expect(facets.accounts).toContain("本人自述");expect(facets.accounts).not.toContain("按通用赛道");
+  const empty=positioningFacets({positioningBrief:"",accountsBrief:""});
+  expect(empty.current).toContain("本人自述");expect(empty.current).not.toContain("抖音账号画像");
+ });
  it("保持当前定位与抖音账号画像，不执行模型或写库",async()=>{
   const {deps}=makeDeps(VALID_OBJECT);const adapter=createPositioningGenerateBusinessAdapter(deps);
   const facets=await adapter.prepare(ctx,{id:"t",projectId:null,retryOfTaskId:null,inputData:{},skillSnapshot:{} as never});

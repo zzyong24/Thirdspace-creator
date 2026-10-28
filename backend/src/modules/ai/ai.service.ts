@@ -196,6 +196,7 @@ export interface AiPositioningPort {
       audience: string;
       differentiation: string;
       capabilities: string[];
+      facets?: Partial<Record<"contentScope" | "avoid" | "corePain" | "coreValue" | "tone", string>>;
     },
   ): Promise<unknown>;
   createStatementVersion(
@@ -1792,12 +1793,21 @@ export function createAiService(deps: ServiceDeps): AiService {
         const hasRules = Object.values(downstreamRules).some(
           (v) => v !== undefined,
         );
+        // 模型 schema 已把缺失项补为空串：AI 候选空白视为未知，仅合并稳定非空字段。
+        // 手动 upsert 的显式清空合同不变；动态 statusNote 不属于定位候选采纳范围。
+        const rawFacets = (s.facets ?? {}) as Record<string, unknown>;
+        const facets: NonNullable<Parameters<AiPositioningPort["upsertProfile"]>[1]["facets"]> = {};
+        for (const key of ["contentScope", "avoid", "corePain", "coreValue", "tone"] as const) {
+          const value = nonEmpty(rawFacets[key]);
+          if (value !== undefined) facets[key] = value;
+        }
         await deps.positioning.upsertProfile(ctx, {
           persona: str(s.persona),
           field: str(s.field),
           audience: str(s.audience),
           differentiation: str(s.differentiation),
           capabilities: strArr(s.capabilities),
+          ...(Object.keys(facets).length ? { facets } : {}),
           ...(hasRules ? { downstreamRules } : {}),
         });
         await deps.positioning.createStatementVersion(ctx, {

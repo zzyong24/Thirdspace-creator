@@ -1,12 +1,12 @@
-# T-1403 最终生成格式补充（2026-10-23）
+# T-1424 最终生成格式补充（2026-10-23）
 
-现成esbuild `supported: { 'template-literal': false }`由原production构建器转义模板，未手改bundle或第三方/合同算法。实际新旧包两段Zod生成字符串静态cooked全字符与插值顺序严格相同，四组相同插值执行值逐字相等；原/新包均没有tagged模板。431模块身份保持，fixture=false。固定基线717源标准U0补丁实际F0复原逐字节一致，同锁两次正式构建七输出一致。当前归档/patch/产物摘要以本目录SHA256SUMS、DELIVERY和manifest的t1403Recovery为准。
+现成esbuild `supported: { 'template-literal': false }`由原production构建器转义模板，未手改bundle或第三方/合同算法。实际新旧包两段Zod生成字符串静态cooked全字符与插值顺序严格相同，四组相同插值执行值逐字相等；原/新包均没有tagged模板。431模块身份保持，fixture=false。固定基线717源标准U0补丁实际F0复原逐字节一致，同锁两次正式构建七输出一致。当前归档/patch/产物摘要以本目录SHA256SUMS、DELIVERY和manifest的t1424Recovery为准。
 
 原全树空白失败与第一次本机diff-U0空range导致24文件错位的来源失败均完整保留；改为Python标准unified_diff空range锚后，系统patch F0及717全字节检查通过。只去header第40行累计新增空tab，保基线另两空tab行；未改whitespace/Gate配置。最终原verify与git diff收据位于外部evidence/editor-implementation/format-final-*.json，未以失败当PASS。以下为前阶段/历史记录，不代签真实UI或整单验收。
 
 ---
 
-# T-1403 当前原生交付（2026-10-23）
+# T-1424 当前原生交付（2026-10-23）
 
 恢复现行正式合同的真实采纳/预览消费者；保当前渲染与缺素材降级。真实preview-scene实现迁名native-preview，公共操作名仍preview-scene。显示词统一“转写”，原片选择在高级时间轴操作前，保属性/slot/返回画面。下文为历史交付记录，历史PASS不代表本轮。
 

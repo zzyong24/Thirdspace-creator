@@ -385,7 +385,8 @@ type AdapterStatus =
 type SourceConfig =
   | {
       type: "creator_profile";
-      collectorAccountId: string;
+      /** 未登录时保存的主页没有采集账号，同步前须先关联。 */
+      collectorAccountId?: string;
       canonicalUrl: string;
       externalAccountId: string;
     }
@@ -918,6 +919,14 @@ function toTransform(
   };
 }
 
+const UNBOUND_PROFILE_COLLECTOR = "unbound";
+const UNBOUND_PROFILE_MESSAGE =
+  "该博主主页还没有关联抖音采集账号。请先登录抖音，再在来源上关联账号后同步作品";
+
+function isUnboundLoginSource(config: SourceConfig): boolean {
+  return config.type === "creator_profile" && !config.collectorAccountId;
+}
+
 function sourceIdentity(config: SourceConfig): {
   platform: string;
   externalKey: string;
@@ -929,9 +938,11 @@ function sourceIdentity(config: SourceConfig): {
     case "creator_profile":
       return {
         platform: "douyin",
-        externalKey: `profile:${config.collectorAccountId}:${config.externalAccountId}`,
+        externalKey: `profile:${config.collectorAccountId ?? UNBOUND_PROFILE_COLLECTOR}:${config.externalAccountId}`,
         canonicalUrl: canonicalUrl(config.canonicalUrl),
-        browserSessionRef: `douyin-profile:${config.collectorAccountId}`,
+        browserSessionRef: config.collectorAccountId
+          ? `douyin-profile:${config.collectorAccountId}`
+          : null,
         defaultName: config.externalAccountId,
       };
     case "favorites_folder":
@@ -2038,12 +2049,15 @@ export function createIntelligenceService(
   ): Promise<{ run: ReturnType<typeof toRun>; task: ExecutionTaskResourceV2 }> {
     const source = await requireSource(ctx, sourceId);
     const config = sourceConfigForExecution(source);
+    if (isUnboundLoginSource(config)) {
+      throw new IntelligenceValidationError(UNBOUND_PROFILE_MESSAGE);
+    }
     if (
       config.type === "creator_profile" ||
       config.type === "favorites_folder" ||
       config.type === "darkhorse_query"
     ) {
-      await assertCollectorEligible(ctx, config.collectorAccountId);
+      await assertCollectorEligible(ctx, config.collectorAccountId!);
     }
     if (source.status !== "active") {
       throw new IntelligenceConflictError(
@@ -2108,18 +2122,25 @@ export function createIntelligenceService(
         trigger: input.trigger,
       },
       priority: input.trigger === "manual" ? 20 : 10,
-    });
+    }, async (store, task) => {
+    // 运行绑定与任务同事务提交；后台drain不能先领取可见任务再发现run尚不存在。
+    // SEMANTIC_BOUNDARY_ALLOW: 仅按真实任务/来源ID原子绑定，不改变采集内容或归属策略。
     if (input.reuseActiveRun === false && task.idempotencyKey !== input.idempotencyKey) {
       throw new IntelligenceConflictError("该来源已有其他任务的同步，请稍后重试");
     }
-    const [existing] = await db
+    const [existing] = await store
       .select()
       .from(intelligenceSyncRuns)
       .where(eq(intelligenceSyncRuns.executionTaskId, task.id))
       .limit(1);
-    if (existing) return { run: toRun(existing), task };
+    if (existing) return;
+    const [boundSource] = await store.select().from(intelligenceSources).where(and(
+      eq(intelligenceSources.id, sourceId), eq(intelligenceSources.userId, ctx.userId), intelligenceWorkspaceFilter(intelligenceSources,ctx),
+    )).for("update").limit(1);
+    if (!boundSource) throw new OwnershipError("来源工作区已变化，不能创建同步运行");
+    if (boundSource.status !== "active") throw new IntelligenceConflictError(`来源当前为 ${boundSource.status}，不能开始同步`);
     const stamp = now();
-    const [run] = await db
+    await store
       .insert(intelligenceSyncRuns)
       .values({
         id: nextId("intelligence-run"),
@@ -2148,14 +2169,14 @@ export function createIntelligenceService(
       // executionTaskId 唯一索引决定唯一赢家，失败方随后回读同一 run。
       .onConflictDoNothing()
       .returning();
-    if (run) return { run: toRun(run), task };
-    const [racedRun] = await db
+    });
+    const [run] = await db
       .select()
       .from(intelligenceSyncRuns)
       .where(eq(intelligenceSyncRuns.executionTaskId, task.id))
       .limit(1);
-    if (!racedRun) throw new Error("failed to create intelligence run");
-    return { run: toRun(racedRun), task };
+    if (!run) throw new Error("failed to create intelligence run");
+    return { run: toRun(run), task };
   }
 
   async function radarProjectIds(ctx: RequestContext, itemIds: string[]) {
@@ -2821,13 +2842,23 @@ export function createIntelligenceService(
         throw new IntelligenceValidationError("source type 与 config 不一致");
       }
       if (input.collectionId) await requireCollection(ctx, input.collectionId);
+      const unbound = isUnboundLoginSource(input.config);
+      if (unbound && input.config.type === "creator_profile") {
+        // 未经登录预览的主页只接受 douyin.com/user/<sec_uid> 且两处标识一致。
+        const url = new URL(input.config.canonicalUrl);
+        const secUid = decodeURIComponent(url.pathname.match(/^\/user\/([^/?#]+)/)?.[1] ?? "");
+        if (!/(^|\.)douyin\.com$/i.test(url.hostname) || !secUid || secUid !== input.config.externalAccountId) {
+          throw new IntelligenceValidationError("请输入完整的抖音博主主页链接");
+        }
+      }
       const collector =
-        input.config.type === "creator_profile" ||
-        input.config.type === "favorites_folder" ||
-        input.config.type === "darkhorse_query"
+        !unbound &&
+        (input.config.type === "creator_profile" ||
+          input.config.type === "favorites_folder" ||
+          input.config.type === "darkhorse_query")
           ? await assertCollectorEligible(
               ctx,
-              input.config.collectorAccountId,
+              input.config.collectorAccountId!,
             )
           : null;
       const identity = sourceIdentity(input.config);
@@ -2882,7 +2913,7 @@ export function createIntelligenceService(
       await ensureSourceMembership({...ctx,groupId:frozen.groupId}, source, input.collectionId,tx);
       return source;
       });
-      const started = input.runInitial
+      const started = input.runInitial && !unbound
         ? await startRun(ctx, source.id, {
             trigger: "initial",
             idempotencyKey: `${input.idempotencyKey}:initial`,
@@ -2966,6 +2997,7 @@ export function createIntelligenceService(
         monitorEnabled?: boolean;
         syncPolicy?: Record<string, unknown>;
         instruction?: string | null;
+        collectorAccountId?: string;
         expectedVersion: number;
       },
     ) {
@@ -2975,6 +3007,46 @@ export function createIntelligenceService(
         throw new IntelligenceConflictError("来源已被其他操作修改，请刷新后重试");
       }
       if (input.collectionId) await requireCollection(ctx, input.collectionId);
+      let attached: {
+        collector: CollectorAccountProjection;
+        adapterConfig: SourceConfig;
+        externalKey: string;
+        browserSessionRef: string | null;
+      } | null = null;
+      if (input.collectorAccountId !== undefined) {
+        const config = sourceConfigForExecution(current);
+        if (config.type !== "creator_profile") {
+          throw new IntelligenceValidationError("只有博主主页来源可以补关联采集账号");
+        }
+        if (config.collectorAccountId && config.collectorAccountId !== input.collectorAccountId) {
+          throw new IntelligenceValidationError("该博主主页已关联其他采集账号，不能直接更换");
+        }
+        if (!config.collectorAccountId) {
+          const collector = await assertCollectorEligible(ctx, input.collectorAccountId);
+          const adapterConfig: SourceConfig = { ...config, collectorAccountId: input.collectorAccountId };
+          const identity = sourceIdentity(adapterConfig);
+          const duplicates = await db
+            .select({ id: intelligenceSources.id })
+            .from(intelligenceSources)
+            .where(
+              and(
+                eq(intelligenceSources.userId, ctx.userId),
+                intelligenceWorkspaceFilter(intelligenceSources, ctx),
+                eq(intelligenceSources.type, current.type),
+                eq(intelligenceSources.externalKey, identity.externalKey),
+              ),
+            );
+          if (duplicates.some((row) => row.id !== sourceId)) {
+            throw new IntelligenceConflictError("该采集账号下已有这个博主主页来源，请直接使用已有来源");
+          }
+          attached = {
+            collector,
+            adapterConfig,
+            externalKey: identity.externalKey,
+            browserSessionRef: identity.browserSessionRef,
+          };
+        }
+      }
       const monitorEnabled =
         input.monitorEnabled ?? current.monitorEnabled;
       const syncPolicy =
@@ -3003,6 +3075,13 @@ export function createIntelligenceService(
             input.instruction === undefined
               ? current.extractionInstruction
               : input.instruction,
+          ...(attached
+            ? {
+                adapterConfig: attached.adapterConfig,
+                externalKey: attached.externalKey,
+                browserSessionRef: attached.browserSessionRef,
+              }
+            : {}),
           version: current.version + 1,
           updatedAt: now(),
         })
@@ -3019,7 +3098,7 @@ export function createIntelligenceService(
       }
       return updated;
       });
-      return presentSource(ctx, updated);
+      return presentSource(ctx, updated, attached?.collector);
     },
 
     async deleteSource(
@@ -3380,58 +3459,81 @@ export function createIntelligenceService(
     ): Promise<number> {
       const accountId = await account(ctx,"intelligence.enqueueDueSourceRuns");
       const stamp = now();
-      const due = await db
-        .select()
-        .from(intelligenceSources)
-        .where(
-          and(
-            eq(intelligenceSources.userId, ctx.userId),
-            intelligenceWorkspaceFilter(intelligenceSources,ctx),
-            eq(intelligenceSources.status, "active"),
-            eq(intelligenceSources.monitorEnabled, true),
-            or(
-              isNull(intelligenceSources.nextRunAt),
-              lte(intelligenceSources.nextRunAt, stamp),
-            ),
-          ),
-        )
-        .orderBy(asc(intelligenceSources.nextRunAt))
-        .limit(Math.max(1, limit));
+      const batch = Math.max(1, limit);
+      const dueWhere = and(
+        eq(intelligenceSources.userId, ctx.userId),
+        intelligenceWorkspaceFilter(intelligenceSources,ctx),
+        eq(intelligenceSources.status, "active"),
+        eq(intelligenceSources.monitorEnabled, true),
+        or(
+          isNull(intelligenceSources.nextRunAt),
+          lte(intelligenceSources.nextRunAt, stamp),
+        ),
+      );
       let enqueued = 0;
-      for (const source of due) {
-        const [latest] = await db
-          .select({ status: intelligenceSyncRuns.status })
-          .from(intelligenceSyncRuns)
-          .where(and(eq(intelligenceSyncRuns.sourceId, source.id),intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx)))
-          .orderBy(desc(intelligenceSyncRuns.createdAt))
-          .limit(1);
-        // 登录/验证码受阻后停跑，避免每分钟重新撞站点；用户处理后手动“同步”
-        // 一次即可恢复，并由成功 run 重算下次每日计划。
-        if (latest?.status === "blocked") continue;
-        const sourceCtx: RequestContext = {
-          userId: ctx.userId,
-          accountId,groupId:ctx.groupId??null,
-          requestId: `intelligence-scheduler:${source.id}:${stamp}`,
-          source: "ingestion",
-        };
-        try {
-          await startRun(sourceCtx, source.id, {
-            trigger: "schedule",
-            idempotencyKey: `scheduled:${source.id}:${source.nextRunAt ?? stamp.slice(0, 10)}`,
-          });
-          await db
-            .update(intelligenceSources)
-            .set({
-              nextRunAt: nextDailyRunAt(stamp),
-              updatedAt: stamp,
-            })
-            .where(eq(intelligenceSources.id, source.id));
-          enqueued += 1;
-        } catch (error) {
-          // 手动/首次同步已在运行时，让现有 run 完成后重算下次时间，不重复排队。
-          if (error instanceof IntelligenceConflictError) continue;
-          throw error;
+      // 本轮已推后的未关联主页。推后失败时避免同一批反复选中、空转。
+      const deferredIds = new Set<string>();
+      while (enqueued < batch) {
+        const due = await db
+          .select()
+          .from(intelligenceSources)
+          .where(dueWhere)
+          .orderBy(asc(intelligenceSources.nextRunAt))
+          .limit(batch);
+        if (due.length === 0) break;
+        let moved = false;
+        for (const source of due) {
+          const [latest] = await db
+            .select({ status: intelligenceSyncRuns.status })
+            .from(intelligenceSyncRuns)
+            .where(and(eq(intelligenceSyncRuns.sourceId, source.id),intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx)))
+            .orderBy(desc(intelligenceSyncRuns.createdAt))
+            .limit(1);
+          // 登录/验证码受阻后停跑，避免每分钟重新撞站点；用户处理后手动“同步”
+          // 一次即可恢复，并由成功 run 重算下次每日计划。
+          if (latest?.status === "blocked") continue;
+          // 未关联主页不占这批名额：把下次时间推后一个周期，已关联来源才能排进来。
+          if (isUnboundLoginSource(sourceConfigForExecution(source))) {
+            if (deferredIds.has(source.id)) continue;
+            await db
+              .update(intelligenceSources)
+              .set({
+                nextRunAt: nextDailyRunAt(stamp),
+                updatedAt: stamp,
+              })
+              .where(eq(intelligenceSources.id, source.id));
+            deferredIds.add(source.id);
+            moved = true;
+            continue;
+          }
+          const sourceCtx: RequestContext = {
+            userId: ctx.userId,
+            accountId,groupId:ctx.groupId??null,
+            requestId: `intelligence-scheduler:${source.id}:${stamp}`,
+            source: "ingestion",
+          };
+          try {
+            await startRun(sourceCtx, source.id, {
+              trigger: "schedule",
+              idempotencyKey: `scheduled:${source.id}:${source.nextRunAt ?? stamp.slice(0, 10)}`,
+            });
+            await db
+              .update(intelligenceSources)
+              .set({
+                nextRunAt: nextDailyRunAt(stamp),
+                updatedAt: stamp,
+              })
+              .where(eq(intelligenceSources.id, source.id));
+            enqueued += 1;
+            moved = true;
+          } catch (error) {
+            // 手动/首次同步已在运行时，让现有 run 完成后重算下次时间，不重复排队。
+            if (error instanceof IntelligenceConflictError) continue;
+            throw error;
+          }
+          if (enqueued >= batch) break;
         }
+        if (!moved) break;
       }
       return enqueued;
     },
@@ -3447,12 +3549,15 @@ export function createIntelligenceService(
     }> {
       const source = await requireSource(ctx, sourceId);
       const config = sourceConfigForExecution(source);
+      if (isUnboundLoginSource(config)) {
+        throw new IntelligenceValidationError(UNBOUND_PROFILE_MESSAGE);
+      }
       if (
         config.type === "creator_profile" ||
         config.type === "favorites_folder" ||
         config.type === "darkhorse_query"
       ) {
-        await assertCollectorEligible(ctx, config.collectorAccountId);
+        await assertCollectorEligible(ctx, config.collectorAccountId!);
       }
       return {
         source: await presentSource(ctx, source),

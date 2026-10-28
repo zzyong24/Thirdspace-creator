@@ -404,7 +404,7 @@ describe("CreateJobDialog — 新建表单组装(友好频率 + 自然语言 pro
     expect(screen.queryByPlaceholderText(/0 9 \* \* \*/)).not.toBeInTheDocument();
     expect(screen.queryByText(/cron/i)).not.toBeInTheDocument();
     expect(screen.getByText("频率")).toBeInTheDocument();
-    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+    expect(screen.getByRole("switch", { name: "创建后启用" })).toHaveAttribute("aria-checked", "false");
   });
 
   it("切到「按间隔 · 每 6 小时」→ onCreate 收到 `0 */6 * * *`", async () => {
@@ -556,7 +556,7 @@ describe("TemplateCards — 从模板入手", () => {
 });
 
 describe("AutomationsIsland — 新建接线", () => {
-  it("island.create → createScheduledJob(body 带编译 cron + prompt) + router.refresh", async () => {
+  it("island.create → createScheduledJob(body 带编译 cron + prompt + 停用态) + router.refresh", async () => {
     render(<AutomationsIsland jobs={[]} />);
     // 打开新建弹窗(顶部按钮)
     fireEvent.click(screen.getAllByText("新建任务")[0]!);
@@ -578,6 +578,7 @@ describe("AutomationsIsland — 新建接线", () => {
         sourceKind: string;
         schedule: string;
         prompt: string;
+        enabled: boolean;
       };
     };
     expect(arg.body.name).toBe("新作业");
@@ -585,6 +586,7 @@ describe("AutomationsIsland — 新建接线", () => {
     // schedule 是编译出的 cron(默认每天 09:00),prompt 承接自然语言
     expect(arg.body.schedule).toBe("0 */2 * * *");
     expect(arg.body.prompt).toBe("每天抓我主页的新作品");
+    expect(arg.body.enabled).toBe(false);
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 

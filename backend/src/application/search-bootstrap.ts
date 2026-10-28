@@ -38,7 +38,7 @@ export async function rebuildOwnedSearchIndex(db:Db,userId:string,now:()=>string
           knowledgeItemId: r.knowledgeItemId,
           content: r.content ?? "",
         })),
-        assets: dbAssets.map((a) => ({
+        assets: dbAssets.filter(a=>a.status==="active").map((a) => ({
           id: a.id,
           name: a.name,
           assetType: a.assetType,

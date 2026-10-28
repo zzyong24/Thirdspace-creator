@@ -1,6 +1,6 @@
 # T1410 批次 C 独立规格审核说明
 
-审核日期：2026-10-25。审核者为与实现/主控制面分离的独立会话 `/root/t1408_contract_review`；未核实精确模型名称。只读当前 SPEC、适用宪法、原 finding 和来源裁决，仅写本批审核交付物；未修改产品、SPEC、审核引擎或状态控制面，未调用真实业务。
+审核日期：2026-10-25。审核者为与实现/主控制面分离的独立会话 `/root/t1427_contract_review`；未核实精确模型名称。只读当前 SPEC、适用宪法、原 finding 和来源裁决，仅写本批审核交付物；未修改产品、SPEC、审核引擎或状态控制面，未调用真实业务。
 
 结论：当前七项规格未发现新的阻断性合同缺口。五份 initial 可供原计划的新周期使用；T694/T652 另外保留旧 finding 的 recheck 原件与完整 initial 备用包。正式 record、typed 授权、周期选择和最终 receipt 由主会话在规定流程中执行，本说明不宣称这些操作已经完成。
 
@@ -84,6 +84,6 @@ T691/T656/T645/T635 的旧 PROJECT 绑定哈希分别保留如下；本轮建议
 
 ## 本轮验证边界
 
-本轮只检查报告 JSON 格式、SPEC/宪法 SHA-256、recheck 冻结字段一致性和本批 diff 空白错误；不运行产品、provider、签名打包或真机 UI 验收。已另交 T1405 UI 适用性小范围 recheck 与 T1405/T1407 完整适用性研究报告；该适用性裁决不取消 T1407 的真实 UI 验收，也不声称官方 Pi 402 恢复或允许推送。
+本轮只检查报告 JSON 格式、SPEC/宪法 SHA-256、recheck 冻结字段一致性和本批 diff 空白错误；不运行产品、provider、签名打包或真机 UI 验收。已另交 T1426 UI 适用性小范围 recheck 与 T1426/T1407 完整适用性研究报告；该适用性裁决不取消 T1407 的真实 UI 验收，也不声称官方 Pi 402 恢复或允许推送。
 
 实际检查结果：7 份 initial 通过当前 Draft 2020-12 JSON schema；2 份 recheck 的全部冻结字段逐项不变，schema 唯一错误分别为 2 个/3 个旧 finding 缺省 threat_model_id。10 份本批交付物通过 UTF-8、结尾换行与尾部空格检查。git diff --check 未报错，但这些新文件被 `.git/info/exclude` 的 `/docs/verification/` 忽略，不能把空 diff 当成已纳入提交；主会话归档时需显式添加。未调用 record 或任何写控制面命令。

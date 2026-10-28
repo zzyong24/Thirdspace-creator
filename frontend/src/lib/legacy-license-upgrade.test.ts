@@ -3,7 +3,7 @@ import {parseNativeRestoreResult,parseLegacyUpgradeResult} from './legacy-licens
 
 const native={contractVersion:'creatoros-license-restore-result-v1',status:'ready',reasonCode:'RESTORE_READY',bindingStatus:'verified',persistence:'confirmed',retryable:false};
 const projection={contractVersion:'creatoros-legacy-model-upgrade-v1',action:'probe',phase:'credentials',outcome:'ready',reasonCode:'UPGRADE_READY',bindingStatus:'verified',entitlementStatus:'ready',configurationStatus:'not_started',retryable:false};
-describe('T1402 closed安全投影',()=>{
+describe('T1423 closed安全投影',()=>{
  it('只接受准确成功元组，原生runtime拒绝允许已真实保存',()=>{
   expect(parseNativeRestoreResult(native)).toEqual(native);
   expect(parseNativeRestoreResult({...native,status:'blocked',reasonCode:'RESTORE_RESPONSE_UNVERIFIED'})).toMatchObject({status:'blocked',persistence:'confirmed'});

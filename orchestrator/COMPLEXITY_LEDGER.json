@@ -8621,9 +8621,9 @@
       "acceptance": "仅范围恢复审计，不代预检或业务通过。"
     },
     {
-      "task_id": "T-1404",
+      "task_id": "T-1425",
       "files": [
-        "docs/verification/t1404/browser-runtime.json"
+        "docs/verification/t1425/browser-runtime.json"
       ],
       "file_sha256": "7e4ddb74d571d552cedb1d56466214343e9f30837331da0dc53dcc500eb1f8fa",
       "categories": [
@@ -8631,7 +8631,7 @@
       ],
       "disposition": "in-budget",
       "decision": "登记浏览器验收证据中继承的宿主PATH；新增工具链预算为0",
-      "scope_source": "docs/features/t1404-tab-navigation-performance-fixes.md",
+      "scope_source": "docs/features/t1425-tab-navigation-performance-fixes.md",
       "reason": "证据原样记录当前宿主PATH中的既有 .cargo/bin，未安装、调用或新增该语言工具链，产品实现没有新增运行时。保留原证据与守卫，不改写标记或放宽扫描。",
       "acceptance": "仅闭合精确文件哈希上的环境词汇登记；不代替测试、浏览器验收或任何安装版性能结论。"
     }

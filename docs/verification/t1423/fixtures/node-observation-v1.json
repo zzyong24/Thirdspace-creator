@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "t1423-node-observation-synthetic-v1",
+  "provenance": {
+    "syntheticOnly": true,
+    "actualFunction": "backend/src/secret-crypto.ts encryptSecret",
+    "algorithm": "existing AES-256-GCM enc:v1 envelope",
+    "runtimeSecretsRead": false,
+    "networkCalls": 0,
+    "sourceSha256": "6e55797dcf01cb79c803b7abd95ad2d7bd3051bf36f3512603b0b629f404e225"
+  },
+  "syntheticMasterKeyBase64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+  "syntheticBootNonce": "1111111111111111111111111111111111111111111111111111111111111111",
+  "stableTuple": [
+    "creatoros-legacy-upgrade-license-identity-v1",
+    "creatoros",
+    "SYNTHETIC-T1423-SAVED-CODE",
+    "fixture-machine-alpha",
+    "TIME",
+    null,
+    null
+  ],
+  "stableTupleJson": "[\"creatoros-legacy-upgrade-license-identity-v1\",\"creatoros\",\"SYNTHETIC-T1423-SAVED-CODE\",\"fixture-machine-alpha\",\"TIME\",null,null]",
+  "payload": {
+    "contractVersion": "creatoros-legacy-upgrade-observation-v1",
+    "observationId": "dc128b4c-3052-4ddd-b253-a780d5983c87",
+    "licenseIdentityHash": "sha256:1411bc7f62b70bc593b81a3f3dd50bbb9e67722ef937010edc115f8b94328654",
+    "issuedAt": "2026-10-23T04:00:00.000Z",
+    "expiresAt": "2026-10-23T04:12:10.000Z",
+    "bootNonceHash": "sha256:3138bb9bc78df27c473ecfd1410f7bd45ebac1f59cf3ff9cfe4db77aab7aedd3"
+  },
+  "plaintext": "{\"contractVersion\":\"creatoros-legacy-upgrade-observation-v1\",\"observationId\":\"dc128b4c-3052-4ddd-b253-a780d5983c87\",\"licenseIdentityHash\":\"sha256:1411bc7f62b70bc593b81a3f3dd50bbb9e67722ef937010edc115f8b94328654\",\"issuedAt\":\"2026-10-23T04:00:00.000Z\",\"expiresAt\":\"2026-10-23T04:12:10.000Z\",\"bootNonceHash\":\"sha256:3138bb9bc78df27c473ecfd1410f7bd45ebac1f59cf3ff9cfe4db77aab7aedd3\"}",
+  "observationToken": "enc:v1:IjV4OXJhmIJKNY1FUDJ6SQ6g6QWttk4DG9m0wm5O2dTrANIVJLcDUEEGnvcQy/CVYIXbCfdpLFAyejr/P7Q9IyvC78fboJjqUZXamZ5mNYZuVAM6I6EheQO8dCm4jZr8XRBhdKftlOdVD1iZqK6FezXYH3htAmw8R2PK5Km31JwzZeQteYzb6MxisAgZtUauy5yP4M9Gh8MNV0t1byS0ZvR8x2QMhm3hOsIKYseTEew02YuHqFNw756l83g/gkk3CcMvD/SSMXRYF64yS2KQ28drIun0VO63XyJqu7DSHOuwFYdjVn0hg/0Hh3djWu6oNcxuom2cx0frv5eR5PF+xgpeyhS5YNws7KsCgAigsfLf3SJr3B6uPNwdecV/1fIn6qPFsiytXx+okTZXe5V74Wq9pQnfnfM7JlQCEYtAY72zdWW5L0DKbR6Cc5Eb8Qm4jFSgRh3UFAHDd8mvvGLeXtZLu9Gjdx4dnoJ+MhkL8ic3VZhaX0aKdfJV98P1zOr0yvZU7YGOphm7qEZCELDjLLqKRB/wWQY=",
+  "tokenSha256": "eed38621bff63f806d89b73e2925b77828ee977e204732d7d1802e773119fd82"
+}

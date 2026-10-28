@@ -2590,18 +2590,18 @@ T-1014仅迁移看板原说明，状态和验收未改：
 | T-1410 | 修复历史审核证据与看板对账 | 🔨 | PASS[REV:1f4e2a1dd6f2] | — | [SPEC](docs/features/t1410-review-evidence-reconciliation.md) | 沿原规范链保全恢复原件并真实独审，不刷新hash冒PASS；通过后再整理看板。 |
 
 <a id="t1410-t-1409-9b955b6be974"></a>
-### T-1409 · 修复官方Pi支付拒绝的安全诊断
+### T-1428 · 修复官方Pi支付拒绝的安全诊断
 
 原始七列行（说明与文档链接逐字保留）：
 
-| T-1409 | 修复官方Pi支付拒绝的安全诊断 | 🔨 | PASS[REV:04839f8bcbce] | — | [SPEC](docs/features/t1409-managed-pi-payment-diagnostics.md) | T1408拆分的确定性错误提取与持久分类修复；真实原任务恢复与安装总验收仍由T1408闭环。 |
+| T-1428 | 修复官方Pi支付拒绝的安全诊断 | 🔨 | PASS[REV:04839f8bcbce] | — | [SPEC](docs/features/t1428-managed-pi-payment-diagnostics.md) | T1427拆分的确定性错误提取与持久分类修复；真实原任务恢复与安装总验收仍由T1427闭环。 |
 
 <a id="t1410-t-1408-683359c4567e"></a>
-### T-1408 · 修复官方Pi与未通过验收并在通过后推送
+### T-1427 · 修复官方Pi与未通过验收并在通过后推送
 
 原始七列行（说明与文档链接逐字保留）：
 
-|T-1408|修复官方Pi与未通过验收并在通过后推送|🔨|PASS[REV:e780bb81f759]|待验|[SPEC](docs/features/t1408-official-pi-acceptance-and-push.md)|用户明确继续修复官方402、验收失败及真实安装复验，通过后普通推送；先核根因和精确写集，独立审核，不伪造UI或历史审核。|
+|T-1427|修复官方Pi与未通过验收并在通过后推送|🔨|PASS[REV:e780bb81f759]|待验|[SPEC](docs/features/t1427-official-pi-acceptance-and-push.md)|用户明确继续修复官方402、验收失败及真实安装复验，通过后普通推送；先核根因和精确写集，独立审核，不伪造UI或历史审核。|
 
 <a id="t1410-t-1407-cb4ca31c11ed"></a>
 ### T-1407 · 整理现有修复、安装复验并准备合并推送
@@ -2611,32 +2611,32 @@ T-1014仅迁移看板原说明，状态和验收未改：
 |T-1407|整理现有修复、安装复验并准备合并推送|⏸️|PASS[REV:4538b35201d4]|待验|[SPEC](docs/features/t1407-local-integration-install-merge-preparation.md)|用户明确恢复安装并要求处理代码、准备合并推送；保现安装修复与数据，整理本地提交、整合主干、CLI实测并给出真实准备状态，尚不执行push或公开发布。|
 
 <a id="t1410-t-1405-17aea9ed8bdd"></a>
-### T-1405 · 修复CLI真实对话的组上下文、模型错误与开销
+### T-1426 · 修复CLI真实对话的组上下文、模型错误与开销
 
 原始七列行（说明与文档链接逐字保留）：
 
-|T-1405|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:2537258f8796]|—|[SPEC](docs/features/t1405-chat-model-combination-fixes.md)|用户要求修复T1403暴露的问题；核真实额度、对话组绑定、路由错误及工具开销，保合法来源与权限，独评后实现并CLI复验。|
+|T-1426|修复CLI真实对话的组上下文、模型错误与开销|🔨|PASS[REV:2537258f8796]|—|[SPEC](docs/features/t1426-chat-model-combination-fixes.md)|用户要求修复T1424暴露的问题；核真实额度、对话组绑定、路由错误及工具开销，保合法来源与权限，独评后实现并CLI复验。|
 
 <a id="t1410-t-1403-a4d540e822a8"></a>
-### T-1403 · 沿用已确认账号并实测CLI对话组合
+### T-1424 · 沿用已确认账号并实测CLI对话组合
 
 原始七列行（说明与文档链接逐字保留）：
 
-|T-1403|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1403-cli-chat-combination-acceptance.md)|用户纠正非阻塞问题不要重复询问；固定月明水清深，修订Agent规则并真实CLI验证模型来源与引擎组合、回复和工具，不以连接探针代签。|
+|T-1424|沿用已确认账号并实测CLI对话组合|⏸️|—|待验|[SPEC](docs/features/t1424-cli-chat-combination-acceptance.md)|用户纠正非阻塞问题不要重复询问；固定月明水清深，修订Agent规则并真实CLI验证模型来源与引擎组合、回复和工具，不以连接探针代签。|
 
 <a id="t1410-t-1402-a2fc1c8e6929"></a>
-### T-1402 · 历史激活码无感升级模型权益与原授权恢复
+### T-1423 · 历史激活码无感升级模型权益与原授权恢复
 
 原始七列行（说明与文档链接逐字保留）：
 
-|T-1402|历史激活码无感升级模型权益与原授权恢复|🔨|PASS[REV:523d1050324a]|待验|[SPEC](docs/features/t1402-legacy-license-one-click-upgrade.md)|用户要求面向所有用户自助升级历史永久码；保原许可与钱包，幂等启用，不依赖人工查库；含本机已明确授权恢复及一份失效旧绑定释放，本地实现测试打包安装，发布另列。|
+|T-1423|历史激活码无感升级模型权益与原授权恢复|🔨|PASS[REV:523d1050324a]|待验|[SPEC](docs/features/t1423-legacy-license-one-click-upgrade.md)|用户要求面向所有用户自助升级历史永久码；保原许可与钱包，幂等启用，不依赖人工查库；含本机已明确授权恢复及一份失效旧绑定释放，本地实现测试打包安装，发布另列。|
 
 <a id="t1410-t-1401-0f3d947f138f"></a>
-### T-1401 · 接入试用设备一次模型权益与明确恢复
+### T-1422 · 接入试用设备一次模型权益与明确恢复
 
 原始七列行（说明与文档链接逐字保留）：
 
-|T-1401|接入试用设备一次模型权益与明确恢复|🔨|—|待验|[SPEC](docs/features/t1401-trial-device-model-benefits.md)|用户确认每台试用设备一次5元；消费Activity/Growth试用v2、正式v1保持，复用正常许可核验与明确启用；独立worktree本地验证，不push/部署/实赠。|
+|T-1422|接入试用设备一次模型权益与明确恢复|🔨|—|待验|[SPEC](docs/features/t1422-trial-device-model-benefits.md)|用户确认每台试用设备一次5元；消费Activity/Growth试用v2、正式v1保持，复用正常许可核验与明确启用；独立worktree本地验证，不push/部署/实赠。|
 
 <a id="t1410-t-1400-a933983fbe98"></a>
 ### T-1400 · 修复选题 Copilot 长候选采纳区裁切

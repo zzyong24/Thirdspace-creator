@@ -150,6 +150,8 @@ export interface PersistentTaskService {
   enqueue(
     ctx: RequestContext,
     input: EnqueuePersistentTaskInput,
+    /** 仅后端内部领域绑定；同一入队事务提交前执行，不进入公共 DTO/payload。 */
+    bindBeforeCommit?: (tx: Db, task: ExecutionTaskResourceV2) => Promise<void>,
   ): Promise<ExecutionTaskResourceV2>;
   get(
     ctx: RequestContext,
@@ -394,7 +396,7 @@ export function createPersistentTaskService(
   return {
     async hasActiveTasks(ctx){return (await db.execute(sql`SELECT id FROM execution_tasks WHERE user_id=${ctx.userId} AND status IN('running','pause_requested','cancel_requested') LIMIT 1`)).rows.length>0;},
     async readObservabilityLedger(ctx,cursor){return (await db.execute(sql`SELECT id,user_id,kind,status,attempt,created_at,updated_at FROM execution_tasks WHERE user_id=${ctx.userId} AND (updated_at>${cursor.updatedAt} OR (updated_at=${cursor.updatedAt} AND id>${cursor.taskId})) ORDER BY updated_at,id LIMIT 100`)).rows as Array<{id:string;user_id:string;kind:string;status:string;attempt:number;created_at:string;updated_at:string}>;},
-    async enqueue(ctx, input) {
+    async enqueue(ctx, input, bindBeforeCommit) {
       if(input.kind==="radar_project_upgrade")throw new ConflictError("系统已升级，请重新点击升级为项目");
       requireWorkspace(ctx);
       // 精确重放与可信父路由无需捕获当前模型；只在无路由的新根进行锁前准备。
@@ -403,6 +405,11 @@ export function createPersistentTaskService(
       const deferredParent=routeParent&&isPreparationParent(routeParent)&&asPayload(routeParent.payload).executionRoute===undefined;
       const checkModelAuthority=input.kind!=='project_preparation'&&!priorRoot.length&&(!input.modelRouteParent||deferredParent)&&input.payload.executionRoute===undefined?await deps.prepareModelAuthority?.(ctx,input):undefined;
       return db.transaction(async tx => {
+      const boundResource=async(row:TaskRow)=>{
+        const resource=toResource(row);
+        await bindBeforeCommit?.(tx as unknown as Db,resource);
+        return resource;
+      };
       const jobPayload=input.payload.job as {id?:string;sourceKind?:string}|undefined;
       const privateAdmission=input.kind==="automation_sync"&&input.ownerType==="scheduled_job"&&ctx.source==="ingestion"&&!!ctx.groupId&&!!ctx.accountId&&jobPayload?.id===input.ownerId&&PRIVATE_COLLECTION_SOURCE_KINDS.has(jobPayload?.sourceKind??"");
       const frozen=await lockWorkspaceMembership(tx,ctx,{allowArchived:privateAdmission});
@@ -451,7 +458,7 @@ export function createPersistentTaskService(
             "idempotencyKey 已被另一份任务请求使用",
           );
         }
-        return toResource(existing);
+        return boundResource(existing);
       };
       const [prior]=await tx.select().from(executionTasks).where(and(eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx),eq(executionTasks.kind,input.kind),eq(executionTasks.idempotencyKey,input.idempotencyKey))).limit(1);
       if(prior)return replay(prior);
@@ -522,7 +529,7 @@ export function createPersistentTaskService(
         .values(row)
         .onConflictDoNothing()
         .returning();
-      if (inserted) return toResource(inserted);
+      if (inserted) return boundResource(inserted);
 
       const [existing] = await tx
         .select()
@@ -560,7 +567,7 @@ export function createPersistentTaskService(
             ),
           )
           .limit(1);
-        if (activeOwnerTask) return toResource(activeOwnerTask);
+        if (activeOwnerTask) return boundResource(activeOwnerTask);
       }
       if(!existing)throw new ConflictError('idempotencyKey 已被另一份任务请求使用');
       return replay(existing);

@@ -14,7 +14,7 @@ const actions=()=>io.fetch.mock.calls.map(call=>new Headers(call[1]?.headers).ge
 const flush=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
 beforeEach(()=>{vi.resetModules();io.fetch.mockReset();io.invoke.mockReset();io.fresh.mockReset().mockResolvedValue(undefined);io.group='group-a';io.account='platform-filter';Object.defineProperty(window,'__TAURI_INTERNALS__',{value:{},configurable:true});});
 afterEach(()=>{vi.useRealTimers();delete (window as unknown as Record<string,unknown>).__TAURI_INTERNALS__;});
-describe('T1402无感协调器（本地mock，不调用真实IPC/模型/钱包）',()=>{
+describe('T1423无感协调器（本地mock，不调用真实IPC/模型/钱包）',()=>{
  it('无需设置按钮，已有钱包只probe/sync/fresh GET，广播成功且不写来源',async()=>{
   const m=await import('./automatic-license-upgrade'),synced=vi.fn();window.addEventListener('creatoros:client-config-synced',synced);
   io.fetch.mockResolvedValueOnce(reply('probe')).mockResolvedValueOnce(reply('sync'));

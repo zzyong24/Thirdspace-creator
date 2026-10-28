@@ -88,14 +88,14 @@ node orchestrator/process/reviewctl.mjs record T-1072-owned-devices --spec docs/
 
 只读dry-run `node orchestrator/process/backlog-compact.mjs --all --squeeze --dry-run` 显示约95.1KB，机械归档9行只能减少约2.9KB，不能单独解决RUNAWAY。T-1171已记录旧5列暂停表的squeeze会使pmem漏143任务、context-compile误读；不得盲用这条输出直接改当前7列控制表。保留任务ID、状态、审核、验收、SPEC链接及7列结构；先归档真实已完成行，再按既有消费者可识别的格式外移长详情。不得删除未完成行、擅自完成旧任务或提高阈值。T-1171估算仅靠标题/摘要外移的最低约40.7KB，可能消除60KB错误但仍高于30KB硬限，必须分别报告，不能把“错误清除”写成“全部健康”。
 
-### T-1405/T-1407真实UI验收缺口
+### T-1426/T-1407真实UI验收缺口
 
-`taskctl complete`对T-1407的实际拒绝见 `docs/verification/t1407/taskctl-complete-attempt.txt`：RESULT.md缺frontend-validation JSON block。T-1405/T-1407的待验列不能靠CLI RESULT销账；当前缺专门frontend journey contract、独立真实UI报告和对应可执行verify绑定。适用规则为 `orchestrator/process/rule-bundle/gates/10-frontend-validation-gate.md`，实现核验入口在 `orchestrator/process/taskctl.mjs:253`。
+`taskctl complete`对T-1407的实际拒绝见 `docs/verification/t1407/taskctl-complete-attempt.txt`：RESULT.md缺frontend-validation JSON block。T-1426/T-1407的待验列不能靠CLI RESULT销账；当前缺专门frontend journey contract、独立真实UI报告和对应可执行verify绑定。适用规则为 `orchestrator/process/rule-bundle/gates/10-frontend-validation-gate.md`，实现核验入口在 `orchestrator/process/taskctl.mjs:253`。
 
 应按两份SPEC的真实范围补齐有限旅程：聊天引擎/模型来源设置、原合法组归属与可见回复/错误/恢复，及本机已安装版本实际流程；用真实浏览器/桌面、代表性非fixture数据、两个视口记录visible copy、postconditions及logic/surface/journey层证据，绑定当前HEAD、受监测路径洁净与精确contract SHA。CLI可作为后端读回，不能冒充UI。正式执行报告的verify_key必须映射现有配置命令，再运行：
 
 ```bash
-node orchestrator/process/frontend-validation.mjs validate --execute --report <T1405真实报告> --task T-1405
+node orchestrator/process/frontend-validation.mjs validate --execute --report <T1426真实报告> --task T-1426
 node orchestrator/process/frontend-validation.mjs validate --execute --report <T1407真实报告> --task T-1407
 ```
 
@@ -103,7 +103,7 @@ node orchestrator/process/frontend-validation.mjs validate --execute --report <T
 
 ### 原UX失败与本次证据边界
 
-来源SPEC在独立旧工作树 `/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/features/t1403-cos-ux-closure.md`；原任务授权和最终报告在 `/Users/zyongzhu/terminals/cos-ux-closure/prompt.md`、`REPORT.md`。这些FAIL不能被T-1407整合提交或本轮审核收据恢复洗成PASS：
+来源SPEC在独立旧工作树 `/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator/docs/features/t1424-cos-ux-closure.md`；原任务授权和最终报告在 `/Users/zyongzhu/terminals/cos-ux-closure/prompt.md`、`REPORT.md`。这些FAIL不能被T-1407整合提交或本轮审核收据恢复洗成PASS：
 
 | 原结果 | 实际证据与本轮要求 |
 | --- | --- |
@@ -113,7 +113,7 @@ node orchestrator/process/frontend-validation.mjs validate --execute --report <T
 | 平台切换性能失败 | 12次里7次超过2秒、最慢9.661秒；慢状态可见性通过不能证明延迟通过。 |
 | 原导航3秒路径 | 原证据已通过，只保留其原有效范围。 |
 
-T-1405/T-1407原范围保留这些独立旧FAIL，并未承诺整份来源任务全绿；用户最新要求处理没通过验收，可由主线程按当前明确关联范围继续修复、复验，但不能将21项历史收据的控制修复解释成无边界重做所有旧功能。若要处理上述旧UX失败，应在精确关联SPEC/任务中保留原FR、3/2/10秒阈值、1440与1024视口和原任务恢复身份，真实重跑来源旅程；现有入口 `docs/verification/t1403/control/verify-journey.mjs` 位于旧工作树。未复验的项继续写FAIL或未验，不假通过。
+T-1426/T-1407原范围保留这些独立旧FAIL，并未承诺整份来源任务全绿；用户最新要求处理没通过验收，可由主线程按当前明确关联范围继续修复、复验，但不能将21项历史收据的控制修复解释成无边界重做所有旧功能。若要处理上述旧UX失败，应在精确关联SPEC/任务中保留原FR、3/2/10秒阈值、1440与1024视口和原任务恢复身份，真实重跑来源旅程；现有入口 `docs/verification/t1424/control/verify-journey.mjs` 位于旧工作树。未复验的项继续写FAIL或未验，不假通过。
 
 官方Pi的HTTP402只证明原官方任务返回该HTTP状态并进入等待，不能直接命名“余额不足”；最近resume结果由主线程另行取证。本节不调用模型、不新增重试、不改变原任务ID。全局22ERROR/17WARN是此锚点的真实旧结果；最终应重新运行所需Gate并报告新结果，不覆盖该旧回执。
 
@@ -945,7 +945,7 @@ T-1405/T-1407原范围保留这些独立旧FAIL，并未承诺整份来源任务
 }
 ```
 
-## 官方 Pi 诊断（独立代理 /root/t1408_pi_diagnosis）
+## 官方 Pi 诊断（独立代理 /root/t1427_pi_diagnosis）
 
 来源：2026-10-25只读源码调查，未读用户DB、连接文件或密钥。原任务合法恢复至attempt2后仍http_402，真正上游业务原因尚未知；不再次消耗最后尝试。
 
@@ -960,7 +960,7 @@ T-1405/T-1407原范围保留这些独立旧FAIL，并未承诺整份来源任务
 
 ## 2026-10-25 23:38 Growth 与供应商只读核因
 
-后续用户已明确跳过额度页登录验收，又明确要求结合 Growth 继续分析。按 DEC-140803 和 `PASS[REV:e9724b83fcdb]` 的定向只读合同，经既有运维认证核对实际部署版本及 T249 同机原权益四重一致性标签。完整证据见 [Growth 核因结果](../verification/t1408/growth-diagnosis/RESULT.md)。
+后续用户已明确跳过额度页登录验收，又明确要求结合 Growth 继续分析。按 DEC-140803 和 `PASS[REV:e9724b83fcdb]` 的定向只读合同，经既有运维认证核对实际部署版本及 T249 同机原权益四重一致性标签。完整证据见 [Growth 核因结果](../verification/t1427/growth-diagnosis/RESULT.md)。
 
 权威实时事实：原 provider Key 总预算 5.00000000 元，已用 4.99427733 元，冻结 0，剩余 **0.00572267 元**（约 0.57 分）。Growth 同一原钱包已保存快照仍为 2026-08-19 的已用0、剩余5元；目标预算与 provider 总额都为5元，credential active、同步 ready。这消除了“尚未发出原5元”和“本次冻结占用”的候选，但不能用旧缓存宣称余额充足。
 

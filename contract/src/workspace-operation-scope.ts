@@ -186,6 +186,8 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "browserSessions.clear": "platform-account",
   // knowledge
   "knowledge.list": "group",
+  'knowledge.distill.receipt':'group',
+  'knowledge.distill.adopt':'group',
   "knowledge.create": "group",
   "knowledge.folders.list": "group",
   "knowledge.folders.create": "group",

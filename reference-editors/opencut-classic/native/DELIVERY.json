@@ -1,5 +1,5 @@
 {
-  "task": "T-1403",
+  "task": "T-1424",
   "deliveryStatus": "PASS_SCOPED_NATIVE_RECONSTRUCTION_EQUIVALENT_FORMAT_HOST_UNIT_UI_PENDING",
   "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
   "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
@@ -103,7 +103,7 @@
     "仅声明同机同锁两次实际生产构建字节一致，不声明跨OS位复现。",
     "历史外部绝对路径可能失效；本轮证据单独绑定，历史收据不代签本轮。"
   ],
-  "scope": "T-1403真实合同消费者恢复、原预览迁名与必要IA；正式合同/schema/validator和原Gate未改；完整reference/public镜像；不提交、不push。",
+  "scope": "T-1424真实合同消费者恢复、原预览迁名与必要IA；正式合同/schema/validator和原Gate未改；完整reference/public镜像；不提交、不push。",
   "t1062": {
     "task": "T-1062",
     "candidateManifest": {
@@ -2479,8 +2479,8 @@
     ],
     "scope": "唯一native writer；隔离源码与本worktree原生归档/patch/双目录精确资产；未修改root业务TSX。"
   },
-  "t1403PreFormatDelivery": {
-    "task": "T-1403",
+  "t1424PreFormatDelivery": {
+    "task": "T-1424",
     "deliveryStatus": "PASS_SCOPED_NATIVE_RECONSTRUCTION_HOST_UNIT_UI_PENDING",
     "build": {
       "command": "bun apps/web/scripts/build-native.mjs",
@@ -2582,6 +2582,6 @@
       "仅声明同机同锁两次实际生产构建字节一致，不声明跨OS位复现。",
       "历史外部绝对路径可能失效；本轮证据单独绑定，历史收据不代签本轮。"
     ],
-    "scope": "T-1403真实合同消费者恢复、原预览迁名与必要IA；正式合同/schema/validator和原Gate未改；完整reference/public镜像；不提交、不push。"
+    "scope": "T-1424真实合同消费者恢复、原预览迁名与必要IA；正式合同/schema/validator和原Gate未改；完整reference/public镜像；不提交、不push。"
   }
 }

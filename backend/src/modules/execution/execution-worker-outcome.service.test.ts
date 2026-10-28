@@ -95,7 +95,7 @@ describe("持久重试调度",()=>{
     f.ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
     expect((await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128})).callId).not.toBe(call.callId);
   });
-  it('T1405 额度不足保留原任务与准确恢复提示，不自动换源或重提',async()=>{
+  it('T1426 额度不足保留原任务与准确恢复提示，不自动换源或重提',async()=>{
     const f=await fixture('credit-message');
     const call=await f.ports.reserveCall(f.ref,{operationKey:'generate',maxOutputTokens:128});
     await f.ports.startCall(f.ref,{callId:call.callId});
@@ -105,7 +105,7 @@ describe("持久重试调度",()=>{
     expect((await f.tasks.get(ctx,f.ref.executionTaskId)).errorMessage).toContain('继续原任务');
     expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'no-auto-resume'})).toBeNull();
   });
-  it('T1409 受管支付拒绝保留原任务与固定诊断，未获继续授权不自动领取',async()=>{
+  it('T1428 受管支付拒绝保留原任务与固定诊断，未获继续授权不自动领取',async()=>{
     const f=await fixture('managed-payment-message');
     const message='官方模型服务返回支付或权益核验拒绝（HTTP 402）。请在设置查看 AI 额度与消耗，核对后继续原任务。';
     const call=await f.ports.reserveCall(f.ref,{operationKey:'generate',maxOutputTokens:128});

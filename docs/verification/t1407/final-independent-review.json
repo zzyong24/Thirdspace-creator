@@ -1,6 +1,6 @@
 {
   "review": "最终产物与运行事实独立复核",
-  "reviewer": "/root/t1405_spec_review",
+  "reviewer": "/root/t1426_spec_review",
   "model": "继承宿主模型；未核实具体型号",
   "commit": "6daaf71d4d3afe8d5bfa5801cffff7c9b9b345bb",
   "findings": [],

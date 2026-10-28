@@ -30,7 +30,7 @@ function pendingDownloads() {
 }
 async function flushPreview() { await act(async()=>{for(let i=0;i<12;i++)await Promise.resolve();}); }
 
-it('T1403 真实24张缩略图最多同时发3个请求，仍挂载时全部可完成预览',async()=>{
+it('T1424 真实24张缩略图最多同时发3个请求，仍挂载时全部可完成预览',async()=>{
  const pending=pendingDownloads(),{AssetThumbnail}=await import('./asset-thumbnail');
  const view=render(React.createElement(React.Fragment,null,...Array.from({length:24},(_,i)=>React.createElement(AssetThumbnail,{key:i,asset:previewAsset(`grid-${i}`)}))));
  await flushPreview();expect(mockGetDownloadUrl).toHaveBeenCalledTimes(3);
@@ -43,14 +43,14 @@ it('T1403 真实24张缩略图最多同时发3个请求，仍挂载时全部可�
  expect(mockGetDownloadUrl).toHaveBeenCalledTimes(24);expect(view.container.querySelectorAll('img')).toHaveLength(24);
 });
 
-it('T1403 缩略图占满3个名额时真实详情预览仍有第4名额',async()=>{
+it('T1424 缩略图占满3个名额时真实详情预览仍有第4名额',async()=>{
  pendingDownloads();const {AssetThumbnail}=await import('./asset-thumbnail'),{AssetLivePreview}=await import('./asset-live-preview');
  render(React.createElement(React.Fragment,null,...Array.from({length:24},(_,i)=>React.createElement(AssetThumbnail,{key:i,asset:previewAsset(`reserved-${i}`)}))));
  await flushPreview();render(React.createElement(AssetLivePreview,{asset:previewAsset('active-detail')}));await flushPreview();
  expect(mockGetDownloadUrl.mock.calls.map(([input])=>input.params.assetId)).toEqual(['reserved-0','reserved-1','reserved-2','active-detail']);
 });
 
-it('T1403 整页卸载撤销未发送缩略图，已发请求结算后不续旧队列',async()=>{
+it('T1424 整页卸载撤销未发送缩略图，已发请求结算后不续旧队列',async()=>{
  const pending=pendingDownloads(),{AssetThumbnail}=await import('./asset-thumbnail');
  const view=render(React.createElement(React.Fragment,null,...Array.from({length:24},(_,i)=>React.createElement(AssetThumbnail,{key:i,asset:previewAsset(`leaving-${i}`)}))));
  await flushPreview();view.unmount();
@@ -59,7 +59,7 @@ it('T1403 整页卸载撤销未发送缩略图，已发请求结算后不续旧�
  expect(mockGetDownloadUrl.mock.calls.map(([input])=>input.params.assetId)).toEqual(['leaving-0','leaving-1','leaving-2']);
 });
 
-it('T1403 同素材独立订阅共享原Promise，释放一方不撤销另一方', async () => {
+it('T1424 同素材独立订阅共享原Promise，释放一方不撤销另一方', async () => {
   const pending = pendingDownloads();
   const {acquireAssetPreviewUrl, resolveAssetPreviewUrl} = await import('./asset-preview-url');
   const thumbnail = acquireAssetPreviewUrl('shared', {priority: 'thumbnail'});
@@ -75,7 +75,7 @@ it('T1403 同素材独立订阅共享原Promise，释放一方不撤销另一方
   expect(mockGetDownloadUrl).toHaveBeenCalledTimes(1);
 });
 
-it('T1403 最后一个排队订阅释放不记失败，可立即重新获取', async () => {
+it('T1424 最后一个排队订阅释放不记失败，可立即重新获取', async () => {
   const pending = pendingDownloads();
   const {acquireAssetPreviewUrl} = await import('./asset-preview-url');
   const cancelled = acquireAssetPreviewUrl('cancelled', {priority: 'thumbnail'});
@@ -91,7 +91,7 @@ it('T1403 最后一个排队订阅释放不记失败，可立即重新获取', a
   retry.release();
 });
 
-it.each(['group', 'account'] as const)('T1403 真正发送前复核%s，旧排队任务不借新scope发送', async scope => {
+it.each(['group', 'account'] as const)('T1424 真正发送前复核%s，旧排队任务不借新scope发送', async scope => {
   const pending = pendingDownloads();
   const {CURRENT_GROUP_KEY, CURRENT_ACCOUNT_KEY} = await import('@/lib/http-transport');
   const key = scope === 'group' ? CURRENT_GROUP_KEY : CURRENT_ACCOUNT_KEY;
@@ -109,7 +109,7 @@ it.each(['group', 'account'] as const)('T1403 真正发送前复核%s，旧排�
   old.release(); current.release();
 });
 
-it('T1403 已排队等待名额时切组，结算后不发送旧队列且不缓存迟到失败', async () => {
+it('T1424 已排队等待名额时切组，结算后不发送旧队列且不缓存迟到失败', async () => {
   const pending = pendingDownloads();
   const {CURRENT_GROUP_KEY} = await import('@/lib/http-transport');
   const {acquireAssetPreviewUrl} = await import('./asset-preview-url');
@@ -131,7 +131,7 @@ it('T1403 已排队等待名额时切组，结算后不发送旧队列且不缓�
   for (const lease of leases) lease.release(); retry.release();
 });
 
-it('T1403 真实缩略图卸载不撤销同素材详情消费者', async () => {
+it('T1424 真实缩略图卸载不撤销同素材详情消费者', async () => {
   const pending = pendingDownloads();
   const {AssetThumbnail} = await import('./asset-thumbnail');
   const {AssetLivePreview} = await import('./asset-live-preview');
@@ -145,7 +145,7 @@ it('T1403 真实缩略图卸载不撤销同素材详情消费者', async () => {
   expect(detail.container.querySelector('img')?.getAttribute('src')).toBe('https://signed/shared-components');
 });
 
-it('T1403 release与invalidate不提前释放真实在途名额，迟到结果不回填', async () => {
+it('T1424 release与invalidate不提前释放真实在途名额，迟到结果不回填', async () => {
   const pending = pendingDownloads();
   const {acquireAssetPreviewUrl, invalidateAssetPreviewUrl, resolveAssetPreviewUrl} = await import('./asset-preview-url');
   const running = Array.from({length: 4}, (_, i) => acquireAssetPreviewUrl(`held-${i}`, {priority: 'active'}));
@@ -164,7 +164,7 @@ it('T1403 release与invalidate不提前释放真实在途名额，迟到结果�
   for (const lease of running) lease.release(); replacement.release();
 });
 
-it('T1403 后加入的主动消费者提升同素材排队优先级，未释放同级仍FIFO', async () => {
+it('T1424 后加入的主动消费者提升同素材排队优先级，未释放同级仍FIFO', async () => {
   const pending = pendingDownloads();
   const {acquireAssetPreviewUrl} = await import('./asset-preview-url');
   const leases = Array.from({length: 5}, (_, i) => acquireAssetPreviewUrl(`priority-${i}`, {priority: 'thumbnail'}));
@@ -179,7 +179,7 @@ it('T1403 后加入的主动消费者提升同素材排队优先级，未释放�
   for (const lease of leases) lease.release(); detail.release();
 });
 
-it('T1403 失败释放名额并保留30秒失败缓存，不阻塞后续预览', async () => {
+it('T1424 失败释放名额并保留30秒失败缓存，不阻塞后续预览', async () => {
   const pending = pendingDownloads();
   const {acquireAssetPreviewUrl, resolveAssetPreviewUrl} = await import('./asset-preview-url');
   const leases = Array.from({length: 5}, (_, i) => acquireAssetPreviewUrl(`failed-${i}`, {priority: 'active'}));
@@ -193,7 +193,7 @@ it('T1403 失败释放名额并保留30秒失败缓存，不阻塞后续预览',
   for (const lease of leases) lease.release();
 });
 
-it('T1403 StrictMode重复effect不泄漏名额，原编辑器消费者能使用保留名额', async () => {
+it('T1424 StrictMode重复effect不泄漏名额，原编辑器消费者能使用保留名额', async () => {
   pendingDownloads();
   const {AssetThumbnail} = await import('./asset-thumbnail');
   const {FinalVideoPreview} = await import('@/features/production/production-media-previews');
@@ -204,7 +204,7 @@ it('T1403 StrictMode重复effect不泄漏名额，原编辑器消费者能使用
   expect(mockGetDownloadUrl.mock.calls.map(([input]) => input.params.assetId)).toEqual(['strict-0', 'strict-1', 'strict-2', 'editor-final']);
 });
 
-it.each(['thumbnail', 'detail'] as const)('T1403 真实%s媒体加载失败只重取一次，不形成请求循环', async kind => {
+it.each(['thumbnail', 'detail'] as const)('T1424 真实%s媒体加载失败只重取一次，不形成请求循环', async kind => {
   mockGetDownloadUrl.mockResolvedValue({url: 'https://signed/broken'});
   const {AssetThumbnail} = await import('./asset-thumbnail');
   const {AssetLivePreview} = await import('./asset-live-preview');

@@ -1,6 +1,6 @@
 # T-1412 原 full 的最小环境只读复核
 
-2026-10-25；独立审核者 `/root/t1408_contract_review`。本轮仅读配置、测试和执行器源码、Git 跟踪清单及明确允许的两份测试观测基线；未读任何真实 `.env`、用户配置或凭据，未运行测试、模型、网络、PG、浏览器、依赖安装或 full。这里只给执行准备建议，不签安全运行或 full PASS。T-1412 SPEC SHA-256 为 `c7640f725a1d9db2780bb3cae662e2a91d9dc3cae207dca307f30ff7406bd1bf`；当前 reconcile 配置 SHA 为 `293009903af92bd378fc82defeb42d0e222c145c0ecc65e5918a794932e0a1cf`，尚不是 T-1413 合并后的最终配置。
+2026-10-25；独立审核者 `/root/t1427_contract_review`。本轮仅读配置、测试和执行器源码、Git 跟踪清单及明确允许的两份测试观测基线；未读任何真实 `.env`、用户配置或凭据，未运行测试、模型、网络、PG、浏览器、依赖安装或 full。这里只给执行准备建议，不签安全运行或 full PASS。T-1412 SPEC SHA-256 为 `c7640f725a1d9db2780bb3cae662e2a91d9dc3cae207dca307f30ff7406bd1bf`；当前 reconcile 配置 SHA 为 `293009903af92bd378fc82defeb42d0e222c145c0ecc65e5918a794932e0a1cf`，尚不是 T-1413 合并后的最终配置。
 
 **结论：原 full 无需全程设置 `DATABASE_URL`。** 采用明确 commit 的干净 managed worktree、子进程私有 HOME/缓存和精确环境投影可行；LED-052 只接收本轮 owned PG 的四个专用变量即可。不能把 T1246 启动器返回的 `state.env` 整包传入 full。frontend 的原内存 PGlite 用例应继续在 `DATABASE_URL`、`PGLITE_DATA_DIR` 均未设置的 Vitest 环境运行。当前还需准备两份未跟踪的 LED-061 基线、离线依赖及浏览器运行资产，并完成已要求的实现独审/单门；这些尚未被本报告验证。
 

@@ -25,8 +25,8 @@ const ready=(revision=1)=>publish({status:'ready',phase:'routing',reasonCode:'UP
 const open=()=>fireEvent.click(screen.getByRole('button',{name:'查看 AI 额度与消耗'}));
 beforeEach(()=>{f.fetch.mockReset();f.open.mockReset();f.fresh.mockReset();f.refresh.mockReset();f.group='group-a';f.account='acct-a';f.state=null;f.listeners.clear();});
 afterEach(()=>cleanup());
-describe('T1402无感升级状态与额度卡（协调链守卫迁入automatic-license-upgrade.test.ts）',()=>{
- it('T1402无感入口：额度卡不再要求点击升级或继续核对',()=>{
+describe('T1423无感升级状态与额度卡（协调链守卫迁入automatic-license-upgrade.test.ts）',()=>{
+ it('T1423无感入口：额度卡不再要求点击升级或继续核对',()=>{
   render(<AiCreditCenterCard/>);
   expect(screen.queryByRole('button',{name:/升级原激活码|继续核对|取消等待/})).toBeNull();
   expect(screen.getByText(/模型权益会随原授权自动核对/)).toBeInTheDocument();

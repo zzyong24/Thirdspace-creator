@@ -2947,7 +2947,7 @@
 @@ -17,0 +18,28 @@
 +test('原采纳摘要异步核对期间取消请求，零Command且完整轨道保留',async()=>{const e=setup(),before=structuredClone(e.scenes.getScenes()[0].tracks),after=structuredClone(before);after.main.elements=[];const input={outputId:'output-one',sceneId:'scene-a',expectedBeforeDigest:await nativeDigest(before),beforeTracks:before,afterTracks:after};const signal=new AbortController();const pending=new NativePatchReplay().apply(e,'cancel-digest',input,()=>{if(signal.signal.aborted)throw new DOMException('请求已取消','AbortError');});signal.abort();await expect(pending).rejects.toMatchObject({name:'AbortError'});expect(e.command.canUndo()).toBe(false);expect(e.scenes.getScenes()[0].tracks).toEqual(before);});
 +
-+// T-1403: 通过真实采纳入口验证现行合同，旧扩展不整体迁移。
++// T-1424: 通过真实采纳入口验证现行合同，旧扩展不整体迁移。
 +test('采纳合同拒绝非法变更且保原稿/撤销栈，不让Zod错误泄漏错误类别',async()=>{
 + const e=setup();e.media={getAssets:()=>[]};
 + const before=structuredClone(e.scenes.getScenes()[0].tracks),after=structuredClone(before);

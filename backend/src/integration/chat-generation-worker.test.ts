@@ -10,6 +10,7 @@ import * as supervisorModule from "../modules/execution/worker-supervisor";
 import * as generationModule from "../modules/execution/execution-chat-generation.service";
 import {createServer} from "node:http";
 import {execFileSync} from "node:child_process";
+import {writeFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {createDb,aiTasks,aiTaskResults,executionTasks,executionCalls,aiMessages,eq,type Db} from "@creatoros/backend";
@@ -19,6 +20,11 @@ import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submissio
 import {createChatWorkerDispatcher,createModelWorkerDispatcher} from "../modules/execution/model-worker-dispatcher";
 import {createExecutionStreamService} from "../modules/execution/execution-stream.service";
 import {createPersistentTaskService} from "../modules/execution/persistent-task.service";
+import type {RequestContext} from "@creatoros/contract";
+import {createProjectsService} from "../modules/projects/projects.service";
+import {createProjectRepository} from "../modules/projects/projects.repository";
+import {createArtifactsService} from "../modules/artifacts/artifacts.service";
+import {createConfirmedProjectScriptReader} from "../application/context/confirmed-project-script";
 const originalSupervisor=supervisorModule.createWorkerSupervisor;
 const originalFactory=generationModule.createExecutionChatGenerationService;
 const realHooks=hooksModule.createExecutionChatHooksService;
@@ -26,23 +32,49 @@ let db:Db,close:()=>Promise<void>,seq=0;
 const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe",timeout:180000});},180000);
 afterAll(async()=>close(),180000);
-it.each(["success","cancel","reject401","reject401resume","reject429","reject429drop","reject400drop","crashAfterChild","crashUnknownChild","crashCancel","crashDeadline","crashPauseResume","settlementDrop","badOutput","crashFallback","crashTwoNodes","positioning","crashMixed","diagnosis","crashDiagnosis","diagnosisEmpty"])("同一真实 Worker 内部结构化生成：%s",async(mode)=>{
+it.each(["success","cancel","reject401","reject401resume","reject429","reject429drop","reject400drop","crashAfterChild","crashUnknownChild","crashCancel","crashDeadline","crashPauseResume","settlementDrop","badOutput","crashFallback","crashTwoNodes","positioning","crashMixed","diagnosis","crashDiagnosis","diagnosisEmpty","diagnosisCurrentScript"])("同一真实 Worker 内部结构化生成：%s",async(mode)=>{
  let server:ReturnType<typeof createServer>|undefined,host:ReturnType<typeof createChatWorkerDispatcher>|undefined,draining:Promise<number>|undefined;
  let supervisorSpy:{mockRestore():void}|undefined,failureSpy:{mockRestore():void}|undefined,hooksSpy:{mockRestore():void}|undefined;
  let releaseSettlements=()=>{},diagnosticTaskId:string|null=null;const fixtureTrace:Array<Record<string,unknown>>=[];
  const requests:Record<string,unknown>[]=[];
  try{
  let clockOffset=0;
- const diagnosis=mode==="diagnosis" || mode==="crashDiagnosis" || mode==="diagnosisEmpty";
- const name=diagnosis?"calibration.diagnose":mode==="positioning"?"positioning.generate":"topic.enrich",facet=mode==="positioning"?"current":"title";
- const ctx={userId:"hooks-worker-u",accountId:`hooks-worker-a-${++seq}`,requestId:"test",source:"user" as const},now=()=>new Date(Date.now()+clockOffset).toISOString();
- const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++seq}`});
- const conversation=await repo.createConversation({title:"开场",projectId:null,scope:"global"});
+ const currentScriptMode=mode==="diagnosisCurrentScript";
+ const diagnosis=mode==="diagnosis" || mode==="crashDiagnosis" || mode==="diagnosisEmpty" || currentScriptMode;
+ const name=diagnosis?"calibration.diagnose":mode==="positioning"?"positioning.generate":"topic.enrich",facet=currentScriptMode?"script":mode==="positioning"?"current":"title";
+ const ctx:RequestContext&{accountId:string}={userId:"hooks-worker-u",accountId:`hooks-worker-a-${++seq}`,requestId:"test",source:"user"},now=()=>new Date(Date.now()+clockOffset).toISOString();
+ const nextId=(prefix:string)=>`${prefix}-${++seq}`;
+ let currentProjectId:string|null=null,currentVersionId:string|null=null,currentScriptText="";
+ const oldScriptText="【旧v2独有正文】只说先看厘米格，旧稿没有复量与安全边界。";
+ let readCurrentScript:ReturnType<typeof createConfirmedProjectScriptReader>|undefined;
+ let assertCurrentProject:((c:RequestContext,id:string)=>Promise<unknown>)|undefined;
+ if(currentScriptMode){
+  const account=await createPlatformAccountService({db,now,nextId:prefix=>prefix==="acct"?ctx.accountId:nextId(prefix)}).createAccount(ctx,{platform:"douyin",accountHandle:ctx.accountId,idempotencyKey:`current-script-account-${ctx.accountId}`});
+  const groups=createAccountGroupService({db,now,nextId}),membership=await groups.forAccount(ctx,account.id),group=await groups.get(ctx,membership.groupId);
+  Object.assign(ctx,{groupId:group.id,groupVersion:group.version,membershipVersion:membership.version});
+  const projectsService=createProjectsService(createProjectRepository(db),{now,nextId});
+  assertCurrentProject=(c,id)=>projectsService.getProject(c,id);
+  const project=await projectsService.createProject(ctx,{title:"真实主题"});currentProjectId=project.id;
+  const artifactsService=createArtifactsService({db,now,nextId,assertProjectOwned:(c,id)=>projectsService.getProject(c,id)});
+  const artifact=await artifactsService.createArtifact(ctx,{projectId:project.id,title:"当前确认口播稿",artifactType:"output_script",stage:"script",initialContentText:""});
+  const v2=await artifactsService.createVersion(ctx,artifact.id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:oldScriptText});
+  const v3=await artifactsService.createVersion(ctx,artifact.id,{expectedCurrentVersionId:v2.id,contentText:"【新v3独有正文】钩子这几毫米到底算不算？先看厘米，再数毫米。\n读完记下数字，再量一次核对；不切割，不使用电动工具。"});
+  expect(v2.versionNumber).toBe(2);expect(v3.versionNumber).toBe(3);currentVersionId=v3.id;
+  readCurrentScript=createConfirmedProjectScriptReader({projectsService,artifactsService});
+  const truth=await readCurrentScript(ctx,project.id);expect(truth?.versionId).toBe(v3.id);currentScriptText=truth!.fullText;
+ }
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,...(currentScriptMode?{groupId:ctx.groupId}:{}),now,nextId});
+ const conversation=await repo.createConversation({title:"开场",projectId:currentProjectId,scope:currentScriptMode?"project":"global"});
  const source=await repo.createMessage(conversation.id,{role:"user",content:"生成开场",attachments:[],modelMetadata:{}});
  const definitions=(await prepareChatToolDefinitions(buildChatTools(mode==="crashMixed"?[name,"script.hooks"]:[name],{} as ChatToolDeps),{workerStructuredNodes:true,workerScriptHooks:true})).definitions;
  const effective:ChatHostContext["skillSnapshot"]["skills"][number]["effective"]={methodSystem:"策略",template:`{{${facet}}}`,tools:[name],requiredFacets:[facet],contextRequirements:[],outputSchema:diagnosis?{type:"object",properties:{dimensions:{type:"array",items:{type:"object",properties:{key:{type:"string"},score:{type:"number"}},required:["key","score"],additionalProperties:false}},verdict:{type:"string"}},required:["dimensions","verdict"],additionalProperties:false}:{type:"object",properties:{oneLiner:{type:"string"}},required:["oneLiner"],additionalProperties:false},completionPolicy:null,completionPolicyAdapter:null};
+ if(currentScriptMode)effective.template="{{title}}\n{{script}}";
  const hostContext:ChatHostContext={schemaVersion:1,scriptHooksGeneration:{version:1,maxOutputTokens:2048},scriptHooksContext:{selectionTitle:"开场专用主题",positioningBrief:"原定位",projectBriefHard:"",userMaterialHardBrief:"",userMaterialRefBrief:"",knowledgeBrief:""},chatContext:{surface:"topics",selection:{kind:"candidate",ids:["candidate"],label:"真实主题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],structuredContext:{positioningBrief:"原定位",accountsBrief:"",learningsBrief:"",signalsBrief:"",knowledgeBrief:""},structuredGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:["chatbox.topic",name].sort().map(skillId=>({skillId,baseVersion:"1",overlayRevision:null,overlayVersion:null,effective}))}};
- const submission=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"生成开场候选",messages:[{role:"user",content:"生成开场"}],maxSteps:6,maxOutputTokens:128,tools:definitions,hostContext})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ if(currentScriptMode){
+  hostContext.chatContext={surface:"project",projectId:currentProjectId!,selection:{kind:"project",ids:[currentProjectId!],label:"真实主题"}};
+  Object.assign(hostContext.skillSnapshot,{groupId:ctx.groupId,groupVersion:ctx.groupVersion,membershipVersion:ctx.membershipVersion});
+ }
+ const submission=await createChatTurnSubmissionService(db,{now,...(currentScriptMode?{assertProject:assertCurrentProject}:{}),assemble:async()=>({capability:"copilot.assist",system:"生成开场候选",messages:[{role:"user",content:"生成开场"}],maxSteps:6,maxOutputTokens:128,tools:definitions,hostContext})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  diagnosticTaskId=submission.executionTaskId;
  const [originalFrozenTask]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
  let mixedConfirmedModelFacts:Array<{id:string;operationKey:string;parentCallId:string|null;status:string;totalTokens:number|null}>=[];
@@ -57,12 +89,15 @@ it.each(["success","cancel","reject401","reject401resume","reject429","reject429
    if((mode.startsWith("reject")) && requests.length===2){res.writeHead(mode.startsWith("reject401")?401:mode.startsWith("reject400")?400:429,{"content-type":"application/json","retry-after":"1"});res.end(JSON.stringify({error:{message:"fixture rejected",type:"api_error"}}));return;}
 if(!input.stream)res.writeHead(200,{"content-type":"application/json"});if(mode==="cancel"){res.write('{"id":');return;}const childResponse={id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:hook?'[ {"text":"真实开场卡","angle":"场景"} ]':mode==="badOutput" || (!recovered && ["crashFallback","crashTwoNodes","crashMixed"].includes(mode))?'无效对象':mode==="diagnosisEmpty"?'{"dimensions":[],"verdict":""}':diagnosis?'{"dimensions":[{"key":"hook","score":4}],"verdict":"真实选题卡"}':'{"oneLiner":"真实选题卡"}'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}};if(input.stream){res.writeHead(200,{"content-type":"text/event-stream"});res.end([{...childResponse,object:"chat.completion.chunk",choices:childResponse.choices.map(choice=>({index:choice.index,delta:choice.message,finish_reason:null}))},{...childResponse,object:"chat.completion.chunk",choices:childResponse.choices.map(choice=>({index:choice.index,delta:{},finish_reason:choice.finish_reason}))}].map(chunk=>`data: ${JSON.stringify(chunk)}\n\n`).join("")+"data: [DONE]\n\n");}else res.end(JSON.stringify(childResponse));return;}
   const first=requests.length===1;
-  const delta=first?{tool_calls:(["crashTwoNodes","crashMixed"].includes(mode)?[0,1]:[0]).map(index=>({index,id:`node-${index}`,type:"function",function:{name:mode==="crashMixed" && index===1?"script_hooks":name.replaceAll(".","_"),arguments:JSON.stringify(mode==="crashMixed" && index===1?{}:mode==="positioning"?{extraBrief:"真实主题"}:{title:"真实主题"})}}))}:{content:"候选已准备好"};
+  const delta=first?{tool_calls:(["crashTwoNodes","crashMixed"].includes(mode)?[0,1]:[0]).map(index=>({index,id:`node-${index}`,type:"function",function:{name:mode==="crashMixed" && index===1?"script_hooks":name.replaceAll(".","_"),arguments:JSON.stringify(mode==="crashMixed" && index===1?{}:mode==="positioning"?{extraBrief:"真实主题"}:{title:"真实主题",...(currentScriptMode?{script:oldScriptText}:{})})}}))}:{content:"候选已准备好"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
  });
  await new Promise<void>(resolve=>server!.listen(0,"127.0.0.1",resolve));
- const reader=createChatHostContextReader(db,{now}),structuredHost=createChatStructuredTaskToolHost(reader,{readWorks:async()=>"",getPositioningDiscovery:async()=>null}),hooksHost=createChatHooksTaskToolHost(reader);
+ const reader=createChatHostContextReader(db,{now}),structuredHost=createChatStructuredTaskToolHost(reader,{readWorks:async()=>"",getPositioningDiscovery:async()=>null,...(currentScriptMode?{readCurrentScript:async(c:RequestContext,projectId:string,signal?:AbortSignal)=>{
+  signal?.throwIfAborted();const script=await readCurrentScript!(c,projectId);signal?.throwIfAborted();
+  return script?{projectId:script.projectId,artifactId:script.artifactId,currentVersionId:script.versionId,contentHash:script.sha256,fullText:script.fullText}:null;
+ }}:{})}),hooksHost=createChatHooksTaskToolHost(reader);
  const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:mode.startsWith("crash")?300000:180000},modelConcurrency:1,resolveTools:async(...args)=>({...await structuredHost(...args),...await hooksHost(...args)}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server!.address() as {port:number}).port}/v1`,model:"fixture",...(["crashFallback","crashTwoNodes","crashMixed"].includes(mode)?{structuredOutputs:true}:{}),token:mode==="reject401resume"?`fixture-${requests.length}`:"fixture"})});
  let droppedFailure=false;
  let stopExecution:ReturnType<typeof originalSupervisor>["stopExecutionTree"]|undefined;
@@ -186,6 +221,20 @@ if(!input.stream)res.writeHead(200,{"content-type":"application/json"});if(mode=
   }
   expect(calls.reduce((sum,call)=>sum+(call.totalTokens??0),0)).toBe(mode==="crashMixed"?38:mode==="crashTwoNodes"?38:mode==="crashFallback"?24:17);
   const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));
+  if(currentScriptMode){
+   const childRequests=requests.filter(request=>!Array.isArray(request.tools)||(request.tools as Array<{function?:{name?:string}}>).every(tool=>tool.function?.name!=="calibration_diagnose"));
+   expect(childRequests).toHaveLength(1);
+   const childText=(childRequests[0]!.messages as Array<{content:unknown}>).flatMap(message=>typeof message.content==="string"?[message.content]:Array.isArray(message.content)?message.content.map((part:{type?:string;text?:unknown})=>typeof part.text==="string"?part.text:JSON.stringify(part)):[JSON.stringify(message.content)]).join("\n");
+   expect(childText).toContain(currentScriptText);expect(childText).not.toContain(oldScriptText);
+   expect(JSON.stringify(calls.find(call=>call.kind==="model"&&!call.parentCallId)?.providerResult)).toContain(oldScriptText);
+   expect(calls.filter(call=>call.kind==="model").every(call=>call.status==="settled")).toBe(true);
+   expect(messages.filter(message=>message.role==="user").map(message=>message.id)).toEqual([source.id]);
+   const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,submission.taskId));expect(business).toMatchObject({status:"succeeded",projectId:currentProjectId,groupId:ctx.groupId});
+   const after=await readCurrentScript!(ctx,currentProjectId!);expect(after?.versionId).toBe(currentVersionId);expect(after?.fullText).toBe(currentScriptText);
+   const witness={mode,loopbackOnly:true,commercialProviderUsed:false,groupId:ctx.groupId,projectId:currentProjectId,currentVersionId,currentScriptText,rootToolScript:oldScriptText,rootExecutionStatus:task!.status,businessStatus:business!.status,requests:requests.length,childRequests:childRequests.length,childHttpMessages:childRequests[0]!.messages,userMessageIds:messages.filter(message=>message.role==="user").map(message=>message.id),sourceMessageId:source.id,callStatuses:calls.map(call=>({id:call.id,kind:call.kind,parentCallId:call.parentCallId,status:call.status}))};
+   console.info("T1403_CALIBRATION_CURRENT_SCRIPT_HTTP",JSON.stringify(witness));
+   if(process.env.CREATOROS_CALIBRATION_HTTP_WITNESS_PATH)writeFileSync(process.env.CREATOROS_CALIBRATION_HTTP_WITNESS_PATH,JSON.stringify(witness,null,2),"utf8");
+  }
   expect(JSON.stringify(messages.find(message=>message.role==="assistant")?.parts)).toContain("真实选题卡");
   const page=await createExecutionStreamService(db).read(ctx,submission.executionTaskId,{});
   expect(page.events.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("候选已准备好");

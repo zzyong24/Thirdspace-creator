@@ -75,17 +75,17 @@ describe("POST /api/v1/local/client-config（API-575-002）", () => {
     });
   });
 
-  it.each(['probe','fulfill','sync'])('T1402 %s仅走准确新端口，保actor凭据serviceport与原signal',async(action)=>{
+  it.each(['probe','fulfill','sync'])('T1423 %s仅走准确新端口，保actor凭据serviceport与原signal',async(action)=>{
     const projection={contractVersion:'creatoros-legacy-model-upgrade-v1',action,phase:action==='probe'?'credentials':action==='fulfill'?'fulfillment':'configuration',outcome:'ready',reasonCode:'UPGRADE_READY',bindingStatus:'verified',entitlementStatus:'ready',configurationStatus:action==='sync'?'ready':'not_started',retryable:false};upgradeModelBenefits.mockImplementation(async(_action,deps)=>{deps.observation.onToken('enc:v1:publicSynthetic');return projection;});
     const request=new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':'legacy_upgrade','x-creatoros-upgrade-action':action}}),response=await POST(request);
     expect(await response.json()).toEqual(projection);expect(upgradeModelBenefits).toHaveBeenCalledWith(action,expect.objectContaining({signal:request.signal,putManagedCredential:expect.any(Function)}));expect(fulfillActivationIncludedCredit).not.toHaveBeenCalled();expect(refreshClientConfig).not.toHaveBeenCalled();
     expect(response.headers.get('x-creatoros-upgrade-observation')).toBe('enc:v1:publicSynthetic');expect(upgradeModelBenefits.mock.calls[0]![1].observation.actor).toEqual({userId:'u-1',accountId:'acct-1',groupId:null});expect(resolveRequestContext).toHaveBeenCalledWith('session','acct-1',expect.objectContaining({groupId:'group-1'}));
     await upgradeModelBenefits.mock.calls[0]![1].putManagedCredential('scope','omnihi-main','synthetic-key');expect(putManagedCredential).toHaveBeenCalledWith(expect.objectContaining({accountId:'acct-1'}),'scope','omnihi-main','synthetic-key');
   });
-  it('T1402未知action拒绝，不忽略后调用旧路径',async()=>{
+  it('T1423未知action拒绝，不忽略后调用旧路径',async()=>{
     const response=await POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':'legacy_upgrade','x-creatoros-upgrade-action':'force_activate'}}));expect(response.status).toBe(422);expect(upgradeModelBenefits).not.toHaveBeenCalled();expect(refreshClientConfig).not.toHaveBeenCalled();
   });
-  it('T1402矛盾ready投影不泄漏或宣成功',async()=>{
+  it('T1423矛盾ready投影不泄漏或宣成功',async()=>{
     upgradeModelBenefits.mockResolvedValue({contractVersion:'creatoros-legacy-model-upgrade-v1',action:'probe',outcome:'ready',token:'synthetic-secret'});
     const response=await POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':'legacy_upgrade','x-creatoros-upgrade-action':'probe'}}));expect(response.status).toBe(503);expect(await response.text()).not.toContain('synthetic-secret');
   });
@@ -270,7 +270,7 @@ it.each(['startup','scheduled','bootstrap','manual_revalidate'])('T238 普通%s�
 });
 
 
-describe('T1402 automatic mode route闭合',()=>{
+describe('T1423 automatic mode route闭合',()=>{
  beforeEach(()=>{upgradeModelBenefits.mockReset();refreshClientConfig.mockReset();fulfillActivationIncludedCredit.mockReset();readSessionCookie.mockReturnValue('session');readRequestAccountId.mockReturnValue('acct-1');resolveRequestContext.mockResolvedValue({userId:'u-1',accountId:'acct-1',requestId:'req-1'});});
  it.each(['','manual','automatic, automatic'])('未知mode %s拒绝422且不调用任一产品端口',async(mode)=>{
   const response=await POST(new Request('http://127.0.0.1/api/v1/local/client-config',{method:'POST',headers:{'x-creatoros-config-trigger':'legacy_upgrade','x-creatoros-upgrade-action':'probe','x-creatoros-upgrade-mode':mode}}));

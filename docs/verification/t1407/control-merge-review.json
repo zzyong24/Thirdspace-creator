@@ -8,10 +8,10 @@
     "review_events_equals_canonical_bytes": true,
     "foreign_unique_events_archived_exactly": 6,
     "foreign_unique_review_events_archived_exactly": 3,
-    "foreign_t1402_review_archived_exactly": true,
-    "t1402_module_and_progress_match_installed_f714": true,
+    "foreign_t1423_review_archived_exactly": true,
+    "t1423_module_and_progress_match_installed_f714": true,
     "other_modules_and_verticals_match_canonical": true,
-    "t1401_t1403_rows_match_canonical": true,
+    "t1422_t1424_rows_match_canonical": true,
     "DEC_both_sources_preserved": true
   },
   "findings": [],

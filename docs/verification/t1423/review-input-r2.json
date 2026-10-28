@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-1423 R2同原对象观察token增补独立规格PASS。Client 658037d750a8ae3ef671c6906452c35ef354db0cb302f977dd20e2617ae9e401；SPEC 9a7656816d3a147eb4e8cc9163a849c0404d3f98f644cf42e4ce52d5b0a55339；Activity b586757b7cae06f2f606c99465d94eab98a6b6f3c4dcc866a115485eab50806d不变。实际跨请求/无参native换码反例必要收紧，复用现enc:v1+purpose派生、单opaque header/IPC token、sameboot/TTL/稳定tuple/有界Map与used-ID；无DB/journal/经济身份新增，无未闭合finding。R1已记录PASS[REV:874bad8f27b3]，本轮仅recheck；未签token实现/真实互通/桌面/生产。详见wire-independent-review.md R2。",
+  "findings": []
+}

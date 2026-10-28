@@ -303,6 +303,8 @@ export const intelligenceOperations = {
         monitorEnabled: z.boolean().optional(),
         syncPolicy: z.record(z.string(), z.unknown()).optional(),
         instruction: z.string().nullable().optional(),
+        /** 仅用于给未关联采集账号的博主主页补关联。 */
+        collectorAccountId: id.optional(),
         expectedVersion: z.number().int().positive(),
       })
       .strict(),

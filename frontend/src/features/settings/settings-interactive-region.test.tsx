@@ -125,9 +125,9 @@ import { SettingsDialog } from "./settings-interactive-region";
 import { TestConnectionButton } from "./model-connection-test";
 import type { SettingsViewModel } from "./settings-page";
 
-describe("T1403 连接测试能力边界", () => {
+describe("T1424 连接测试能力边界", () => {
   it("图片编辑显示未测试说明，没有不执行探测的假按钮", () => {
-    rtlRender(<TestConnectionButton capability="image.edit" slotPrefix="t1403-image-edit" />);
+    rtlRender(<TestConnectionButton capability="image.edit" slotPrefix="t1424-image-edit" />);
     expect(screen.getByText(/暂无内置连接测试/)).toHaveTextContent("不代表密钥失效");
     expect(screen.getByText(/暂无内置连接测试/)).toHaveTextContent("未执行图片编辑");
     expect(screen.queryByRole("button", { name: "测试连接" })).toBeNull();
@@ -136,10 +136,10 @@ describe("T1403 连接测试能力边界", () => {
 
   it("视频探针警告结果不显示连通成功或密钥失败", async () => {
     mockClient.testModelConnection.mockResolvedValueOnce({ ok: true, status: "warn", detail: "尚未确认视频鉴权与端点，未实际生成视频。" });
-    const tree = rtlRender(<TestConnectionButton capability="video.generate" slotPrefix="t1403-video" />);
+    const tree = rtlRender(<TestConnectionButton capability="video.generate" slotPrefix="t1424-video" />);
     fireEvent.click(screen.getByRole("button", { name: "测试连接" }));
-    await waitFor(() => expect(tree.container.querySelector('[data-slot="t1403-video-test-result"]')).toHaveAttribute("data-status", "warn"), { timeout: 120000 });
-    const result = tree.container.querySelector('[data-slot="t1403-video-test-result"]')!;
+    await waitFor(() => expect(tree.container.querySelector('[data-slot="t1424-video-test-result"]')).toHaveAttribute("data-status", "warn"), { timeout: 120000 });
+    const result = tree.container.querySelector('[data-slot="t1424-video-test-result"]')!;
     expect(result).toHaveTextContent("⚠ 尚未确认");
     expect(result).not.toHaveTextContent("✓ 连通");
     expect(result).not.toHaveTextContent("✗ 失败");
@@ -2372,8 +2372,8 @@ it('T1294 redfox旧deep link切到模型并只有一份真实密钥入口，额�
  }finally{Element.prototype.scrollIntoView=original;}
 });
 
-// T1402：升级执行与迟到原生/截止守卫迁到 automatic-license-upgrade.test.ts；设置不再拥有该操作。
-it('T1402 未开通用户无需点升级，保AICR与个人来源选择',async()=>{
+// T1423：升级执行与迟到原生/截止守卫迁到 automatic-license-upgrade.test.ts；设置不再拥有该操作。
+it('T1423 未开通用户无需点升级，保AICR与个人来源选择',async()=>{
  const {AiCreditCenterCard}=await import('./channel-model-configuration');
  const fetchMock=vi.spyOn(globalThis,'fetch');
  rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);
@@ -2383,17 +2383,17 @@ it('T1402 未开通用户无需点升级，保AICR与个人来源选择',async()
  expect(screen.getByText('使用充值码开通官方额度')).toBeInTheDocument();
 },180_000);
 
-it('T1402 设置卸载不会发起或取消正常启动流程，也不刷新整页',async()=>{
+it('T1423 设置卸载不会发起或取消正常启动流程，也不刷新整页',async()=>{
  const {AiCreditCenterCard}=await import('./channel-model-configuration');
  const fetchMock=vi.spyOn(globalThis,'fetch');
  const view=rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);view.unmount();
  expect(fetchMock).not.toHaveBeenCalled();expect(mockRouter.refresh).not.toHaveBeenCalled();
 },180_000);
-it('T1402 换组不会由额度卡另起升级或改写来源',async()=>{
+it('T1423 换组不会由额度卡另起升级或改写来源',async()=>{
  const {AiCreditCenterCard}=await import('./channel-model-configuration');
  const fetchMock=vi.spyOn(globalThis,'fetch');
  rtlRender(<AiCreditCenterCard accountStatus="not_configured"/>);
- await act(async()=>{window.localStorage.setItem(CURRENT_GROUP_KEY,'new-t1402-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));});
+ await act(async()=>{window.localStorage.setItem(CURRENT_GROUP_KEY,'new-t1423-group');window.dispatchEvent(new Event('creatoros:accounts-changed'));});
  expect(fetchMock).not.toHaveBeenCalled();expect(mockRouter.refresh).not.toHaveBeenCalled();expect(mockClient.putModelRouting).not.toHaveBeenCalled();
  expect(screen.queryByRole('button',{name:/升级原激活码|继续核对/})).toBeNull();
 },180_000);

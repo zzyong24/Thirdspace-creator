@@ -23,7 +23,7 @@ import {createUnavailablePublisher} from '../../modules/publishing/platform-publ
 
 type PublicCreate=(typeof ENDPOINTS.createProject.body)['_output'];
 /** 单一事务组合；这里仅绑定领域服务，无模型调用、无 worker 或第二条任务队列。 */
-export function createProjectIntakeApplication(db:Db,deps:ServiceDeps,options:{preparation?:ProjectPreparationReservationPort}={}){
+export function createProjectIntakeApplication(db:Db,deps:ServiceDeps,options:{preparation?:ProjectPreparationReservationPort;indexProject?:(ctx:RequestContext,project:import('../../modules/projects/projects.repository').ProjectRow)=>Promise<unknown>}={}){
  const intakeFor=(store:Db)=>createProjectIntakeService(store,deps,{lockWorkspace:(ctx,tx)=>lockWorkspaceMembership(tx,ctx),preparation:options.preparation});
  const intake=intakeFor(db);
  const projectsFor=(tx:Db)=>createProjectsService(createProjectRepository(tx),deps);
@@ -154,5 +154,22 @@ export function createProjectIntakeApplication(db:Db,deps:ServiceDeps,options:{p
    }});
   },
  };
- return application;
+ // 提交后统一投影：手写、选题、雷达及导入均经此边界；失败不回滚业务真值。
+ // 不在 intake 内层事务调用全局索引，避免 PGlite 自等待；重放也能修复此前索引失败。
+ async function indexed<T extends {project:import('../../modules/projects/projects.repository').ProjectRow}|{projectId:string}>(ctx:RequestContext,work:Promise<T>):Promise<T>{
+  const result=await work;
+  if(options.indexProject){
+   const projectId='project'in result?result.project.id:result.projectId;
+   try{await options.indexProject(ctx,'project'in result?result.project:await projectsFor(db).getProject(ctx,projectId));}
+   catch(error){console.warn('[project-intake-index] source saved; projection failed',{projectId,error:error instanceof Error?error.message:String(error)});}
+  }
+  return result;
+ }
+ return {
+  ...application,
+  ensureAssistantCreate:(...args:Parameters<typeof application.ensureAssistantCreate>)=>indexed(args[0],application.ensureAssistantCreate(...args)),
+  ensureImportedProject:(...args:Parameters<typeof application.ensureImportedProject>)=>indexed(args[0],application.ensureImportedProject(...args)),
+  ensureProject:(...args:Parameters<typeof application.ensureProject>)=>indexed(args[0],application.ensureProject(...args)),
+  ensurePublicCreate:(...args:Parameters<typeof application.ensurePublicCreate>)=>indexed(args[0],application.ensurePublicCreate(...args)),
+ };
 }

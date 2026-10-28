@@ -1,0 +1,39 @@
+# SPEC Review — current
+
+- Task: T-1427
+- Verdict: PASS
+- Round: 2/3 (recheck)
+- Spec receipt: bab850a5474a
+- Review receipt: e9724b83fcdb
+
+## 当前有效问题
+
+当前无未销账问题。
+
+已销账：—
+
+```spec-review-state
+{
+  "schema": "spec-review-state/v2",
+  "task_id": "T-1427",
+  "cycle": 2,
+  "round": 2,
+  "max_rounds": 3,
+  "review_kind": "recheck",
+  "verdict": "PASS",
+  "summary": "独立代理 /root/t1427_contract_review 对 T-1427 新增 Growth 定向只读诊断合同作普通 recheck。已读任务包 §1–5、§7–9，写前核 §6，实际读取 reviewctl context、当前完整 SPEC、适用产品宪法、DEC-140803 及相关 Growth 源码。绑定 SPEC SHA-256 bab850a5474a2d1dff198190d2a230c0d07ad787a88c0bf5ec20583abf8255b0；宪法 docs/产品定位.md SHA-256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。前轮为 cycle 2 round 1 PASS[REV:865044ef60d5]，event ebb8edafe4a27f082cb6ddc093ef145142ea2f7924f9b45633a4ee8edb7af0f5、SPEC 746061940528344e34db04fd193329953bfcbc0d6b18646ff957555cce091731、findings=[]；本轮为独立判断，不继承旧 PASS。\n\n新增第51–61行以用户“结合growth服务一起分析”的明确指令为依据：只查原权益和当前服务版本，按 credential/provider/encrypted-token/wallet 四重历史一致性标签唯一定位；DB 显式只读事务、验证 read-only、finally rollback。历史同机标签不证明当前客户端仍使用该权益，合同及 collector 均明确该关联尚未独立核实；预算只可区分候选原因，不能将旧身份、402或不同余额口径直接当根因/实现bug。\n\n已核 provider.get_budget 实际为正常登录 POST 后分页 GET /api/v1/user/apikeys，再在可信服务端进程中按原 key 唯一筛选。本轮首次反馈指出它不是单 key 请求；新增第59行现已明确允许仅为精确筛选瞬时读取服务账号名单，每页100/最多100页，其他 key 不输出、不落盘、不调查，不猜接口。禁止 reveal/create/rotate/update、模型生成、资金变化、部署/重启；认证只在服务器内存按既有配置使用，输出仅白名单事实及固定错误，不保存身份、密钥、会话、连接串或完整响应。\n\n附带复核最终脚本：collect-account-readonly.py SHA-256 f59e24df08fb98f9cf9fcc93c0af853fb30d7a590aa72567781713fd83d1e57d；remote-host-readonly.py SHA-256 576b1fc233c66197265965702d0ec524a0c4a395c232e9c83a7d92905065985d。唯一目标守卫、provider 源码哈希核对、HTTPS 指定主机/方法/path hook、禁止跳转和101请求上限均存在。执行前反馈的总时限问题已以 SIGALRM/setitimer 30秒总限及 finally 恢复修正，超时为固定 PROVIDER_TOTAL_TIMEOUT；环境投影已由前缀改成六个 OMNIHI 变量加 DB 的七项精确名单。宿主校验运行 PID cwd 与 current release，使用原 release 子进程、55秒外层兜底，不输出环境或 stderr。没有发现这些收窄后的新阻断；执行结果仍须检查 error/身份关联/readOnlyTransaction/预算字段，不能用宿主退出0代成功。\n\n仅静态审核合同、脚本和已有版本证据，未访问生产、读取真实认证材料、运行脚本或供应商请求，未改控制面。当前 findings=[]；允许范围不恢复额度页面或剪辑验收、不动原任务最后恢复、不发重复生成、不修改产品预算。正常官方对话三轮及通过后推送条件仍有效；本包不证明查询已发生、402已定位或修复，也不是推送许可。审查模型精确 ID 未核实，不作异构声明。",
+  "spec_path": "docs/features/t1427-official-pi-acceptance-and-push.md",
+  "spec_sha256": "bab850a5474a2d1dff198190d2a230c0d07ad787a88c0bf5ec20583abf8255b0",
+  "constitution_path": "docs/产品定位.md",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "review_path": "docs/features/t1427-official-pi-acceptance-and-push.T-1427.review.md",
+  "review_mode": "homogeneous",
+  "model": "独立同构会话，精确模型型号未核实",
+  "policy": "convergent-review/v2",
+  "cycle_authorization": null,
+  "latest_event_hash": "23854d0935a9a9d6d67209cb7c8b984e915aafc94d5a7fdf1d9c3c4cf320eca1",
+  "open_findings": [],
+  "resolved_findings": [],
+  "receipt": "e9724b83fcdb"
+}
+```

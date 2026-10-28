@@ -17,14 +17,14 @@ import {readChatTurnSnapshot} from '../../../../backend/src/modules/ai/chat-turn
 import {getChatRuntime,compositeTransport,__resetPersistenceForTests} from '../persistence-client';
 import {prepareChatReply} from '../prepare-chat-reply';
 
-it('T1405 真实组合根用对话绑定组而非当前界面选择；不同用户不能读取组',async()=>{
- const root=await mkdtemp(join(tmpdir(),'t1405-workspace-'));
+it('T1426 真实组合根用对话绑定组而非当前界面选择；不同用户不能读取组',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'t1426-workspace-'));
  vi.stubEnv('DATABASE_URL','');vi.stubEnv('PGLITE_DATA_DIR',join(root,'db'));vi.stubEnv('CREATOROS_MEDIA_ROOT',join(root,'media'));
  vi.stubEnv('CREATOROS_STORAGE','local');vi.stubEnv('CREATOROS_DISABLE_BACKGROUND_DRIVERS','1');vi.stubEnv('CREATOROS_DISABLE_SCHEDULER','1');vi.stubEnv('CREATOROS_CLIENT_CONFIG_PULL_ENABLED','0');
  __resetPersistenceForTests();
  try{
-  const user:RequestContext={userId:canonicalDataset.user.id,requestId:'t1405-workspace',source:'user',accountId:null};
-  const create=async(name:string)=>(await compositeTransport.request({id:'accountGroups.create'} as Endpoint,{body:{name,idempotencyKey:`t1405:${name}`}} as never,user) as {data:{id:string;name:string}}).data;
+  const user:RequestContext={userId:canonicalDataset.user.id,requestId:'t1426-workspace',source:'user',accountId:null};
+  const create=async(name:string)=>(await compositeTransport.request({id:'accountGroups.create'} as Endpoint,{body:{name,idempotencyKey:`t1426:${name}`}} as never,user) as {data:{id:string;name:string}}).data;
   const a=await create('明确选中的空组'),b=await create('另一个可见组');
   const ctx={...user,groupId:a.id},runtime=await getChatRuntime();
   expect(await runtime.contextReaders.getCurrentGroup?.(ctx)).toEqual({id:a.id,name:a.name});

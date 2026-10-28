@@ -1,6 +1,6 @@
-{"ts":"2026-10-23T01:20:11.654Z","actor":"taskctl","action":"start","task":"T-1401","sha_before":"417171ca451e","sha_after":"d71f0a81d303"}
+{"ts":"2026-10-23T01:20:11.654Z","actor":"taskctl","action":"start","task":"T-1422","sha_before":"417171ca451e","sha_after":"d71f0a81d303"}
 {"ts":"2026-10-23T01:22:02.247Z","actor":"taskctl","action":"complete","task":"T-1401","evidence":"服务与路由27测试通过；timeout-policy全通过；开发POST403配置未启用/retryable=false；diag删除；见docs/features/t1401-ai-credit-link-errors.md。reconcile quick仍既有范围外22 errors/17 warnings（历史审核凭证与看板体积/状态），本任务Gate通过。","sha_before":"d71f0a81d303","sha_after":"11eba5e46a6a"}
-{"ts":"2026-10-23T01:22:34.953Z","actor":"taskctl","action":"block","task":"T-1401","reason":"代码修复、相关49测试、超时守卫与开发HTTP403实测通过；本地提交因环境.git只读，无法创建index.lock而受阻，未push。","sha_before":"11eba5e46a6a","sha_after":"1c96ee51c471"}
-{"ts":"2026-10-23T01:23:21.531Z","actor":"taskctl","action":"resume","task":"T-1401","reason":"仓库写权限恢复，本地提交已完成","sha_before":"1c96ee51c471","sha_after":"d71f0a81d303"}
-{"ts":"2026-10-23T01:23:21.559Z","actor":"taskctl","action":"complete","task":"T-1401","evidence":"commit 99a98f9d; vitest 27 pass; POST connect 403 权益配置同步尚未启用 retryable=false; diag deleted; no push","sha_before":"d71f0a81d303","sha_after":"11eba5e46a6a"}
-{"ts":"2026-10-23T02:51:22.669Z","actor":"taskctl","action":"start","task":"T-1402","sha_before":"054b991046d4","sha_after":"a71c8d253819"}
+{"ts":"2026-10-23T01:22:34.953Z","actor":"taskctl","action":"block","task":"T-1422","reason":"代码修复、相关49测试、超时守卫与开发HTTP403实测通过；本地提交因环境.git只读，无法创建index.lock而受阻，未push。","sha_before":"11eba5e46a6a","sha_after":"1c96ee51c471"}
+{"ts":"2026-10-23T01:23:21.531Z","actor":"taskctl","action":"resume","task":"T-1422","reason":"仓库写权限恢复，本地提交已完成","sha_before":"1c96ee51c471","sha_after":"d71f0a81d303"}
+{"ts":"2026-10-23T01:23:21.559Z","actor":"taskctl","action":"complete","task":"T-1422","evidence":"commit 99a98f9d; vitest 27 pass; POST connect 403 权益配置同步尚未启用 retryable=false; diag deleted; no push","sha_before":"d71f0a81d303","sha_after":"11eba5e46a6a"}
+{"ts":"2026-10-23T02:51:22.669Z","actor":"taskctl","action":"start","task":"T-1423","sha_before":"054b991046d4","sha_after":"a71c8d253819"}

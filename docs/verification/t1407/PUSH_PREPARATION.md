@@ -13,4 +13,4 @@
 
 在明确的后续推送授权下，再经正常 Git 流程执行推送。此次没有创建 tag、GitHub Release、PR，没有触发正式双平台构建或生产放量。当前安装包为本地 ad-hoc 包，没有 Apple 公证声明。
 
-任务状态保持真实：`taskctl complete T-1407` 实际拒绝了普通 CLI 报告，原因是验收列“待验”要求 `frontend-validation` UI 旅程 JSON；本轮没有这份标准 UI 证据，没有伪造或降低验收。已用 taskctl 将 T-1407 标为阻塞，安装和本地合并的实际完成事实、CLI 成功/失败结果仍照实保留。T-1405 因官方 Pi 原任务 HTTP 402 未解决也保持阻塞。
+任务状态保持真实：`taskctl complete T-1407` 实际拒绝了普通 CLI 报告，原因是验收列“待验”要求 `frontend-validation` UI 旅程 JSON；本轮没有这份标准 UI 证据，没有伪造或降低验收。已用 taskctl 将 T-1407 标为阻塞，安装和本地合并的实际完成事实、CLI 成功/失败结果仍照实保留。T-1426 因官方 Pi 原任务 HTTP 402 未解决也保持阻塞。

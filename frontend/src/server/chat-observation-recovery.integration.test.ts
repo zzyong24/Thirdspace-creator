@@ -5,6 +5,37 @@ import {createAiRepository} from "../../../backend/src/modules/ai/ai.repository"
 import {createChatTurnSubmissionService,readChatTurnSnapshot} from "../../../backend/src/modules/ai/chat-turn-submission.service";
 import {createPersistentTaskService} from "../../../backend/src/modules/execution/persistent-task.service";
 import {createChatTaskControl} from "../features/copilot/chat-task-control";
+import {createAiService,type ServiceDeps} from "../../../backend/src/modules/ai/ai.service";
+import {createExecutionStreamService,subscribeExecutionStream} from "../../../backend/src/modules/execution/execution-stream.service";
+import {recoverChatExecution} from "./chat-execution-recovery";
+import type {ChatRuntime} from "./persistence-client";
+
+it("T-1407 真实库已取消原轮只读回abort，旧恢复与陌生账号均不重建任务或删历史",async()=>{
+ const f=await createDb(),db=f.db;let seq=0;
+ const ctx={userId:"recovery-user",accountId:"recovery-account",source:"user" as const,requestId:"recovery"};
+ const now=()=>new Date().toISOString(),nextId=(prefix:string)=>`${prefix}-recovery-${++seq}`;
+ const repo=createAiRepository(db,{...ctx,now,nextId});
+ try{
+  const conversation=await repo.createConversation({title:"原定位",projectId:null,scope:"global"});
+  const source=await repo.createMessage(conversation.id,{role:"user",content:"原定位内容保留",attachments:[],modelMetadata:{}});
+  const submit=createChatTurnSubmissionService(db,{now,nextId,assemble:async()=>({capability:"copilot.assist",system:"隔离测试",messages:[{role:"user",content:source.content}],tools:[],maxSteps:2,maxOutputTokens:128})});
+  const receipt=await submit.submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+  const tasks=createPersistentTaskService(db,{now,nextId}),events=createExecutionStreamService(db,{now});
+  await tasks.command(ctx,{taskIds:[receipt.executionTaskId],command:"cancel",idempotencyKey:"test-cancel"});
+  // Only read methods are used; unrelated adoption/write ports must never be invoked.
+  const ai=createAiService({db,now,nextId} as ServiceDeps);
+  const forbidden=vi.fn(async()=>{throw new Error("恢复不得新建任务");});
+  const runtime={ai,durable:{get:tasks.get,subscribe:(c:typeof ctx,id:string,signal:AbortSignal)=>subscribeExecutionStream(events,c,id,{signal}),submit:forbidden,command:forbidden}} as unknown as ChatRuntime;
+  const original={executionTaskId:receipt.executionTaskId,conversationId:conversation.id,sourceMessageId:source.id,intent:"observe"};
+  const before={tasks:await db.select().from(aiTasks),executions:await db.select().from(executionTasks),messages:await ai.listMessages(ctx,conversation.id)};
+  const response=await recoverChatExecution(runtime,ctx,original,new AbortController().signal);
+  expect(response.status).toBe(200);expect(await response.text()).toContain('"type":"abort"');
+  expect((await recoverChatExecution(runtime,ctx,{...original,intent:"resume"},new AbortController().signal)).status).toBe(409);
+  expect((await recoverChatExecution(runtime,{...ctx,accountId:"other-account"},original,new AbortController().signal)).status).toBe(409);
+  expect(forbidden).not.toHaveBeenCalled();
+  expect({tasks:await db.select().from(aiTasks),executions:await db.select().from(executionTasks),messages:await ai.listMessages(ctx,conversation.id)}).toEqual(before);
+ }finally{await f.client.close();}
+},180000);
 
 it("真实持久提交先于响应头：停止观察后原对话/任务中心仍查得同一任务，原消息重放不重复创建",async()=>{
  const f=await createDb();const db=f.db;let seq=0;

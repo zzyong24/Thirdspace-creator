@@ -37,7 +37,7 @@ async function fixture(name="unassigned") {
   return {dir,row,am,env,deps,store,puts,calls,fetchImpl,putManagedCredential,setVerdict:(value:Partial<typeof verdict>)=>{verdict={...verdict,...value}},setNow:(value:Date)=>{now=value}};
 }
 function canonical(value:unknown):string{if(value===null||typeof value!=="object")return JSON.stringify(value);if(Array.isArray(value))return `[${value.map(canonical).join(",")}]`;return `{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonical((value as Record<string,unknown>)[key])}`).join(",")}}`}
-describe('T1402真实正式v1升级消费端口',()=>{
+describe('T1423真实正式v1升级消费端口',()=>{
  it('并发首次probe穿过异步读盘后仍不超过256个live观察，不踢已有观察',async()=>{
   const f=await fixture(),read=f.deps.readVerdict!,key=Buffer.alloc(32,7);let release!:()=>void,created=0,entered=0;
   const gate=new Promise<void>(resolve=>{release=resolve}),clock=vi.spyOn(Date,'now').mockReturnValue(Date.now()-1460000);
@@ -121,8 +121,8 @@ describe('T1402真实正式v1升级消费端口',()=>{
   });expect(await upgradeModelBenefits('probe',f.deps)).toMatchObject({outcome:'blocked',reasonCode:'UPGRADE_AUTHORITY_UNVERIFIED'});expect(f.putManagedCredential).not.toHaveBeenCalled();
  });
 });
-describe('T1402实际Growth正式v1输出消费（合成authority/fake provider，非生产或恢复接口验收）',()=>{
- const vectors=JSON.parse(readFileSync(join(ROOT,'docs/verification/t1402/fixtures/growth-formal-v1-economy-r1.json'),'utf8'));
+describe('T1423实际Growth正式v1输出消费（合成authority/fake provider，非生产或恢复接口验收）',()=>{
+ const vectors=JSON.parse(readFileSync(join(ROOT,'docs/verification/t1423/fixtures/growth-formal-v1-economy-r1.json'),'utf8'));
  const names:[string][]=vectors.cases.map((row:{name:string})=>[row.name]);
  it.each(names)('实际服务向量 %s 保原经济结果/unknown/Key与closed协议',async(name)=>{
   expect(vectors.provenance.handWrittenDirectoryOrCredential).toBe(false);
@@ -327,7 +327,7 @@ it("T1375 fresh security_error对象不折为临时不可用，后续合法验�
 });
 
 
-describe('T1402 automatic 单owner与原截止',()=>{
+describe('T1423 automatic 单owner与原截止',()=>{
  async function autoFixture(){
   const f=await fixture(),key=randomBytes(32),boot=randomBytes(32).toString('hex'),actor={userId:'automatic-principal',accountId:'automatic-account',groupId:'automatic-group'},tokens:string[]=[];
   const step=(action:'probe'|'fulfill'|'sync',options:{token?:string|null;automatic?:boolean;actor?:typeof actor}={})=>upgradeModelBenefits(action,{...f.deps,env:{...f.env,CREATOROS_SIDECAR_HANDSHAKE_TOKEN:boot},observationMasterKey:key,observation:{token:options.token??null,actor:options.actor??actor,automatic:options.automatic??true,onToken:value=>tokens.push(value)}});

@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 // a registry-first test cache. This imports schemas only, never user data.
 const entries = [
   "resources/prediction-lock.ts",
+  "resources/knowledge-distill.ts",
   "index.ts",
   "endpoints.ts",
   "operations/account-groups.ts",
@@ -60,7 +61,7 @@ describe("contract module initialization from every real entry", () => {
       const legacy = await import("../contract/src/endpoints.ts");
       if (root.defineEndpoint !== legacy.defineEndpoint) throw new Error("legacy export changed");
       // T1382：新增五个项目准备入口、退役一个雷达 producer，保留精确清单规模检查。
-      if (Object.keys(root.ENDPOINTS).length !== 440) throw new Error("registry surface changed");
+      if (Object.keys(root.ENDPOINTS).length !== 442) throw new Error("registry surface changed");
       for (const id of ["projects.ensure","projects.preparation.get","projects.preparation.start","projects.preparation.transcript.provide","projects.preparation.candidate.accept"]) if (!Object.values(root.ENDPOINTS).some(op=>op.id===id)) throw new Error("project intake operation missing");
       if (Object.values(root.ENDPOINTS).some(op=>op.id==="intelligence.projects.enqueue")) throw new Error("retired radar producer registered");
       for (const id of ["ai.predictionLocks.source","ai.predictionLocks.start"]) if (!Object.values(root.ENDPOINTS).some(op=>op.id===id)) throw new Error("prediction source operation missing");

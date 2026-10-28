@@ -38,7 +38,7 @@ beforeEach(()=>{
 });
 afterEach(()=>{cleanup();f.listeners.clear();vi.unstubAllGlobals()});
 
-describe('T1402 Region自动同步局部状态',()=>{
+describe('T1423 Region自动同步局部状态',()=>{
  it('旧SSR local/security_error不覆盖当前官方就绪，恢复真实连接入口且不主动请求',()=>{
   mount();expect(screen.getByText(message)).toBeInTheDocument();expect(screen.queryByText(/当前官方配置尚未取得/)).toBeNull();expect(screen.getByRole('button',{name:'测试连接'})).toBeEnabled();expect(f.fetch).not.toHaveBeenCalled();expect(f.refresh).not.toHaveBeenCalled();
  });

@@ -389,7 +389,7 @@ it.each([
  {label:'未知受管402',body:{error:{code:'private-upstream-code',type:'private-upstream-type',message:'private-model private-provider private-token https://private.example/api'},request:{secret:'private-request'},headers:{authorization:'private-header'}},code:'CHANNEL_MODEL_PAYMENT_REQUIRED'},
  {label:'SDK短消息',body:'payment verification required private-token',code:'CHANNEL_MODEL_PAYMENT_REQUIRED'},
  {label:'自配402',body:{error:{message:'payment required'}},code:'http_402',self:true},
-])('T1409 实际HTTP→Pi→聊天durable：$label',async vector=>{
+])('T1428 实际HTTP→Pi→聊天durable：$label',async vector=>{
  const {body,code}=vector;
  let requests=0;
  const log=vi.spyOn(console,'warn').mockImplementation(()=>{});
@@ -411,14 +411,14 @@ it.each([
  }finally{log.mockRestore();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 });
 
-it('T1409 自配402保持原分类，受管支付错误已有输出时仍未知',async()=>{
+it('T1428 自配402保持原分类，受管支付错误已有输出时仍未知',async()=>{
  const own=generationFailure({statusCode:402,providerErrorDetail:'http_402: payment required'},false);
  expect(own).toMatchObject({outcome:'waiting_user',errorCode:'http_402'});expect(own.message).not.toContain('官方');
  const managed=toChannelManagedError({status:402,message:'payment required'});
  expect(generationFailure(managed,true,{allowUnconfirmedModelRetry:true})).toMatchObject({outcome:'unknown_result',errorCode:'MODEL_RESULT_UNKNOWN'});
 });
 
-it('T1409 实际HTTP已出文本后中断仍未知，不伪装支付拒绝或自动换源',async()=>{
+it('T1428 实际HTTP已出文本后中断仍未知，不伪装支付拒绝或自动换源',async()=>{
  let requests=0;
  const log=vi.spyOn(console,'warn').mockImplementation(()=>{});
  const server=createServer((req,res)=>{

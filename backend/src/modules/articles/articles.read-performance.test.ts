@@ -39,7 +39,7 @@ async function fixture() {
   return {opened, db, service, project, output, getOutput, getArtifact, listVersions, resetCounts, anchorReads};
 }
 
-describe("T-1404 文章首读的真实库读取预算", () => {
+describe("T-1425 文章首读的真实库读取预算", () => {
   it("多个历史版本只读取一次归属链及版本列表，当前正文与历史保持一致", async () => {
     const f = await fixture();
     try {

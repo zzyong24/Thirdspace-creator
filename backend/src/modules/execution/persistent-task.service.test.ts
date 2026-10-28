@@ -68,6 +68,17 @@ it("大量历史任务分页不会读出全部payload并破坏后续数据库查
 },30000);
 
 describe("T-482 持久执行任务状态机", () => {
+  it("T1403 私有入队绑定失败时整笔回滚，不暴露可领取的无绑定任务", async () => {
+    const { db, client } = await createDb(), service = createPersistentTaskService(db);
+    try {
+      await expect(service.enqueue(ctxA, {
+        kind: "source_sync", ownerType: "source", ownerId: "bind-source", idempotencyKey: "bind-failed", payload: { sourceId: "bind-source" },
+      }, async () => { throw new Error("模拟领域绑定写入失败"); })).rejects.toThrow("模拟领域绑定写入失败");
+      expect((await service.list(ctxA)).rows).toEqual([]);
+      expect(await service.claimNext({ workerId: "binding-observer", kinds: ["source_sync"] })).toBeNull();
+    } finally { await client.close(); }
+  });
+
   it("[T-1022] 无调用账本的连续选题任务可自动等待并沿原任务再次领取", async () => {
     const { db, client } = await createDb();
     const f = fixture();

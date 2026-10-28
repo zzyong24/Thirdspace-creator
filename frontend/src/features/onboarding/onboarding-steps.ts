@@ -2,7 +2,7 @@
  * 新手引导的纯状态机。
  *
  * T-637 把技术配置/自动化从用户主线移出，只保留能形成创作成果的路径：
- * 绑定账号 →（识别是否有历史作品）→ 查看历史项目 → 定位 → 对标监控 → 对标选题 → 项目。
+ * 有效工作区默认先定位；平台绑定可选，已有历史资料仍可随后确认和查看。
  */
 
 type StepKey = import("@creatoros/contract").OnboardingStateResource["completedSteps"][number];
@@ -153,9 +153,14 @@ function isVisible(spec: GuidedStepSpec, origin: OnboardingOrigin): boolean {
 }
 
 export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
-  const visible = GUIDED_STEP_SET.filter((spec) =>
-    isVisible(spec, state.origin ?? null),
+  const hasWorkspace = Boolean(state.groupId || state.accountId);
+  const candidates = GUIDED_STEP_SET.filter((spec) =>
+    isVisible(spec, state.origin ?? null) && (!hasWorkspace || spec.key !== "import-account"),
   );
+  // 平台绑定不计入必做进度，不通过伪造完成记录跳过；其它步骤的相对顺序不变。
+  const visible = hasWorkspace
+    ? [...candidates.filter(spec => spec.key === "positioning-profile"), ...candidates.filter(spec => spec.key !== "positioning-profile")]
+    : candidates;
   const out: GuidedStep[] = [];
   for (const spec of visible) {
     const done = state.completedSteps?.includes(spec.key) === true || (state.groupId&&spec.key==="import-account"?typeof state.memberCount==="number"&&state.memberCount>0:spec.isDone(state));

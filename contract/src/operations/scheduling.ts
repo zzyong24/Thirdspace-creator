@@ -26,6 +26,8 @@ export const schedulingOperations = {
       target: z.record(z.string(), z.unknown()).default({}),
       schedule: z.string().min(1), // cron 表达式
       toolGrants: z.array(z.unknown()).default([]),
+      // 显式false直接保存停用态；省略保持旧客户端的默认启用行为。
+      enabled: z.boolean().optional(),
     }),
     response: scheduledJobResource,
     fr: ["FR-SCHED-JOB-CREATE"],

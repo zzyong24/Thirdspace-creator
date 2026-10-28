@@ -12,4 +12,4 @@ T-858 的旧竖屏人物断言已按用户既定 T-902/DEC-VIDEO-056 标明适�
 
 实际已运行 `reviewctl.test.mjs`（exit 0）、`reviewctl audit`（exit 0）、`backlog-health`（exit 1）、`pmem sync`（exit 0）和 quick reconcile；各原日志保留。最终 quick 结果以 `reconcile-quick-after-manifest.log` 为准，不以此文替代工具结果。
 
-看板仍超过 30KiB，`backlog-health` 自身保留 1 ERROR、12 WARN，包括 162 个原状态文字矛盾和历史撞号；现有 reconcile 将该级别映射为 WARN。本次只解除 60KiB RUNAWAY，不抬阈值、不擅改旧任务状态，不称看板全绿。适用 full 检查另发现预算配置、旧端口守卫和测试隔离问题，由 T-1412 继续；这里只跑了 quick，未冒称 full 通过。官方聊天、安装及标准 UI 验收仍由 T-1408 承担。
+看板仍超过 30KiB，`backlog-health` 自身保留 1 ERROR、12 WARN，包括 162 个原状态文字矛盾和历史撞号；现有 reconcile 将该级别映射为 WARN。本次只解除 60KiB RUNAWAY，不抬阈值、不擅改旧任务状态，不称看板全绿。适用 full 检查另发现预算配置、旧端口守卫和测试隔离问题，由 T-1412 继续；这里只跑了 quick，未冒称 full 通过。官方聊天、安装及标准 UI 验收仍由 T-1427 承担。

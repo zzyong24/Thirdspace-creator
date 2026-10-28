@@ -225,6 +225,13 @@ export function createCalibrationPositioningAdoptionService(
             const value = str(rawRules[key]).trim();
             if (value) rules[key] = value;
           }
+          // AI 候选空白是未知（schema 已补空），保留旧值；手动编辑仍可明确清空。
+          const rawFacets = record(s.facets);
+          const facets: NonNullable<Parameters<AiPositioningPort["upsertProfile"]>[1]["facets"]> = {};
+          for (const key of ["contentScope", "avoid", "corePain", "coreValue", "tone"] as const) {
+            const value = str(rawFacets[key]).trim();
+            if (value) facets[key] = value;
+          }
           await ports.lockPositioning(ctx, tx);
           await ports.upsertProfile(
             ctx,
@@ -234,6 +241,7 @@ export function createCalibrationPositioningAdoptionService(
               audience: str(s.audience),
               differentiation: str(s.differentiation),
               capabilities: arr(s.capabilities),
+              ...(Object.keys(facets).length ? { facets } : {}),
               ...(Object.keys(rules).length ? { downstreamRules: rules } : {}),
             },
             tx,

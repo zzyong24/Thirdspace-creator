@@ -15,7 +15,7 @@
 - 文章/图文/原生分页/工作台/路由合并回归 8 文件 94 项通过（combined-final.log），包含早先 green.log 的两个原生历史全文测试。所需原输入从历史提交逐字节恢复，restored-test-inputs.json 有哈希；不删测、不代造输入。早先 7 失败保留。
 - worker 提示模板 4 项通过；剪辑相关 44 项通过；LED-047 190 项通过；LED-053 exit 0；boundary exit 0，5 个既有基线问题，无新增。
 - 全工作区串行 typecheck exit 0；复核修复后再跑 backend/frontend typecheck。Doocs 立即收起新回归先失败（1 failed/13 passed），修复后文章/图文两文件31通过。
-- 合同旧 scope 测试中 tasks.inspect/events 两断言与此前 T-1408 group 实现不符，已对齐现有公开合同；未放宽任何生产权限。
+- 合同旧 scope 测试中 tasks.inspect/events 两断言与此前 T-1427 group 实现不符，已对齐现有公开合同；未放宽任何生产权限。
 - 独立代码复核发现2个工作台缺陷和1个测试缺口，均修复并复核销账；安装、真实模型语义效果和耗时未代签。
 
 ## 待实际验收

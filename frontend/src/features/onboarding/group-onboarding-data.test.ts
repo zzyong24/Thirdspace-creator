@@ -25,7 +25,7 @@ it('A到B再回A的工作区代数变化也使旧资料失效，不自动补写�
 
 const benchmarkSources=(count:number)=>Array.from({length:count},(_,index)=>({id:`source-${index}`,type:'creator_profile',monitorEnabled:true,status:'active'}));
 
-it('T1403 24个对标源逐个读取，最多一条在途，全部成功为空才判无选题',async()=>{
+it('T1424 24个对标源逐个读取，最多一条在途，全部成功为空才判无选题',async()=>{
  api.getIntelligenceWorkspace.mockResolvedValue({sources:benchmarkSources(24)});
  let active=0,maxActive=0;
  api.listIntelligenceItems.mockImplementation(async()=>{active++;maxActive=Math.max(maxActive,active);await Promise.resolve();active--;return [];});
@@ -34,19 +34,19 @@ it('T1403 24个对标源逐个读取，最多一条在途，全部成功为空�
  expect(api.listIntelligenceItems.mock.calls.map(([input])=>input.query.sourceId)).toEqual(benchmarkSources(24).map(source=>source.id));
 });
 
-it('T1403 首个真实converted命中立即停止，不读取后续源或非对标源',async()=>{
+it('T1424 首个真实converted命中立即停止，不读取后续源或非对标源',async()=>{
  api.getIntelligenceWorkspace.mockResolvedValue({sources:[{id:'rss',type:'rss'},...benchmarkSources(24),{id:'share',type:'shared_item'}]});
  api.listIntelligenceItems.mockImplementation(async({query})=>query.sourceId==='source-1'?[{item:{id:'converted'}}]:[]);
  expect(await loadRadarSignals()).toEqual({hasBenchmarkMonitor:true,hasBenchmarkTopic:true});
  expect(api.listIntelligenceItems.mock.calls.map(([input])=>input.query)).toEqual(['source-0','source-1'].map(sourceId=>({sourceId,page:1,pageSize:1,sort:'newest',topicState:'converted'})));
 });
 
-it('T1403 只有非对标源不扫描items，也不把它们判为已监控对标',async()=>{
+it('T1424 只有非对标源不扫描items，也不把它们判为已监控对标',async()=>{
  api.getIntelligenceWorkspace.mockResolvedValue({sources:[{id:'rss',type:'rss',monitorEnabled:true,status:'active'}]});
  expect(await loadRadarSignals()).toEqual({hasBenchmarkMonitor:false,hasBenchmarkTopic:false});expect(api.listIntelligenceItems).not.toHaveBeenCalled();
 });
 
-it('T1403 已完成对标选题沿持久里程碑判done，跳过items但仍读取未完成监控信号',async()=>{
+it('T1424 已完成对标选题沿持久里程碑判done，跳过items但仍读取未完成监控信号',async()=>{
  api.getGroupOnboarding.mockResolvedValue({...record(),completedSteps:['benchmark-topic']});
  api.getIntelligenceWorkspace.mockResolvedValue({sources:benchmarkSources(24).map(source=>({...source,monitorEnabled:false}))});
  const state=await loadState();
@@ -63,20 +63,20 @@ const unreadSourceResults=[
  {name:'返回对象',read:async()=>({})},
 ];
 
-it.each(unreadSourceResults)('T1403 某源$name且其余为空时选题未知，不能落库为完成',async({read})=>{
+it.each(unreadSourceResults)('T1424 某源$name且其余为空时选题未知，不能落库为完成',async({read})=>{
  api.getIntelligenceWorkspace.mockResolvedValue({sources:benchmarkSources(2).map(source=>({...source,monitorEnabled:false}))});
  api.listIntelligenceItems.mockImplementationOnce(read).mockResolvedValueOnce([]);
  const state=await loadState();expect(state.hasBenchmarkTopic).toBeUndefined();expect(state.hasBenchmarkMonitor).toBe(false);
  expect(api.listIntelligenceItems).toHaveBeenCalledTimes(2);expect(api.patchGroupOnboarding).not.toHaveBeenCalled();
 });
 
-it.each(unreadSourceResults)('T1403 前一个源$name后另一个真实命中仍可证明存在选题',async({read})=>{
+it.each(unreadSourceResults)('T1424 前一个源$name后另一个真实命中仍可证明存在选题',async({read})=>{
  api.getIntelligenceWorkspace.mockResolvedValue({sources:benchmarkSources(3)});
  api.listIntelligenceItems.mockImplementationOnce(read).mockResolvedValueOnce([{item:{id:'converted'}}]);
  expect((await loadRadarSignals()).hasBenchmarkTopic).toBe(true);expect(api.listIntelligenceItems).toHaveBeenCalledTimes(2);
 });
 
-it.each(['switch','aba'] as const)('T1403 items读取中%s后拒绝旧结果，不再请求下一源或写进度',async(change)=>{
+it.each(['switch','aba'] as const)('T1424 items读取中%s后拒绝旧结果，不再请求下一源或写进度',async(change)=>{
  api.getIntelligenceWorkspace.mockResolvedValue({sources:benchmarkSources(2)});
  let finish!:(rows:unknown[])=>void;
  api.listIntelligenceItems.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));

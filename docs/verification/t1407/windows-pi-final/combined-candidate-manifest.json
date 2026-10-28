@@ -2,7 +2,7 @@
   "candidateCommit": "6daaf71d4d3afe8d5bfa5801cffff7c9b9b345bb",
   "tree": "bb1995737cc2b2f37105939d58ec682ed91a7ee9",
   "branch": "codex/t1407-integration-ready",
-  "worktree": "/Users/zyongzhu/.codex/worktrees/t1405-chat-model-fixes/Thirdspace-creator",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1426-chat-model-fixes/Thirdspace-creator",
   "remoteMain": "a33cbbc1fd5b71c38ac1f1445a7230a4be4014c2",
   "priorMain": "bb52d58461a311b2e38f399283c3878179569f1b",
   "installedSidecarBefore": "cef4742476245a0608e51a9b6823da79ea0f9847447c657f6365f0f97f40ab36",
@@ -147,7 +147,7 @@
     "reference-editors/opencut-classic/native/native.js": "d53ca25f62bfffe205edcda8bbdfe48daf8889a3b0131103fe985ae1f3162dcc"
   },
   "codeReviewCommit": "6daaf71d4d3afe8d5bfa5801cffff7c9b9b345bb",
-  "additionalChanges": "在原8f757候选126产品文件全部逐字保留的基础上，普通合入远端a33cbbc的4个Pi核心依赖/锁文件/源码/测试路径，最终130产品文件；T1404原始验收证据继续保留。元数据更新不改变源码、构建或已安装产物。",
+  "additionalChanges": "在原8f757候选126产品文件全部逐字保留的基础上，普通合入远端a33cbbc的4个Pi核心依赖/锁文件/源码/测试路径，最终130产品文件；T1425原始验收证据继续保留。元数据更新不改变源码、构建或已安装产物。",
   "previousInstalledCandidate": "8f757a153060067747bfaf664c46155d8b318ff2",
   "priorCodeReviewCommit": "4eaf7946a2c2d4fb02ad543a05f8765652feaf5a",
   "codeReviewCommits": [

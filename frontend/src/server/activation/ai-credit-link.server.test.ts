@@ -41,7 +41,7 @@ function success(
 }
 
 describe("createAiCreditPortalLink", () => {
-  it('T1402绑定proof错误不吞为AI_CREDIT_LINK_UNAVAILABLE，任意上游文案不暴露',async()=>{
+  it('T1423绑定proof错误不吞为AI_CREDIT_LINK_UNAVAILABLE，任意上游文案不暴露',async()=>{
     await expect(createAiCreditPortalLink({env:{CREATOROS_MODEL_BENEFITS_ENABLED:'1',CREATOROS_CLIENT_CONFIG_PULL_ENABLED:'1',CREATOROS_LICENSE_BASE_URL:'https://activity.invalid',CREATOROS_LICENSE_PROJECT_KEY:'creatoros'},readVerdict:async()=>({state:'ready',verdict:{v:1,allowed:true,status:'active',code:'SYNTHETIC',machineId:'test-machine',projectKey:'creatoros'}}),fetchImpl:vi.fn(async()=>Response.json({error:{code:'MODEL_BENEFIT_BINDING_STALE',message:'secret internal'}},{status:409,headers:{'cache-control':'no-store'}}))})).rejects.toMatchObject({code:'MODEL_BENEFIT_BINDING_STALE',message:'当前电脑的原授权绑定需要核对，请使用升级原激活码入口恢复后再试'});
   });
   it.each([

@@ -168,6 +168,122 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
+  it("[T-1409] 未登录抖音可先保存博主主页，同步前关联采集账号", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const config = {
+        type: "creator_profile" as const,
+        canonicalUrl: "https://www.douyin.com/user/MS4wLjABAAAA-unbound",
+        externalAccountId: "MS4wLjABAAAA-unbound",
+      };
+      const created = await service.createSource(ctx, {
+        collectionId: null,
+        type: "creator_profile",
+        config,
+        displayName: "未登录添加的博主",
+        monitorEnabled: true,
+        runInitial: true,
+        idempotencyKey: "unbound-profile",
+      });
+      expect(created.run).toBeNull();
+      expect(created.source).toMatchObject({ collector: null, browserSessionRef: null, displayName: "未登录添加的博主" });
+      const again = await service.createSource(ctx, {
+        collectionId: null, type: "creator_profile", config, monitorEnabled: true, runInitial: false, idempotencyKey: "unbound-profile-again",
+      });
+      expect(again.source.id).toBe(created.source.id);
+
+      await expect(service.startRun(ctx, created.source.id, { trigger: "manual", idempotencyKey: "unbound-manual" }))
+        .rejects.toThrow(/关联抖音采集账号/);
+      await expect(service.getSourceExecutionInput(ctx, created.source.id)).rejects.toThrow(/关联抖音采集账号/);
+      d.clock.value = "2026-07-25T12:00:00.000Z";
+      await expect(service.enqueueDueSourceRuns(ctx)).resolves.toBe(0);
+      await expect(service.listSources(ctx, { limit: 10 })).resolves.toMatchObject({
+        rows: [expect.objectContaining({ id: created.source.id, nextRunAt: "2026-07-26T12:00:00.000Z" })],
+      });
+
+      await expect(service.updateSource(ctx, created.source.id, { collectorAccountId: "account-missing", expectedVersion: created.source.version }))
+        .rejects.toThrow();
+      const attached = await service.updateSource(ctx, created.source.id, { collectorAccountId: "account-1", expectedVersion: created.source.version });
+      expect(attached.collector).toMatchObject({ accountId: "account-1", availability: "active" });
+      expect(attached.externalKey).toBe("profile:account-1:MS4wLjABAAAA-unbound");
+      await expect(service.updateSource(ctx, created.source.id, { collectorAccountId: "account-2", expectedVersion: attached.version }))
+        .rejects.toThrow(/已关联其他采集账号/);
+      const started = await service.startRun(ctx, created.source.id, { trigger: "manual", idempotencyKey: "bound-manual" });
+      expect(started.run.status).toBe("queued");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-1409] 补关联时同账号已有同一主页 → 冲突，不制造重复来源", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const base = { canonicalUrl: "https://www.douyin.com/user/MS4wLjABAAAA-dup", externalAccountId: "MS4wLjABAAAA-dup" };
+      await service.createSource(ctx, {
+        collectionId: null, type: "creator_profile", config: { type: "creator_profile", collectorAccountId: "account-1", ...base },
+        monitorEnabled: false, runInitial: false, idempotencyKey: "bound-dup",
+      });
+      const unbound = await service.createSource(ctx, {
+        collectionId: null, type: "creator_profile", config: { type: "creator_profile", ...base },
+        monitorEnabled: false, runInitial: false, idempotencyKey: "unbound-dup",
+      });
+      await expect(service.updateSource(ctx, unbound.source.id, { collectorAccountId: "account-1", expectedVersion: unbound.source.version }))
+        .rejects.toThrow(/已有这个博主主页/);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-1409] 到期的未关联主页让出每日名额，不挡住已关联来源", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const unbound = await service.createSource(ctx, {
+        collectionId: null,
+        type: "creator_profile",
+        config: {
+          type: "creator_profile",
+          canonicalUrl: "https://www.douyin.com/user/MS4wLjABAAAA-defer",
+          externalAccountId: "MS4wLjABAAAA-defer",
+        },
+        monitorEnabled: true,
+        runInitial: false,
+        idempotencyKey: "unbound-defer",
+      });
+      d.clock.value = "2026-07-23T12:00:01.000Z";
+      const bound = await service.createSource(ctx, {
+        collectionId: null,
+        type: "creator_profile",
+        config: {
+          type: "creator_profile",
+          collectorAccountId: "account-1",
+          canonicalUrl: "https://www.douyin.com/user/MS4wLjABAAAA-bound",
+          externalAccountId: "MS4wLjABAAAA-bound",
+        },
+        monitorEnabled: true,
+        runInitial: false,
+        idempotencyKey: "bound-defer",
+      });
+      d.clock.value = "2026-07-24T12:00:02.000Z";
+
+      await expect(service.enqueueDueSourceRuns(ctx, 1)).resolves.toBe(1);
+      await expect(service.listRuns(ctx, bound.source.id)).resolves.toMatchObject({ total: 1 });
+      await expect(service.listRuns(ctx, unbound.source.id)).resolves.toMatchObject({ total: 0 });
+      const listed = await service.listSources(ctx, { limit: 10 });
+      expect(listed.rows.find((row) => row.id === unbound.source.id)?.nextRunAt).toBe("2026-07-25T12:00:02.000Z");
+    } finally {
+      await client.close();
+    }
+  });
+
   it("[T-546] 进程重启后的过期来源租约会恢复并复用原 run，不再永久占用同步按钮", async () => {
     const { db, client } = await createDb();
     const d = deps();
@@ -1243,7 +1359,7 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
-  it("[T-1403] 来源计数按作品去重，来源/分类筛选和分页保留全来源计数且不串组", async () => {
+  it("[T-1424] 来源计数按作品去重，来源/分类筛选和分页保留全来源计数且不串组", async () => {
     const { db, client } = await createDb();
     const d = deps();
     const tasks = createPersistentTaskService(db, d);
@@ -1307,7 +1423,7 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
-  it("[T-1403] 来源计数读取 observation 字段保持线性预算", async () => {
+  it("[T-1424] 来源计数读取 observation 字段保持线性预算", async () => {
     const { db, client } = await createDb();
     const d = deps();
     const tasks = createPersistentTaskService(db, d);

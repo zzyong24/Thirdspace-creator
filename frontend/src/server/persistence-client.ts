@@ -1,3 +1,4 @@
+import {modelTestRoute,ModelProbeNotApplicable} from './settings-model-routing';
 import {createProjectPreparationApplication} from "@creatoros/backend/application/projects/project-preparation";
 import {createProjectPreparationChat} from "@creatoros/backend/application/projects/project-preparation-chat";
 import {submitProjectPreparationTranscription} from "@creatoros/backend/modules/ai";
@@ -101,12 +102,14 @@ import { createDashboardApplication } from "@creatoros/backend/application/queri
 import { createPageReadRevisionReader } from "@creatoros/backend/application/page-read-revision";
 import { createRecoveryWakeCoordinator } from "@creatoros/backend/application/recovery-wake";
 import { rebuildOwnedSearchIndex } from "@creatoros/backend/application/search-bootstrap";
+import { createEntitySearchProjection } from "@creatoros/backend/application/entity-search-projection";
 import { createThesisAdoption } from "@creatoros/backend/application/thesis-adoption";
 import { withPageReadInvalidation } from "@/lib/page-read-cache.server";
 import { createApplicationTransport } from "@creatoros/backend/application/transport";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
 import { createKnowledgeApplication } from "@creatoros/backend/application/knowledge";
+import {createKnowledgeDistillSourceService} from '@creatoros/backend/modules/ai';
 import { configureHostBrowserProfileLifecycle } from "./ingestion/host-browser-profile-lifecycle";
 import { createHostBrowserProfileLifecycle, createDesktopHostProcessRecovery } from "@creatoros/backend/modules/execution";
 import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
@@ -1459,7 +1462,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
   const projectPreparationRef:{current:ReturnType<typeof createProjectPreparationApplication>['preparation']|undefined}={current:undefined};
   const requireProjectPreparation=()=>{if(!projectPreparationRef.current)throw new Error('项目准备服务未装配');return projectPreparationRef.current;};
-  const projectIntake = createProjectIntakeApplication(db, deps,{preparation:{reserve:(c,input,tx)=>requireProjectPreparation().reserve(c,input,tx)}});
+  const entitySearchProjection=createEntitySearchProjection({upsertDocument:(...args)=>searchService.upsertDocument(...args),removeDocument:(...args)=>searchService.removeDocument(...args)});
+  const projectIntake = createProjectIntakeApplication(db, deps,{preparation:{reserve:(c,input,tx)=>requireProjectPreparation().reserve(c,input,tx)},indexProject:entitySearchProjection.project});
   const projectsBaseTransport = createProjectsTransport(() => ({
     intake: projectIntake,
     preparation:{get:(c,id)=>requireProjectPreparation().get(c,id),start:(c,id,input)=>requireProjectPreparation().start(c,id,input),provideTranscript:(c,id,input)=>requireProjectPreparation().provideTranscript(c,id,input),acceptCandidate:(c,id,candidate,input)=>requireProjectPreparation().acceptCandidate(c,id,candidate,input)},
@@ -1468,13 +1472,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createArticleOutput: (ctx, projectId, input) => articlesService.createOutput(ctx, projectId, input),
     createGraphicPostOutput: (ctx, projectId, input) => graphicPostsService.createOutput(ctx, projectId, input),
   }));
-  // [全局搜索修复①] 项目写路径的搜索索引 fan-out(composition root 组合,projects 模块
-  // 不反向依赖 search)。projects 是四大实体里唯一漏接搜索索引的 —— createProject/
-  // patchProject 全程不碰 search_documents,导致「搜项目标题恒 0」。这里在 create/patch
-  // 成功后**同步 await** 投影一条 entity_type='project' 的 search_document(载荷 stage/
-  // progressPct/snippet 与读侧 toProjectCard 对齐);delete 走 removeDocument。同步(非
-  // fire-and-forget)消除「建完即搜」竞态。索引 best-effort:失败只丢检索增益,业务真值
-  // 已提交不回滚(SPEC §16 派生索引纪律),故 try/catch 吞掉。
+  // 所有 intake 来源的创建在 application 提交后投影；直接编辑仍在响应前同步索引。
+  // 这里只装配拥有者读取与后端投影端口，不在页面宿主复制业务投影规则。
   const indexProjectBestEffort = async (
     ctx: RequestContext,
     data: {
@@ -1487,19 +1486,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   ): Promise<void> => {
     if (!data.id) return;
     try {
-      const title = data.title ?? "";
-      const snippet = data.brief ?? "";
-      await searchService.upsertDocument(ctx, {
-        entityType: "project",
-        entityId: data.id,
-        title,
-        body: JSON.stringify({
-          stage: data.currentStage ?? "",
-          progressPct: data.progressPct ?? 0,
-          snippet,
-        }),
-        searchText: `${title}\n${snippet}`.toLowerCase().trim(),
-      });
+      await entitySearchProjection.project(ctx,await projectsService.getProject(ctx,data.id));
     } catch (err) {
       console.warn("[project-index] 索引失败(业务真值不受影响):", err);
     }
@@ -1509,8 +1496,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const result = await projectsBaseTransport.request(endpoint, input, ctx);
       if (ctx) {
         if (
-          endpoint.id === "projects.create" ||
-          endpoint.id === "projects.patch"
+          endpoint.id === "projects.patch" ||
+          endpoint.id === "projects.archive" ||
+          endpoint.id === "projects.stage.transition"
         ) {
           const data = (result as { data?: unknown }).data as
             | {
@@ -1567,6 +1555,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
 
   const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles}=createKnowledgeApplication(db,deps,{
+    readDistillSource:(ctx,source,store)=>createKnowledgeDistillSourceService(db).read(ctx,source,store),
+    assignDistillTags:async(ctx,knowledgeIds,tagNames)=>{
+      if(!tagNames.length)return;
+      const service=createTaxonomyService(taxonomyRepo,taxonomyAccess);
+      const tags=await service.listTags(ctx,{limit:1000,offset:0}),byName=new Map(tags.map(tag=>[tag.name,tag.id]));
+      const ids:string[]=[];
+      for(const raw of tagNames){const name=raw.trim();if(!name)continue;let id=byName.get(name);if(!id){try{id=(await service.createTag(ctx,{name,kind:'knowledge-topic'})).id;}catch{const existing=await service.listTags(ctx,{limit:1000,offset:0});id=existing.find(tag=>tag.name===name)?.id;if(!id)throw new Error('知识主题标签暂未同步');}byName.set(name,id);}ids.push(id);}
+      for(const knowledgeId of knowledgeIds)await service.assignTags(ctx,{entityType:'knowledge',entityId:knowledgeId,tagIds:[...new Set(ids)]});
+    },
     assertAssetReadable:async(c,id)=>{const asset=await assetsService.getAsset(c,id);if(asset.status!=="active")throw new OwnershipError("原文件不可用");return asset;},
     resolveEmbedSpec:async()=>null,
     embedTexts:async()=>{throw new Error('KNOWLEDGE_EMBEDDING_DISABLED');},
@@ -1657,6 +1654,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const assetsService = createAssetsService(assetsRepo, objectStorageForCtx, {
     ...deps,
     resolveProjectFolder,
+    onAssetChanged:entitySearchProjection.asset,
   });
   // [T-055d SPEC §7.2] Finder/下载 route 的最小运行时面:assetId → 归属校验 + 当前
   // file 的 storageKey(相对 media root);projectId → 项目目录相对路径。
@@ -6723,50 +6721,39 @@ FAVORITES_PROMOTE_PER_RUN
   // ── [T-377] settings.models.test「测试连接」拦截:各能力现有解析链 + 最小真实调用/
   //    最便宜鉴权探测(策略见 settings-model-test-wrap.ts 头注)。解析器与 registry 都住
   //    组合根 → composition-only op(同 projects.transcribe 约定)。
+  const resolveModelTestRoute=async(ctx:RequestContext,testCapability:string)=>{
+    const selected=modelTestRoute(testCapability);
+    const executionRoute=testCapability==='default'
+      ?await (await prepareChatRouting(ctx,{mode:'text'})).freeze(selected.capability,'text')
+      :await resolveRootExecutionRoute(ctx,db,undefined,familyForCapability(selected.capability));
+    const route=readFrozenModelRoute({executionRoute},selected.mode,selected.capability);
+    if(!route)throw new CapabilityModelRoutingError('MODEL_ROUTE_NOT_FROZEN',`${selected.mode}:${selected.capability}`);
+    if(route.source==='codex')throw new ModelProbeNotApplicable('codex');
+    return route;
+  };
   const settingsWithModelTest = createSettingsWithModelTest({
     settings,
-    resolveLlm: (ctx, capability) =>
-      resolveLlmConfig(ctx, capability, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-        env: process.env,
-        getChannelModelConfig,
-        getChannelModelCredential: (serviceId) =>
-          getChannelModelCredential(ctx, serviceId),
-        getChannelModelSelection: (selectedCapability) =>
-          getChannelModelSelection(ctx, selectedCapability),
-      }),
-    resolveDedicatedLlm: (ctx, capability) =>
-      resolveDedicatedLlmConfig(ctx, capability, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-        env: process.env,
-        getChannelModelConfig,
-        getChannelModelCredential: (serviceId) =>
-          getChannelModelCredential(ctx, serviceId),
-      }),
-    resolveMultimodal: (ctx, capability) =>
-      resolveMultimodalSpecFn(
-        ctx,
-        capability as "image.generate" | "video.generate" | "asset.classify",
-        {
-          getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-          env: process.env,
-          getChannelModelConfig,
-          getChannelModelCredential: (serviceId) =>
-            getChannelModelCredential(ctx, serviceId),
-          getChannelModelSelection: (selectedCapability) =>
-            getChannelModelSelection(ctx, selectedCapability),
-        },
-      ),
-    resolveTranscribe: (ctx) =>
-      resolveTranscribeSpecFn(ctx, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-        env: process.env,
-        getChannelModelConfig,
-        getChannelModelCredential: (serviceId) =>
-          getChannelModelCredential(ctx, serviceId),
-        getChannelModelSelection: (selectedCapability) =>
-          getChannelModelSelection(ctx, selectedCapability),
-      }),
+    resolveLlm:async(ctx,capability)=>{
+      const spec=await resolveFrozenExecutionSpec(ctx,await resolveModelTestRoute(ctx,capability));
+      if('engine' in spec)throw new ModelProbeNotApplicable('codex');
+      return spec;
+    },
+    resolveDedicatedLlm:async(ctx,capability)=>{
+      const spec=await resolveFrozenExecutionSpec(ctx,await resolveModelTestRoute(ctx,capability));
+      if('engine' in spec)throw new ModelProbeNotApplicable('codex');
+      return spec;
+    },
+    resolveMultimodal:async(ctx,capability)=>{
+      const spec=await resolveFrozenAssetSpec(ctx,await resolveModelTestRoute(ctx,capability));
+      if('engine' in spec)throw new ModelProbeNotApplicable('codex');
+      return spec;
+    },
+    resolveTranscribe:async(ctx)=>{
+      const value=await resolveFrozenCredential(ctx,await resolveModelTestRoute(ctx,'transcribe.audio'),true);
+      if(value.kind==='codex')throw new ModelProbeNotApplicable('codex');
+      if(value.kind==='asr-pending-lease')throw new ModelProbeNotApplicable('audio-task');
+      return value.spec;
+    },
     resolveEmbed: async () => null,
     resolveSearch: (ctx) => resolveSearchSpec(ctx),
     generateImageMinimal: (spec,c) => modelProbeIo.probeImage(c,spec),
@@ -6926,6 +6913,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
     async afterCommit(c,action,result){
       if(action.kind==="project.create")await indexProjectBestEffort(c,result as Parameters<typeof indexProjectBestEffort>[1]);
+      if(action.kind==="topic.promote")await indexProjectBestEffort(c,{id:(result as {projectId?:string}).projectId});
       if(action.kind==="knowledge.create")await knowledgeSearchRuntime.indexKnowledgeDocumentBestEffort(c,(result as {id:string}).id);
     },
   });

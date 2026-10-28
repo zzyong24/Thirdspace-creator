@@ -32,7 +32,7 @@ assert.equal(new Set(rows.map(row => row.id)).size, rows.length, '活动看板�
 const targets = text => [...text.matchAll(/\[[^\]\n]*\]\(([^)\n]*)\)/g)].map(match => match[1]);
 const shortenLabels = text => text.replace(/\[[^\]\n]*\]\(([^)\n]*)\)/g, (_match, href) => `[SPEC](${href})`);
 const allowed = {
-  'T-1404': { spec: 'docs/features/t1404-tab-navigation-performance-fixes.md', evidence: 'docs/verification/t1404/FRONTEND_VALIDATION.md' },
+  'T-1425': { spec: 'docs/features/t1425-tab-navigation-performance-fixes.md', evidence: 'docs/verification/t1425/FRONTEND_VALIDATION.md' },
   'T-1396': { spec: 'docs/features/t1396-local-recovery-backup-cleanup.md', evidence: 'docs/features/t1396-local-recovery-backup-cleanup.md' },
   'T-1395': { spec: 'docs/features/t1395-local-package-startup-recovery.md', evidence: 'docs/verification/t1395/RESULT.md' },
   'T-1394': { spec: 'docs/features/t1394-local-startup-diagnosis.md', evidence: 'docs/research/t1394-local-startup-diagnosis.md' },
@@ -53,7 +53,7 @@ for (const row of rows) {
   assert(matching.length > 0, `${row.id} 缺真实完成事件`);
   const event = matching.at(-1);
   const evidenceText = fs.readFileSync(path.join(root, binding.evidence), 'utf8');
-  if (row.id === 'T-1404') assert.equal(sha(evidenceText).slice(0, 12), event.report_sha, 'T1404验收报告绑定必须匹配');
+  if (row.id === 'T-1425') assert.equal(sha(evidenceText).slice(0, 12), event.report_sha, 'T1425验收报告绑定必须匹配');
   archived.push(row);
   archiveProof.push({ id: row.id, ...binding, evidenceSha256: sha(evidenceText), originalRowSha256: sha(row.line), completeEvent: event,
     identityBoundary: row.id === 'T-1379' ? '只归档当前协作者Mac说明；同号UI任务后续block原事件不改、不作已完成证明。' : '仅搬运原完成行；不是重新验收产品。' });

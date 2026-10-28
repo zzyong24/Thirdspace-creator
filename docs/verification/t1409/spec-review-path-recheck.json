@@ -1,1 +1,0 @@
-{"schema":"spec-review-round/v2","review_kind":"recheck","summary":"独立代理/root/t1408_contract_review核对唯一规格增量：contract/tests/provider-error-detail.test.ts符合contract/vitest.config.ts的tests/**/*.test.ts收集规则；module与packet已同步。当前SPEC SHA256 e477ca522db3518904cde8f6e3c2af51f63401048116d864551fc3073fa3927c。产品行为不变，增量无新发现；不是测试/402/安装通过声明。","findings":[]}

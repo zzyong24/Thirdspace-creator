@@ -11,7 +11,7 @@ function deps(read:()=>Promise<{id:string;name:string}|null>):AssembleChatDeps{
   assistantSystem:{features:async()=>({}),read:async()=>({kind:'system.read',text:'{}'}),propose:async()=>{throw Error('禁止写');},createCanvas:async()=>{throw Error('禁止写');}},
   contextReaders:{getCurrentGroup:read,listProjects:async()=>({rows:[],total:0}),listComments:async()=>({rows:[],total:0}),getProjectBrief:async()=>null,searchKnowledge:async()=>[],searchMaterials:async()=>[]}};
 }
-describe('T1405 对话所属组由可信上下文确定',()=>{
+describe('T1426 对话所属组由可信上下文确定',()=>{
  it('纯组对话注入同组名称和精确GET，不需要根据其它组成员数量推断',async()=>{
   const read=vi.fn(async()=>({id:'bound-group',name:'空成员但明确选中的组'}));
   const result=await prepareChatAssembly(ctx,{surface:'topics'},deps(read));

@@ -1,3 +1,4 @@
+import {ModelProbeNotApplicable} from './settings-model-routing';
 import { ENDPOINTS, type Transport } from "@creatoros/contract";
 import type { RequestContext } from "@creatoros/contract";
 import { resolveMinimaxH3Endpoints } from "@creatoros/ai-worker";
@@ -10,7 +11,7 @@ import { CHANNEL_MODEL_PAYMENT_REQUIRED_MESSAGE, MANAGED_AI_CREDIT_EXHAUSTED_MES
  * 其余 op 透传。
  *
  * 探测策略(按 capability,走**现有解析链**解析已保存配置,再发最便宜的真实调用):
- *   - default / script.review(文本 LLM):resolveLlmConfig → 与正式聊天相同的
+ *   - default / script.review(文本 LLM):已选模型的冻结业务路由 → 与正式聊天相同的
  *     modelFor + streamText 流式探针，且必须收到非空文本。测试层不再手拼 URL/请求体，
  *     避免把 HTML 200 或 2xx 空流误判为连通。
  *   - chat.fallback:resolveDedicatedLlm(只认专配行,不回退主模型)→ 同上最小流式探测。
@@ -61,7 +62,7 @@ export interface ModelTestResult {
   provider: string;
   model: string;
   detail: string;
-  /** [T-384] 三态:"warn" = 无法探测但也无法证伪配置(诚实中间态,ok=true);
+  /** [T-384] 三态:"warn" = 无法探测但也无法证伪配置(诚实中间态；未验证可为ok=false);
    *  缺省按 ok 二态解释(ok→"ok",!ok→"fail"),向后兼容。 */
   status?: "ok" | "warn" | "fail";
 }
@@ -72,7 +73,7 @@ export interface TextProbeOptions {
 
 export interface SettingsModelTestDeps {
   settings: Transport;
-  /** 文本 LLM 解析(default / script.review;三层回退)。未配 → 抛 LlmCredentialError。 */
+  /** 文本 LLM 解析(default / script.review;复用所选业务路由)。未配 → 抛已分类错误。 */
   resolveLlm: (ctx: RequestContext, capability: string) => Promise<LlmSpecLite>;
   /** 备用对话模型:只认专配行,未配 → null(不回退主模型)。 */
   resolveDedicatedLlm: (
@@ -122,6 +123,17 @@ const trimBase = (url: string): string => url.replace(/\/+$/, "");
 
 function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
+}
+
+/** 只认已知超时协议码/错误类型，不把取消或未知连接故障猜成超时。 */
+function isProbeTimeout(err:unknown):boolean{
+ const seen=new Set<unknown>();let value=err;
+ for(let depth=0;value&&typeof value==='object'&&!seen.has(value)&&depth<5;depth++){
+  seen.add(value);const record=value as {name?:unknown;code?:unknown;message?:unknown;cause?:unknown};
+  if(record.name==='TimeoutError'||record.code==='ETIMEDOUT'||record.code==='UND_ERR_CONNECT_TIMEOUT'||typeof record.message==='string'&&['REQUEST_IO_DEADLINE','连接测试已超时'].includes(record.message.trim()))return true;
+  value=record.cause;
+ }
+ return false;
 }
 
 function isAuthenticationFailure(err: unknown): boolean {
@@ -240,7 +252,8 @@ async function textModelProbe(
         : paymentMessage === MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE ? "credit_exhausted"
         : isAuthenticationFailure(err)
         ? "authentication_error"
-        : "provider_error",
+        : isProbeTimeout(err)?"timeout":"provider_error",
+      correlationId:ctx.requestId,
     });
     if (paymentMessage) return { ok: false, detail: paymentMessage };
     if (isAuthenticationFailure(err)) {
@@ -249,6 +262,7 @@ async function textModelProbe(
         detail: "密钥无效或无权限，请检查 API 密钥后重试。",
       };
     }
+    if(isProbeTimeout(err))return {ok:false,detail:'模型连接测试已超时，尚未取得回复；请稍后核对服务状态再试。'};
     return {
       ok: false,
       detail:
@@ -603,16 +617,18 @@ export async function runModelConnectionTest(
         };
     }
   } catch (err) {
-    // 解析层抛错:未配置类 → 「未配置」;其它 → 人话兜底(技术原因只进 console)。
-    if (isUnconfiguredError(err)) return unconfigured(errMsg(err));
+    if(err instanceof ModelProbeNotApplicable)return {ok:false,status:'warn',provider:'',model:'',detail:err.reason==='codex'?'当前选择 Codex 通路，API 连接测试不适用；此处未验证连通，请通过实际创作任务检查。':'当前语音服务需要实际音频任务才能验证；本次未调用或验证云端服务。'};
+    // 只公开稳定类别和关联号；未确定底层原因时不能把解析失败说成网络或密钥问题。
+    if (isUnconfiguredError(err)) return unconfigured('所选模型尚不可用，请检查该用途的模型来源和已保存配置。');
     logProbeFailure("runModelConnectionTest", {
       category: "configuration_error",
+      correlationId:ctx.requestId,
     });
     return {
       ok: false,
       provider: "",
       model: "",
-      detail: "连接失败,请检查网络和接口地址后重试。",
+      detail: "所选模型配置解析未完成，尚未发起服务连接。请检查该用途的模型来源和已保存配置；可用请求编号联系排查。",
     };
   }
 }

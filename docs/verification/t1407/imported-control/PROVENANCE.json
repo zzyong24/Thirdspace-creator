@@ -1,8 +1,8 @@
 {
   "canonicalControlParent": "bb52d58461a311b2e38f399283c3878179569f1b",
   "foreignControlParent": "fab59d28e87657a1443a7cbfeac91629edc85e3b",
-  "eventPolicy": "保main规范事件链；外部分支独有事件逐字另存，重号T1401/T1403不合并状态；T1402在当前SPEC上重新独立记录审核，不移花接木原PASS。",
-  "specificModuleOwner": "T-1402采用已安装来源最新无感升级合同与模块写集，其他模块沿主目录。",
+  "eventPolicy": "保main规范事件链；外部分支独有事件逐字另存，重号T1422/T1424不合并状态；T1423在当前SPEC上重新独立记录审核，不移花接木原PASS。",
+  "specificModuleOwner": "T-1423采用已安装来源最新无感升级合同与模块写集，其他模块沿主目录。",
   "sourceReviewArchived": true,
   "sourceWorktreeUntouched": true
 }
