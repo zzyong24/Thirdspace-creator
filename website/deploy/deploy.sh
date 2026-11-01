@@ -24,7 +24,7 @@ ssh -o BatchMode=yes "$HOST" "mkdir -p $REMOTE_ROOT"
 # 2) rsync 站点静态文件(只推 website/ 根的产物,排除 deploy/ 工具本身与隐藏文件)。
 echo "[deploy] rsync 站点静态文件…"
 rsync -az --delete \
-  --exclude 'deploy/' --exclude '.*' --exclude '*.test.*' \
+  --exclude 'deploy/' --exclude 'buy/' --exclude '.*' --exclude '*.test.*' \
   --exclude 'updates/' --exclude 'prompts/' \
   "$HERE"/ "$HOST:$REMOTE_ROOT/"
 

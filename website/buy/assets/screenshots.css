@@ -1,0 +1,13 @@
+/* CreatorOS专属截图展示，不修改共享商店样式与交易逻辑。 */
+.product-creatoros .gallery img{width:100%;height:auto;aspect-ratio:auto;object-fit:contain}
+.product-creatoros .gallery figcaption{font-family:inherit;letter-spacing:normal}
+.product-creatoros .gallery figcaption h3{font-size:18px;line-height:1.5}
+.product-creatoros .gallery figcaption p{font-size:15px;color:var(--muted);margin-top:6px}
+.reveal{opacity:1;transform:none}
+.zoomable:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+
+.product-creatoros #hero-shot{height:auto;object-fit:contain}
+@media(max-width:600px){
+ .product-creatoros .lightbox{place-items:start;overflow:auto;padding:72px 12px 24px;overscroll-behavior:contain}
+ .product-creatoros .lightbox img{width:1024px;max-width:none;max-height:none;height:auto}
+}

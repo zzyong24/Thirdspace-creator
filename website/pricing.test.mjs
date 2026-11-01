@@ -15,7 +15,7 @@ const visibleText = html
 
 async function publicFiles(directory, output = []) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
-    if (entry.name.startsWith(".") || entry.name === "deploy" || entry.name.endsWith(".test.mjs")) continue;
+    if (entry.name.startsWith(".") || entry.name === "deploy" || entry.name === "buy" || entry.name.endsWith(".test.mjs")) continue;
     const path = join(directory, entry.name);
     if (entry.isDirectory()) await publicFiles(path, output);
     else output.push(path);

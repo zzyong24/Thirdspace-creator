@@ -22651,7 +22651,13 @@
         "website/shots/shot-dashboard-public-v2.png",
         "website/shots/creatoros-flywheel.webp",
         "orchestrator/process/reconcile.config.json",
-        "orchestrator/DECISION_LOG.md"
+        "orchestrator/DECISION_LOG.md",
+        "website/shots/real/**",
+        "website/buy/**",
+        "website/robots.txt",
+        "website/sitemap.xml",
+        "website/deploy/deploy.sh",
+        "docs/research/2026-11-01-creatoros-sites-real-screens-seo.md"
       ],
       "read_set": [
         "AGENTS.md",

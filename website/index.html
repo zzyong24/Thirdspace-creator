@@ -3,9 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="CreatorOS —— 住在你本机的创作工作台。面向抖音、小红书、视频号、B站、快手、YouTube 与公众号，串联文章、图文、视频创作、发布管理与数据复盘，支持 macOS 与 Windows。">
+<meta name="description" content="CreatorOS是一站式AI自媒体创作工作台：账号定位、短视频选题与脚本、小红书图文、公众号文章排版、封面素材、发布日历和数据复盘。查看14张真实软件截图，了解抖音、小红书、视频号、快手、B站、YouTube与公众号的多平台创作流程，支持Mac和Windows。">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://creatoros.aitongban.cloud/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CreatorOS">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="CreatorOS官网 - AI自媒体创作工具与多平台内容运营">
+<meta property="og:description" content="CreatorOS是一站式AI自媒体创作工作台：账号定位、短视频选题与脚本、小红书图文、公众号文章排版、封面素材、发布日历和数据复盘。查看14张真实软件截图，了解抖音、小红书、视频号、快手、B站、YouTube与公众号的多平台创作流程，支持Mac和Windows。">
+<meta property="og:url" content="https://creatoros.aitongban.cloud/">
+<meta property="og:image" content="https://creatoros.aitongban.cloud/shots/real/creatoros-creator-overview.webp">
+<meta property="og:image:alt" content="CreatorOS多平台创作者总览真实截图">
+<meta property="og:image:width" content="3456">
+<meta property="og:image:height" content="1988">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CreatorOS官网 - AI自媒体创作工具与多平台内容运营">
+<meta name="twitter:description" content="CreatorOS是一站式AI自媒体创作工作台：账号定位、短视频选题与脚本、小红书图文、公众号文章排版、封面素材、发布日历和数据复盘。查看14张真实软件截图，了解抖音、小红书、视频号、快手、B站、YouTube与公众号的多平台创作流程，支持Mac和Windows。">
+<meta name="twitter:image" content="https://creatoros.aitongban.cloud/shots/real/creatoros-creator-overview.webp">
 <meta name="theme-color" content="#fbfbfd">
-<title>CreatorOS · 住在你本机的多平台 AI 编导创作系统</title>
+<title>CreatorOS官网 - AI自媒体创作工具与多平台内容运营</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
 :root{
@@ -206,17 +222,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offs
 .step-shot{position:relative;max-width:640px;justify-self:center;width:100%}
 .step-shot .ph{border:1px solid var(--hair);border-radius:12px;overflow:hidden;background:var(--panel);box-shadow:0 24px 60px -30px rgba(76,34,201,.3)}
 .step-shot img,.zoomable{cursor:zoom-in}
-.privacy-preview{aspect-ratio:16/10;padding:18px;display:grid;grid-template-columns:28% 1fr;gap:14px;background:linear-gradient(145deg,#fff 0%,#faf9fd 65%,#f3f0fb 100%);position:relative}
-.privacy-preview::before{content:attr(data-module);position:absolute;left:28px;top:24px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--brand);font-weight:700}
-.privacy-preview::after{content:"界面结构示意";position:absolute;right:24px;top:24px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--faint)}
-.privacy-side,.privacy-main{margin-top:28px;border:1px solid var(--hair2);border-radius:10px;background:rgba(255,255,255,.88);padding:15px}
-.privacy-side{display:flex;flex-direction:column;gap:11px}
-.privacy-main{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.privacy-line{height:9px;border-radius:99px;background:linear-gradient(90deg,#e9e7ef,#f4f2f8)}
-.privacy-line.short{width:58%}.privacy-line.mid{width:78%}
-.privacy-card{border:1px solid var(--hair2);border-radius:9px;padding:13px;display:flex;flex-direction:column;gap:10px;background:#fff}
-.privacy-card.wide{grid-column:1/-1}
-@media(max-width:560px){.step-shot .privacy-preview{width:100%;max-width:100%;min-height:300px;aspect-ratio:auto;overflow:hidden;padding:14px;grid-template-columns:30% 1fr;gap:9px}.privacy-preview::before{left:22px;top:18px}.privacy-preview::after{right:20px;top:18px}.privacy-side,.privacy-main{margin-top:24px;padding:10px;gap:8px}.privacy-card{padding:9px;gap:8px}.step-shot::after{content:"界面结构示意"}}
 .step-shot .corner{position:absolute;width:18px;height:18px;border:1.5px solid var(--brand-soft)}
 .step-shot .c1{top:-7px;left:-7px;border-right:none;border-bottom:none}
 .step-shot .c2{top:-7px;right:-7px;border-left:none;border-bottom:none}
@@ -446,6 +451,19 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
 .cw-foot textarea:focus{border-color:var(--brand-soft)}
 .cw-send{flex:none;width:38px;height:38px;border-radius:10px;background:var(--brand);color:#fff;border:none;cursor:pointer;display:grid;place-items:center}
 .cw-send svg{width:18px;height:18px}
+
+/* 真实软件截图：完整显示，不裁切；原图支持放大。 */
+.shot-frame img,.step-shot img{width:100%;height:auto;object-fit:contain}
+.real-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.real-gallery figure{min-width:0;overflow:hidden;border:1px solid var(--hair);border-radius:16px;background:var(--panel)}
+.real-gallery img{display:block;width:100%;height:auto;object-fit:contain}
+.real-gallery figcaption{padding:18px 20px;border-top:1px solid var(--hair2)}
+.real-gallery h3{font-size:17px;line-height:1.5}
+.real-gallery p{font-size:14px;line-height:1.75;color:var(--muted);margin-top:5px}
+.product-faq details{padding:19px 0;border-top:1px solid var(--hair2)}
+.product-faq summary{font-size:17px;font-weight:600;cursor:pointer}
+.product-faq details p{margin-top:12px;color:var(--muted);line-height:1.8}
+@media(max-width:760px){.real-gallery{grid-template-columns:1fr;gap:18px}}
 </style>
 </head>
 <body>
@@ -458,6 +476,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
       <a href="#flywheel">飞轮</a>
       <a href="#why">为什么不一样</a>
       <a href="#platforms">多平台</a>
+      <a href="#screenshots">真实界面</a>
       <a href="#usecase">适用</a>
       <a href="#changelog" onclick="jumpToSection(event,'changelog')">更新日志</a>
     </div>
@@ -466,12 +485,20 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
     </div>
   </div>
 </header>
+<div itemscope itemtype="https://schema.org/SoftwareApplication">
+<meta itemprop="name" content="CreatorOS">
+<meta itemprop="applicationCategory" content="MultimediaApplication">
+<meta itemprop="operatingSystem" content="macOS, Windows">
+<link itemprop="url" href="https://creatoros.aitongban.cloud/">
+<link itemprop="image" href="https://creatoros.aitongban.cloud/shots/real/creatoros-creator-overview.webp">
+<meta itemprop="description" content="AI自媒体创作工具，支持账号定位、短视频脚本、小红书图文、公众号排版、素材管理与多平台内容运营。">
+</div>
 <!-- HERO -->
 <section class="hero" id="top">
   <div class="wrap">
     <span class="eyebrow rv">多平台创作 · macOS / Windows · 数据本机</span>
-    <h1 class="rv">创作,不再<br>只靠<span class="em">灵感</span>。</h1>
-    <p class="sub rv">CreatorOS 是一套住在你本机的<b>「多平台 AI 编导创作系统」</b>。把一条内容从定位、选题、写稿、制作,到<b>发布前盲预测</b>、<b>发布后真实数据复盘</b>与<b>经验回流</b>,走完一条越用越准的数据复利飞轮。</p>
+    <h1 class="rv">AI 自媒体创作，<br>从灵感到<span class="em">作品</span>。</h1>
+    <p class="sub rv">CreatorOS 是一套住在你本机的<b>「多平台 AI 编导创作系统」</b>。用 AI 完成账号定位、短视频选题与脚本、小红书图文、公众号文章排版和封面素材，把<b>创作、发布管理、数据复盘与经验积累</b>接成一条持续运转的内容工作流。</p>
     <div class="release-rail rv">
       <div class="release-seal"><span>NOW</span><b>1.3</b></div>
       <div class="release-copy">
@@ -497,10 +524,10 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
 
     <div class="shot-stage rv">
       <div class="shot-frame">
-        <div class="bar"><i></i><i></i><i></i><span class="addr">CreatorOS · 首页驾驶舱</span></div>
-        <img src="shots/shot-dashboard-public-v2.png" alt="CreatorOS 首页驾驶舱隐私安全界面示意" loading="eager" width="1638" height="960">
+        <div class="bar"><i></i><i></i><i></i><span class="addr">CreatorOS · 多平台创作者总览</span></div>
+        <img class="zoomable" src="/shots/real/creatoros-creator-overview.webp" alt="CreatorOS 多平台创作者总览真实软件截图" width="3456" height="1988" loading="eager" decoding="async" fetchpriority="high">
       </div>
-      <div class="shot-cap"><span>驾驶舱 — 产品结构示意，未使用真实账号与经营数据</span><span>LOCAL · 数据本机</span></div>
+      <div class="shot-cap"><span>创作者总览 — 真实账号、作品与运营数据</span><span>LOCAL · 数据本机</span></div>
     </div>
   </div>
 </section>
@@ -569,7 +596,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
           </ul>
         </div>
         <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-          <div class="ph privacy-preview" data-module="定位中心" aria-label="定位中心隐私安全界面结构示意"><div class="privacy-side"><span class="privacy-line mid"></span><span class="privacy-line"></span><span class="privacy-line short"></span><span class="privacy-line mid"></span></div><div class="privacy-main"><div class="privacy-card wide"><span class="privacy-line mid"></span><span class="privacy-line"></span></div><div class="privacy-card"><span class="privacy-line"></span><span class="privacy-line short"></span></div><div class="privacy-card"><span class="privacy-line mid"></span><span class="privacy-line"></span></div></div></div>
+          <div class="ph"><img class="zoomable" src="/shots/real/creatoros-positioning.webp" alt="CreatorOS AI账号定位对话真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"></div>
         </div>
       </div>
 
@@ -586,7 +613,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
           </ul>
         </div>
         <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-          <div class="ph privacy-preview" data-module="选题" aria-label="选题隐私安全界面结构示意"><div class="privacy-side"><span class="privacy-line"></span><span class="privacy-line mid"></span><span class="privacy-line short"></span><span class="privacy-line"></span></div><div class="privacy-main"><div class="privacy-card"><span class="privacy-line mid"></span><span class="privacy-line"></span></div><div class="privacy-card"><span class="privacy-line"></span><span class="privacy-line short"></span></div><div class="privacy-card wide"><span class="privacy-line mid"></span><span class="privacy-line"></span></div></div></div>
+          <div class="ph"><img class="zoomable" src="/shots/real/creatoros-topics.webp" alt="CreatorOS AI自媒体选题中心真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"></div>
         </div>
       </div>
 
@@ -603,7 +630,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
           </ul>
         </div>
         <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-          <div class="ph privacy-preview" data-module="脚本" aria-label="脚本隐私安全界面结构示意"><div class="privacy-side"><span class="privacy-line short"></span><span class="privacy-line"></span><span class="privacy-line mid"></span><span class="privacy-line"></span></div><div class="privacy-main"><div class="privacy-card wide"><span class="privacy-line"></span><span class="privacy-line mid"></span><span class="privacy-line"></span></div><div class="privacy-card"><span class="privacy-line short"></span><span class="privacy-line"></span></div><div class="privacy-card"><span class="privacy-line mid"></span><span class="privacy-line"></span></div></div></div>
+          <div class="ph"><img class="zoomable" src="/shots/real/creatoros-script-workbench.webp" alt="CreatorOS AI脚本与多形式创作工作台真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"></div>
         </div>
       </div>
 
@@ -620,7 +647,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
           </ul>
         </div>
         <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-          <div class="ph privacy-preview" data-module="制作视频" aria-label="制作视频隐私安全界面结构示意"><div class="privacy-side"><span class="privacy-line mid"></span><span class="privacy-line short"></span><span class="privacy-line"></span><span class="privacy-line mid"></span></div><div class="privacy-main"><div class="privacy-card"><span class="privacy-line"></span><span class="privacy-line mid"></span></div><div class="privacy-card"><span class="privacy-line short"></span><span class="privacy-line"></span></div><div class="privacy-card wide"><span class="privacy-line mid"></span><span class="privacy-line"></span></div></div></div>
+          <div class="ph"><img class="zoomable" src="/shots/real/creatoros-creative-canvas.webp" alt="CreatorOS AI封面与小红书图文画布真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"></div>
         </div>
       </div>
 
@@ -637,7 +664,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
           </ul>
         </div>
         <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-          <div class="ph privacy-preview" data-module="复盘" aria-label="复盘隐私安全界面结构示意"><div class="privacy-side"><span class="privacy-line"></span><span class="privacy-line mid"></span><span class="privacy-line short"></span><span class="privacy-line"></span></div><div class="privacy-main"><div class="privacy-card wide"><span class="privacy-line mid"></span><span class="privacy-line"></span></div><div class="privacy-card"><span class="privacy-line"></span><span class="privacy-line short"></span></div><div class="privacy-card"><span class="privacy-line mid"></span><span class="privacy-line"></span></div></div></div>
+          <div class="ph"><img class="zoomable" src="/shots/real/creatoros-operations-analysis.webp" alt="CreatorOS 内容运营分析与复盘真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"></div>
         </div>
       </div>
 
@@ -654,7 +681,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
           </ul>
         </div>
         <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-          <div class="ph privacy-preview" data-module="知识库" aria-label="知识库隐私安全界面结构示意"><div class="privacy-side"><span class="privacy-line short"></span><span class="privacy-line"></span><span class="privacy-line mid"></span><span class="privacy-line"></span></div><div class="privacy-main"><div class="privacy-card"><span class="privacy-line mid"></span><span class="privacy-line"></span></div><div class="privacy-card"><span class="privacy-line"></span><span class="privacy-line short"></span></div><div class="privacy-card wide"><span class="privacy-line mid"></span><span class="privacy-line"></span></div></div></div>
+          <div class="ph"><img class="zoomable" src="/shots/real/creatoros-knowledge-base.webp" alt="CreatorOS 创作知识库真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"></div>
         </div>
       </div>
 
@@ -719,6 +746,30 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
       <div class="ind"><b>矩阵 / 多号运营</b><span>一号一套工作区<em>不串号</em>,一人管多号,定位、数据、经验各自独立。</span></div>
       <div class="ind"><b>MCN / 代运营</b><span>批量做号、交付内容,<em>单条边际成本趋近于零</em>，让团队在统一流程中持续产出。</span></div>
     </div>
+  </div>
+</section>
+
+<section class="sect" id="screenshots">
+  <div class="wrap">
+    <div class="sect-head rv">
+      <div class="rule"><span class="eyebrow">Real Product Screenshots</span></div>
+      <h2>从定位到复盘，看真实软件怎么用</h2>
+      <p>这14张截图来自实际使用中的 CreatorOS。查看账号定位、内容雷达、AI脚本、小红书图文画布、素材管理、发布日历与多平台运营分析；点击图片可放大。</p>
+    </div>
+    <div class="real-gallery"><figure><img class="zoomable" src="/shots/real/creatoros-home.webp" alt="CreatorOS 首页与创作引导真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>首页与创作引导</h3><p>查看继续创作、近期发布和账号上手引导。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-creator-overview.webp" alt="CreatorOS 多平台创作者总览真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>多平台创作者总览</h3><p>按平台与日期查看已采集作品、播放表现和账号数据。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-positioning.webp" alt="CreatorOS AI账号定位对话真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>AI账号定位对话</h3><p>从经验、优势和创作目标出发，逐步整理账号定位。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-content-radar.webp" alt="CreatorOS 内容雷达与对标选题真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>内容雷达与对标选题</h3><p>在真实来源中筛选内容、查看互动数据，并升级为创作项目。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-topics.webp" alt="CreatorOS AI自媒体选题中心真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>AI自媒体选题中心</h3><p>基于定位、评论问题、知识资料与热点补充选题。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-projects.webp" alt="CreatorOS 内容项目管理真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>内容项目管理</h3><p>按创作阶段查看项目与已发布作品，继续进入对应稿件。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-script-workbench.webp" alt="CreatorOS AI脚本与多形式创作工作台真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>AI脚本与多形式创作工作台</h3><p>脚本、文章、图文、视频制作和复盘共享项目资料与编导上下文。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-knowledge-base.webp" alt="CreatorOS 创作知识库真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>创作知识库</h3><p>真实资料库初始界面：添加资料后阅读原文，持续积累创作依据。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-asset-library.webp" alt="CreatorOS 图片与视频素材中心真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>图片与视频素材中心</h3><p>集中管理作品封面和素材，支持预览、检索与项目复用。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-creative-canvas.webp" alt="CreatorOS AI封面与小红书图文画布真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>AI封面与小红书图文画布</h3><p>从封面与图文案例出发，选择适合内容的视觉表达。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-publishing-calendar.webp" alt="CreatorOS 多平台发布日历真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>多平台发布日历</h3><p>按日历管理创作安排、发布记录与平台表现。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-operations-analysis.webp" alt="CreatorOS 内容运营分析与复盘真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>内容运营分析与复盘</h3><p>按真实作品与选定周期查看表现，结合内容生成运营分析。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-automation.webp" alt="CreatorOS 多账号数据采集与自动化真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>多账号数据采集与自动化</h3><p>查看各平台账号采集计划、执行时间与运行状态。</p></figcaption></figure>
+<figure><img class="zoomable" src="/shots/real/creatoros-model-settings.webp" alt="CreatorOS 官方、自配与本地Codex模型设置真实软件截图" width="3456" height="1988" loading="lazy" decoding="async"><figcaption><h3>官方、自配与本地Codex模型设置</h3><p>按文本、图片、视频和语音用途查看与选择模型来源。</p></figcaption></figure></div>
   </div>
 </section>
 
@@ -908,6 +959,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
   </div>
 </section>
 
+<section class="sect" id="product-faq"><div class="wrap"><div class="sect-head"><div class="rule"><span class="eyebrow">CreatorOS FAQ</span></div><h2>关于AI自媒体创作，你可能想了解</h2></div><div class="product-faq"><details><summary>CreatorOS适合做什么内容？</summary><p>CreatorOS面向自媒体创作者、内容团队和多账号运营者，把账号定位、选题、写稿、图片素材、视频制作、发布管理与数据复盘放在同一个本机工作台。</p></details><details><summary>支持哪些内容平台？</summary><p>支持面向抖音、小红书、视频号、快手、B站、YouTube和公众号组织创作与发布管理；具体发布、采集功能以客户端中的账号连接状态为准。</p></details><details><summary>能做小红书图文和公众号文章吗？</summary><p>可以。图文和文章有各自的创作工作面，小红书图文可组织正文、逐页配图与封面，公众号文章可处理长文、配图和排版，并复用项目资料与素材。</p></details><details><summary>需要先登录抖音才能开始吗？</summary><p>不需要。你可以先描述经验、优势和目标，生成账号定位候选，确认采纳后继续选题与创作。</p></details><details><summary>支持Mac和Windows吗？</summary><p>CreatorOS提供macOS与Windows桌面端。安装系统要求与当前可用安装包请查看购买页中的下载说明。</p></details></div></div></section>
 <!-- 尾部产品导览 -->
 <section class="final" id="join">
   <div class="wrap">
@@ -946,20 +998,14 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
   document.querySelectorAll(".rv").forEach(function(el,i){el.style.transitionDelay=(Math.min(i%6,3)*70)+"ms";ob.observe(el);});
 })();
 
-/* 长页导航：懒加载图片会改变上方高度，图片解码后再校准一次目标位置。 */
+/* 截图均声明宽高，锚点可直接定位，无需为导航提前下载全部原图。 */
 window.jumpToSection=function(e,id){
   if(e)e.preventDefault();
   var target=document.getElementById(id);
   if(!target)return;
   history.replaceState(null,"","#"+id);
-  var imgs=Array.from(document.querySelectorAll("img[loading='lazy']"));
-  imgs.forEach(function(img){img.loading="eager";});
   target.scrollIntoView({behavior:"smooth",block:"start"});
-  var decoded=imgs.map(function(img){return img.decode?img.decode().catch(function(){}):Promise.resolve();});
-  Promise.allSettled(decoded).then(function(){target.scrollIntoView({behavior:"auto",block:"start"});});
-  setTimeout(function(){target.scrollIntoView({behavior:"auto",block:"start"});},2200);
 };
-window.jumpToJoin=function(e){window.jumpToSection(e,"join");};
 
 /* 更新日志 Tab：按钮、面板和键盘焦点保持同一状态。 */
 window.releaseSelect=function(id,btn){

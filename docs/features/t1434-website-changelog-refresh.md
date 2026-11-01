@@ -35,22 +35,85 @@
 - 版本选项仅显示 v1.3.0、v1.2.0 及既有历史版本，日期仍保留真实更新区间。
 - 首次交付记录与收据保留在 Git 历史；新一轮证据写入 `docs/verification/t1434/r2/`。通过 taskctl 撤销原验收并恢复进行中，重新验证与部署。
 
+## 第三轮：两站真实截图与SEO（用户2026-11-01明确授权）
+
+- 用户提供14张本机真实截图，明确“两站都放真实截图，不用再脱敏”，授权公开其中账号名、内容标题与实际数据。此指令替代旧的示意图/脱敏限制；不据此读取或公开截图之外的私有数据。
+- 操作者持有该14张图片，最终得到官网与购买页可访问、可放大的真实产品展示。正常路径为看功能、点图放大、返回页面、到购买页查看方案；失败恢复为关闭预览、刷新与服务端备份回滚。
+- 官网替换首页和六个工作面示意图，补全十四张功能截图展示，保持v1.3.0/v1.2.0记录与顶部无下载区。
+- 购买页使用同一批真实截图，保留原有套餐、价格、推荐人、购买、兑换、客服、下载与Moving页面行为。仅增加CreatorOS专属静态HTML、调整CreatorOS展示配置、增加截图样式；共享交易脚本原样保留。
+- 购买页当前部署源为线上静态包，Growth工作区存在大量既有未提交改动，不能用该工作区覆盖线上。本次静态候选在本项目 `website/buy/` 保存，只部署明确的展示文件。官网通用部署脚本排除此独立购买站目录。
+- SEO以品牌、AI自媒体创作、短视频脚本、小红书图文、公众号排版、多平台运营等真实功能组织title/description/H1、正文、alt与图片标题；两站各自canonical、分享预览、静态可抓取内容、结构化软件信息、robots与sitemap。不编造价格、评价、用户规模或排名保证。
+- 购买页维持原CSP与API策略，只为CreatorOS专页及robots/sitemap增加精确静态路由；部署前nginx -t，失败恢复原配置及文件；不改其他产品路由、支付、数据库或下载包。
+- 验证：现有官网测试；图片来源及无损转码记录；静态HTML/SEO/JSON检查；两站1440×1000和390×844真实浏览器图片、放大/关闭/返回、版本、刷新与公开内容回读；购买页仅GET验证方案和表单，不创建订单/兑换/消耗真实码；保留Moving HTML与共享脚本校验和。
+- 新证据写入 `docs/verification/t1434/r3/`。纯文案、静态资源与配置不制造TDD红测；原页面不满足新截图与SEO要求的真实失败单列。pmem sync与quick/read-only reconcile不代表全产品验证。
+
 ## 官网浏览器旅程
 
 ```frontend-journey-contract
 {
   "schema": "frontend-journey-contract/v2",
   "task_id": "T-1434",
-  "watched_paths": ["website/index.html", "website/pricing.test.mjs", "website/assets.test.mjs", "docs/verification/t1434/verify-website.mjs", "docs/features/t1434-website-changelog-refresh.md"],
-  "copy_guard": {"forbid_internal_ids": true},
-  "required_checks": [
-    {"id": "download-removed", "test_id": "website-public-content"},
-    {"id": "versions", "test_id": "website-release-tabs"},
-    {"id": "keyboard-refresh", "test_id": "website-keyboard-refresh"},
-    {"id": "responsive", "test_id": "website-two-viewports"}
+  "watched_paths": [
+    "website/index.html",
+    "website/pricing.test.mjs",
+    "website/assets.test.mjs",
+    "website/buy/creatoros/index.html",
+    "website/buy/products/creatoros.json",
+    "website/buy/assets/screenshots.css",
+    "website/buy/assets/screenshots.js", "website/buy/assets/store.js",
+    "website/shots/real",
+    "website/robots.txt",
+    "website/sitemap.xml",
+    "docs/verification/t1434/verify-website.mjs",
+    "docs/features/t1434-website-changelog-refresh.md"
   ],
-  "required_conditions": ["refresh", "keyboard"],
-  "viewports": [{"width": 1440, "height": 1000}, {"width": 390, "height": 844}],
+  "copy_guard": {
+    "forbid_internal_ids": true
+  },
+  "required_checks": [
+    {
+      "id": "download-removed",
+      "test_id": "website-download-removed"
+    },
+    {
+      "id": "versions",
+      "test_id": "website-versions"
+    },
+    {
+      "id": "keyboard-refresh",
+      "test_id": "website-keyboard-refresh"
+    },
+    {
+      "id": "responsive",
+      "test_id": "website-responsive"
+    },
+    {
+      "id": "real-screenshots",
+      "test_id": "website-real-screenshots"
+    },
+    {
+      "id": "seo",
+      "test_id": "website-seo"
+    },
+    {
+      "id": "storefront-preserved",
+      "test_id": "website-storefront-preserved"
+    }
+  ],
+  "required_conditions": [
+    "refresh",
+    "keyboard"
+  ],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
   "coherence_groups": []
 }
 ```
