@@ -1,0 +1,56 @@
+{
+  "url": "https://creatoros.aitongban.cloud/",
+  "observedAt": "2026-11-01T10:05:32.276Z",
+  "observations": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "initial": {
+        "download": false,
+        "width": 1440,
+        "scrollWidth": 1440,
+        "version": "CreatorOS v1.3.0",
+        "platformText": "MULTI-PLATFORM CREATION\n面向多个平台，一起管理创作\n\n从短视频、图文到长文章，按平台准备内容，把账号、作品与运营经验留在同一个工作台。\n\n视频平台\n面向抖音、视频号、快手、B站、YouTube，管理视频脚本、制作素材、发布物料与作品记录。\n小红书图文\n集中处理图文正文、逐页配图和封面，按连续阅读的顺序编辑内容。\n微信公众号\n用独立的文章工作台组织长文、配图与公众号排版，复用已有项目资料。\n多账号运营\n按账号管理内容与数据，安排发布、查看作品表现，并把复盘经验用于下一次创作。\n\n各平台可用的发布、采集功能，以客户端中的账号连接状态为准。",
+        "tabLabels": [
+          "v1.3.0",
+          "v1.2.0",
+          "v1.1",
+          "v1.0",
+          "v0.3.0",
+          "v0.2.0",
+          "v0.1.0"
+        ],
+        "selected": "release-tab-130"
+      },
+      "versions": 7,
+      "keyboard": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "initial": {
+        "download": false,
+        "width": 390,
+        "scrollWidth": 390,
+        "version": "CreatorOS v1.3.0",
+        "platformText": "MULTI-PLATFORM CREATION\n面向多个平台，一起管理创作\n\n从短视频、图文到长文章，按平台准备内容，把账号、作品与运营经验留在同一个工作台。\n\n视频平台\n面向抖音、视频号、快手、B站、YouTube，管理视频脚本、制作素材、发布物料与作品记录。\n小红书图文\n集中处理图文正文、逐页配图和封面，按连续阅读的顺序编辑内容。\n微信公众号\n用独立的文章工作台组织长文、配图与公众号排版，复用已有项目资料。\n多账号运营\n按账号管理内容与数据，安排发布、查看作品表现，并把复盘经验用于下一次创作。\n\n各平台可用的发布、采集功能，以客户端中的账号连接状态为准。",
+        "tabLabels": [
+          "v1.3.0",
+          "v1.2.0",
+          "v1.1",
+          "v1.0",
+          "v0.3.0",
+          "v0.2.0",
+          "v0.1.0"
+        ],
+        "selected": "release-tab-130"
+      },
+      "versions": 7,
+      "keyboard": true
+    }
+  ]
+}

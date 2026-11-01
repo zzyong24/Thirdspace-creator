@@ -21556,7 +21556,8 @@
         "website/favicon-32.png",
         "website/shots/shot-dashboard-public-v2.png",
         "website/shots/creatoros-flywheel.webp",
-        "orchestrator/process/reconcile.config.json"
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/DECISION_LOG.md"
       ],
       "verify_commands": {
         "implementation": [
