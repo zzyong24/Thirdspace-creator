@@ -37,3 +37,9 @@
 ## 保全与发布
 
 只替换 `/var/www/creatoros/index.html`，部署前保存服务端备份。`updates/`、`prompts/`、安装包与 nginx 配置均不改。GitHub 查询与线上核对是只读操作，没有发布 GitHub Release 或推送源码。
+
+## 首次上线后用户明确更正（2026-11-01）
+
+用户要求“不要命名为9月10月吧，命名为1.2.0、1.3.0”，并指出遗漏多平台支持。该明确命名取代上文按月份区分批次的初次实现，官网最新记录采用1.3.0，前一批采用1.2.0；不据此声称已生成1.3.0安装包。
+
+多平台来源：`frontend/src/features/projects/work-type-fields.tsx` 的文章/图文/视频与小红书、抖音、快手、公众号目标；`contract/src/primitives.ts`、`frontend/src/lib/platform-icons.ts` 与 `backend/src/modules/publishing/publishing.service.ts` 的抖音、小红书、视频号、公众号、快手、B站、YouTube 等发布管理平台；`backend/src/modules/platform-collection/platform-collection.service.ts` 按真实适配和授权状态提供采集能力。官网统一描述多平台创作、发布管理与运营，按连接状态说明发布和采集可用性，不把枚举中的平台视为全功能自动发布验收。
