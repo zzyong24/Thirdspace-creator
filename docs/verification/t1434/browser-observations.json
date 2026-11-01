@@ -1,0 +1,36 @@
+{
+  "url": "https://creatoros.aitongban.cloud/",
+  "observedAt": "2026-11-01T09:51:35.573Z",
+  "observations": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "initial": {
+        "download": false,
+        "width": 1440,
+        "scrollWidth": 1440,
+        "version": "CreatorOS v1.2.0",
+        "selected": "release-tab-120-oct"
+      },
+      "versions": 7,
+      "keyboard": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "initial": {
+        "download": false,
+        "width": 390,
+        "scrollWidth": 390,
+        "version": "CreatorOS v1.2.0",
+        "selected": "release-tab-120-oct"
+      },
+      "versions": 7,
+      "keyboard": true
+    }
+  ]
+}

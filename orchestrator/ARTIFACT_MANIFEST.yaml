@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "4-build"               # 3.9.0 v3 五阶段映射；具体切片仍由 BACKLOG 唯一排序
   frontier: "4-build"                    # 既有产品持续 BUILD，SHIP 仍受真实安装版/生产 E2E 门约束
-  updated_at: "2026-10-28"
+  updated_at: "2026-11-01"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -77,6 +77,7 @@ stages:
     gate_status: "not-run"
     confirmation_required: false
     artifacts:
+      - existing: "docs/verification/t1434/frontend-report.md (官网静态内容更新；移除旧验收下载区，补齐1.2.0九月/十月批次；不代表桌面产品全量验收)"
       - existing: "docs/features/t1354-official-account-binding-completion.md (独审R2事实补录REV:e7684a0a668b；受控导航RED/worker131GREEN与最终721两窗真实strict PASS:98f1613ba0d2；原1726首因UNKNOWN，非真人扫码)"
       - existing: "docs/features/t1355-binding-dialog-completion.md (独审REV:cebfffea8899；82组件、局部视觉来源映射及最终721两窗真实strict PASS:fff9f5e92b3b；真实提交后自动回位/原run恢复保，不冒已安装)"
       - existing: "docs/features/t1356-bound-platform-data-visibility.md (R3原规范及REV:34c4a0a3a50f保；d8ea两视口各28点及最终721真实strict PASS:f09f084b6785；typed/SQL降级恢复123/真实200分证，作品入口另T1362)"
