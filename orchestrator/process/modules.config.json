@@ -21521,6 +21521,49 @@
           "node orchestrator/process/boundary-scan.mjs"
         ]
       }
+    },
+    "T-1434": {
+      "task_id": "T-1434",
+      "archetype": [
+        "reference-config"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1434-website-changelog-refresh.md",
+        "website/index.html"
+      ],
+      "write_set": [
+        "website/index.html",
+        "website/favicon.ico",
+        "website/apple-touch-icon.png",
+        "docs/features/t1434-website-changelog-refresh.md",
+        "docs/research/2026-11-01-website-changelog-sources.md",
+        "docs/verification/t1434/**",
+        "orchestrator/context/T-1434.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "website/assets.test.mjs",
+        "website/pricing.test.mjs",
+        "website/favicon-16.png",
+        "website/favicon-32.png",
+        "website/shots/shot-dashboard-public-v2.png",
+        "website/shots/creatoros-flywheel.webp",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node --test website/*.test.mjs",
+          "git diff --check"
+        ]
+      }
     }
   }
 }

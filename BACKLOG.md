@@ -6,6 +6,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1434|官网移除旧验收包下载并补齐版本日志|🔨|—|待验|[SPEC](docs/features/t1434-website-changelog-refresh.md)|用户要求移除首页旧Mac验收包下载区，按真实发布记录补齐日志并更新官网。|
 |T-1433|重复发布同步不误改项目版本|✅|PASS[REV:22b8d85b13ac]|—|[SPEC](docs/features/t1433-project-noop-timestamps.md)|修复两个可复现空操作更新时间写入点。|
 |T-1432|修复接手看板重复与任务包生成阻塞|✅|PASS[REV:2cac63f1896c]|—|[SPEC](docs/features/t1432-handoff-control-repair.md)|用户授权逐条修复；原记录与审核票据保全，密钥和新Mac包不动。|
 

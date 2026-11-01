@@ -13,8 +13,6 @@ const visibleText = html
   .replace(/\s+/g, " ")
   .trim();
 
-const referral = "请联系向你推荐 CreatorOS 的授权合作伙伴，了解适用方案、交付方式与当前政策。";
-
 async function publicFiles(directory, output = []) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (entry.name.startsWith(".") || entry.name === "deploy" || entry.name.endsWith(".test.mjs")) continue;
@@ -25,19 +23,17 @@ async function publicFiles(directory, output = []) {
   return output;
 }
 
-test("官网只公开产品能力、设备支持和授权伙伴获取方式", () => {
+test("官网保留线上产品导览与更新日志，不恢复已撤下的交易入口", () => {
   for (const expected of [
-    "适配与交付",
-    "一机一码",
-    "每个激活码仅绑定 1 台设备",
-    "Apple 芯片 Mac",
+    "查看产品能力",
+    "更新日志",
+    "macOS",
     "Windows",
-    "Intel Mac",
-    "适配推进中",
-    referral,
+    "数据本机优先",
   ]) {
     assert.ok(visibleText.includes(expected), `缺少公开信息：${expected}`);
   }
+  assert.doesNotMatch(html, /href=["']#(?:delivery|partner)["']/i);
 });
 
 test("官网源码不再公开任何价盘、利润或个人联系方式", () => {
@@ -68,13 +64,10 @@ test("官网源码不再公开任何价盘、利润或个人联系方式", () =>
   }
 });
 
-test("价格、购买、合作和联系 FAQ 都只返回授权伙伴指引", () => {
-  for (const keyword of ["价格", "购买", "代理", "联系"]) {
-    assert.ok(html.includes(`\"${keyword}\"`), `FAQ 缺少关键词：${keyword}`);
-  }
-  assert.ok(html.split(referral).length - 1 >= 2, "页面与 FAQ 必须共用同一条授权伙伴指引");
-  assert.ok((html.match(/a:REFERRAL/g) || []).length >= 3, "价格、合作、联系 FAQ 必须直接返回授权伙伴指引");
-  assert.ok(html.includes('+REFERRAL'), "购买 FAQ 必须附带授权伙伴指引");
+test("官网不再展示旧验收包下载及其构建说明", () => {
+  assert.doesNotMatch(html, /creatoros-manual-download|本轮 Mac 验收包|下载 Apple 芯片 Mac 验收包/);
+  assert.doesNotMatch(html, /href=["'][^"']+\.(?:dmg|exe|zip|tar\.gz)["']/i);
+  assert.doesNotMatch(visibleText, /SHA256|ad-hoc|e3151ce89/);
 });
 
 test("页面不存在旧价格/直营锚点或假按钮", () => {

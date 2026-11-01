@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 314,
+    "verticals": 315,
     "tasks_done": 89,
-    "tasks_total": 441,
-    "tasks_pending": 352,
+    "tasks_total": 442,
+    "tasks_pending": 353,
     "verticals_complete": 28
   },
   "verticals": [
@@ -22608,6 +22608,54 @@
       "read_set": [
         "docs/features/t1433-project-noop-timestamps.md",
         "AGENTS.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1434",
+      "archetype": [
+        "reference-config"
+      ],
+      "task_id": "T-1434",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "website/index.html",
+        "website/favicon.ico",
+        "website/apple-touch-icon.png",
+        "docs/features/t1434-website-changelog-refresh.md",
+        "docs/research/2026-11-01-website-changelog-sources.md",
+        "docs/verification/t1434/**",
+        "orchestrator/context/T-1434.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "website/assets.test.mjs",
+        "website/pricing.test.mjs",
+        "website/favicon-16.png",
+        "website/favicon-32.png",
+        "website/shots/shot-dashboard-public-v2.png",
+        "website/shots/creatoros-flywheel.webp",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1434-website-changelog-refresh.md",
+        "website/index.html"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

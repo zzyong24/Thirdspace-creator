@@ -1,0 +1,4 @@
+Error: 官网初始状态不符合需求: {"download":true,"width":1440,"scrollWidth":1440,"version":"CreatorOS v1.1","selected":"release-tab-110"}
+    at file:////[eval2]:13:151
+
+ego's nodejs process exited with code 1.
