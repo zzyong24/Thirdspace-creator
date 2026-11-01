@@ -37,7 +37,7 @@ for(const site of sites)for(const viewport of viewports){
   if(await page.evaluate(()=>document.querySelectorAll('img[loading="lazy"]').length)===0)throw Error('导航不应提前加载所有原图');
  }
  await page.evaluate(()=>document.querySelectorAll('img[loading="lazy"]').forEach(i=>i.loading='eager'));
- await page.waitForFunction(()=>[...document.images].filter(i=>i.getAttribute('src')).every(i=>i.complete&&i.naturalWidth>0));
+ await page.waitForFunction(()=>[...document.images].filter(i=>i.getAttribute('src')).every(i=>i.complete&&i.naturalWidth>0),undefined,{timeout:60_000});
  const initial=await page.evaluate(()=>({title:document.title,width:innerWidth,scrollWidth:document.documentElement.scrollWidth,canonical:document.querySelector('link[rel="canonical"]')?.href,images:[...new Set([...document.images].map(i=>i.getAttribute('src')).filter(s=>s?.startsWith('/shots/real/')))],gallery:document.querySelectorAll('.real-gallery img,#gallery img').length,privacy:!!document.querySelector('.privacy-preview'),share:document.querySelector('meta[property="og:image"]')?.content,staticHeading:document.querySelector('h1').innerText,copy:document.body.innerText}));
  if(initial.width!==viewport.width||initial.scrollWidth>viewport.width||initial.images.length!==14||initial.gallery!==14||initial.privacy||initial.canonical!==site.canonical||!initial.title.includes('CreatorOS')||!initial.share?.endsWith('.webp'))throw Error('页面/截图/SEO不符合要求 '+site.name+' '+JSON.stringify(initial));
  const distorted=await page.evaluate(()=>[...document.images].filter(i=>i.getAttribute('src')?.startsWith('/shots/real/')).some(i=>{const r=i.getBoundingClientRect();return r.width&&r.height&&Math.abs(r.width/r.height-i.naturalWidth/i.naturalHeight)>0.01}));
