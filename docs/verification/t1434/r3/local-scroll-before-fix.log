@@ -1,0 +1,6 @@
+ElementResolutionError: page.click timed out after 3129ms: page.click failed: element is not visible in the viewport
+    at #retryElementAction (file:////[eval1]:20052:27)
+    at async #services.gate.withPage.sessionTimeoutMs.sessionTimeoutMs (file:////[eval1]:20144:29)
+    at async file:////[eval1]:17463:28
+
+ego's nodejs process exited with code 1.

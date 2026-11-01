@@ -77,7 +77,7 @@ stages:
     gate_status: "not-run"
     confirmation_required: false
     artifacts:
-      - existing: "docs/verification/t1434/r2/frontend-report.md (用户确认官网v1.2.0/v1.3.0命名与多平台介绍；旧下载区保持移除；不代表桌面产品全量验收)"
+      - existing: "docs/verification/t1434/r3/frontend-report.md (用户授权官网与购买页公开使用14张真实截图；两站SEO与双视口交互验收；保留v1.2.0/v1.3.0与旧下载区移除；不代表桌面产品全量验收)"
       - existing: "docs/features/t1354-official-account-binding-completion.md (独审R2事实补录REV:e7684a0a668b；受控导航RED/worker131GREEN与最终721两窗真实strict PASS:98f1613ba0d2；原1726首因UNKNOWN，非真人扫码)"
       - existing: "docs/features/t1355-binding-dialog-completion.md (独审REV:cebfffea8899；82组件、局部视觉来源映射及最终721两窗真实strict PASS:fff9f5e92b3b；真实提交后自动回位/原run恢复保，不冒已安装)"
       - existing: "docs/features/t1356-bound-platform-data-visibility.md (R3原规范及REV:34c4a0a3a50f保；d8ea两视口各28点及最终721真实strict PASS:f09f084b6785；typed/SQL降级恢复123/真实200分证，作品入口另T1362)"

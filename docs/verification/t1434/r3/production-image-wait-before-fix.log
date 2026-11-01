@@ -1,0 +1,6 @@
+Error: page.waitForFunction timed out after 10000ms on page p1; last URL was "https://creatoros.aitongban.cloud/#changelog"; last title was "CreatorOS官网 - AI自媒体创作工具与多平台内容运营".
+    at waitForFunctionTimeoutError (file:////[eval1]:20603:12)
+    at file:////[eval1]:19661:19
+    at async file:////[eval1]:17463:28
+
+ego's nodejs process exited with code 1.

@@ -1,0 +1,15 @@
+{
+  "status": "已部署",
+  "backup": "/var/backups/creatoros-t1434/r3-20261101T142833Z",
+  "files": 38,
+  "protected_files_unchanged": 42,
+  "shared_store_and_moving_unchanged": true,
+  "critical_hashes": {
+    "/var/www/creatoros-buy/index.html": "9198971c6f9da2696459d017ff451e30fc7f795e047bb299c25bc2c9a419ecc5",
+    "/var/www/creatoros-buy/assets/store.js": "cc2dd1192dcb0361eccc1c51f65bdc3aba76635ac870fbe34e855971d1d95d74",
+    "/var/www/creatoros-buy/assets/store.css": "9cb41506fe8781a2fc7f1d24101ec5c887a69717d1f5e42aa8d39447fde19c18",
+    "/var/www/creatoros-buy/products/moving.json": "7d6156cacaeae21945694de8bc38622127f025849985a141267683ca731643d6"
+  },
+  "nginx_test": "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful",
+  "deployed_at": "2026-11-01T14:28:34.141607+00:00"
+}

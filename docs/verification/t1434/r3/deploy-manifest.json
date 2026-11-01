@@ -1,0 +1,230 @@
+[
+  {
+    "member": "main/shots/real/creatoros-asset-library.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-asset-library.webp",
+    "before_sha256": null,
+    "after_sha256": "3abaf4875b17ea3e9c72da37b64c885fcb3e0d4f11519007c43f859887fb58c8"
+  },
+  {
+    "member": "buy/shots/real/creatoros-asset-library.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-asset-library.webp",
+    "before_sha256": null,
+    "after_sha256": "3abaf4875b17ea3e9c72da37b64c885fcb3e0d4f11519007c43f859887fb58c8"
+  },
+  {
+    "member": "main/shots/real/creatoros-automation.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-automation.webp",
+    "before_sha256": null,
+    "after_sha256": "1c8ae30f313c26f09c8b0e7d1ee4071b0d12082eefd3146d9f42a01fbb5b1786"
+  },
+  {
+    "member": "buy/shots/real/creatoros-automation.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-automation.webp",
+    "before_sha256": null,
+    "after_sha256": "1c8ae30f313c26f09c8b0e7d1ee4071b0d12082eefd3146d9f42a01fbb5b1786"
+  },
+  {
+    "member": "main/shots/real/creatoros-content-radar.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-content-radar.webp",
+    "before_sha256": null,
+    "after_sha256": "320267bc1db82e5af7bd425dccedbc6816c29007e0953d21e165cc4b1fa8ed50"
+  },
+  {
+    "member": "buy/shots/real/creatoros-content-radar.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-content-radar.webp",
+    "before_sha256": null,
+    "after_sha256": "320267bc1db82e5af7bd425dccedbc6816c29007e0953d21e165cc4b1fa8ed50"
+  },
+  {
+    "member": "main/shots/real/creatoros-creative-canvas.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-creative-canvas.webp",
+    "before_sha256": null,
+    "after_sha256": "b95d20d2333adadd8eacb36195ccddd2bf0ff1a1ebb58e14588a3fbf7c43eceb"
+  },
+  {
+    "member": "buy/shots/real/creatoros-creative-canvas.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-creative-canvas.webp",
+    "before_sha256": null,
+    "after_sha256": "b95d20d2333adadd8eacb36195ccddd2bf0ff1a1ebb58e14588a3fbf7c43eceb"
+  },
+  {
+    "member": "main/shots/real/creatoros-creator-overview.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-creator-overview.webp",
+    "before_sha256": null,
+    "after_sha256": "e263a6a35096c2e59fb464efdaee5d7b66b8f74146e2bc8890397d88ae98eddf"
+  },
+  {
+    "member": "buy/shots/real/creatoros-creator-overview.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-creator-overview.webp",
+    "before_sha256": null,
+    "after_sha256": "e263a6a35096c2e59fb464efdaee5d7b66b8f74146e2bc8890397d88ae98eddf"
+  },
+  {
+    "member": "main/shots/real/creatoros-home.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-home.webp",
+    "before_sha256": null,
+    "after_sha256": "74355d6d8a4c2792de194d73f43063153b7e729cfc9feb91ecc3b84459e1f94a"
+  },
+  {
+    "member": "buy/shots/real/creatoros-home.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-home.webp",
+    "before_sha256": null,
+    "after_sha256": "74355d6d8a4c2792de194d73f43063153b7e729cfc9feb91ecc3b84459e1f94a"
+  },
+  {
+    "member": "main/shots/real/creatoros-knowledge-base.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-knowledge-base.webp",
+    "before_sha256": null,
+    "after_sha256": "91293e0081804f2a94b783a8e39db1228e6dcca3569bbb361caf73ceda3b53d4"
+  },
+  {
+    "member": "buy/shots/real/creatoros-knowledge-base.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-knowledge-base.webp",
+    "before_sha256": null,
+    "after_sha256": "91293e0081804f2a94b783a8e39db1228e6dcca3569bbb361caf73ceda3b53d4"
+  },
+  {
+    "member": "main/shots/real/creatoros-model-settings.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-model-settings.webp",
+    "before_sha256": null,
+    "after_sha256": "4af052a305a3f4080b07837ecb5b88d03083cc8e8d780bf85e317cf335a37b21"
+  },
+  {
+    "member": "buy/shots/real/creatoros-model-settings.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-model-settings.webp",
+    "before_sha256": null,
+    "after_sha256": "4af052a305a3f4080b07837ecb5b88d03083cc8e8d780bf85e317cf335a37b21"
+  },
+  {
+    "member": "main/shots/real/creatoros-operations-analysis.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-operations-analysis.webp",
+    "before_sha256": null,
+    "after_sha256": "4ddec5aa8fe6240e6dde0975c4ee9721dc41f14f9d316d0fb97ab06809810f64"
+  },
+  {
+    "member": "buy/shots/real/creatoros-operations-analysis.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-operations-analysis.webp",
+    "before_sha256": null,
+    "after_sha256": "4ddec5aa8fe6240e6dde0975c4ee9721dc41f14f9d316d0fb97ab06809810f64"
+  },
+  {
+    "member": "main/shots/real/creatoros-positioning.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-positioning.webp",
+    "before_sha256": null,
+    "after_sha256": "6fa18b2d4b432e596a4306f0e41bdc41385e83ae399af6262bb8f878634f126f"
+  },
+  {
+    "member": "buy/shots/real/creatoros-positioning.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-positioning.webp",
+    "before_sha256": null,
+    "after_sha256": "6fa18b2d4b432e596a4306f0e41bdc41385e83ae399af6262bb8f878634f126f"
+  },
+  {
+    "member": "main/shots/real/creatoros-projects.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-projects.webp",
+    "before_sha256": null,
+    "after_sha256": "850061c23c6b7c00b026d2f24a8812f58643fe40a86b7dba55557ad1ff05acfc"
+  },
+  {
+    "member": "buy/shots/real/creatoros-projects.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-projects.webp",
+    "before_sha256": null,
+    "after_sha256": "850061c23c6b7c00b026d2f24a8812f58643fe40a86b7dba55557ad1ff05acfc"
+  },
+  {
+    "member": "main/shots/real/creatoros-publishing-calendar.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-publishing-calendar.webp",
+    "before_sha256": null,
+    "after_sha256": "596a3aced8b818b59d5faf81d1b3b84f4428ce0c75a7701e90624f40189466cd"
+  },
+  {
+    "member": "buy/shots/real/creatoros-publishing-calendar.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-publishing-calendar.webp",
+    "before_sha256": null,
+    "after_sha256": "596a3aced8b818b59d5faf81d1b3b84f4428ce0c75a7701e90624f40189466cd"
+  },
+  {
+    "member": "main/shots/real/creatoros-script-workbench.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-script-workbench.webp",
+    "before_sha256": null,
+    "after_sha256": "bdfb01b81d93c5230a1447e4f84f26f9f6833f71f5073d2530f92b5ccff91feb"
+  },
+  {
+    "member": "buy/shots/real/creatoros-script-workbench.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-script-workbench.webp",
+    "before_sha256": null,
+    "after_sha256": "bdfb01b81d93c5230a1447e4f84f26f9f6833f71f5073d2530f92b5ccff91feb"
+  },
+  {
+    "member": "main/shots/real/creatoros-topics.webp",
+    "target": "/var/www/creatoros/shots/real/creatoros-topics.webp",
+    "before_sha256": null,
+    "after_sha256": "faacc09ef7740bcfd827cb7208098dc92cb822a15db224f9872de00fc12e6ff2"
+  },
+  {
+    "member": "buy/shots/real/creatoros-topics.webp",
+    "target": "/var/www/creatoros-buy/shots/real/creatoros-topics.webp",
+    "before_sha256": null,
+    "after_sha256": "faacc09ef7740bcfd827cb7208098dc92cb822a15db224f9872de00fc12e6ff2"
+  },
+  {
+    "member": "main/robots.txt",
+    "target": "/var/www/creatoros/robots.txt",
+    "before_sha256": null,
+    "after_sha256": "20cbe1850431117377f9c6b4df946d0c7cc2c71926b1ded4ab23741972825698"
+  },
+  {
+    "member": "main/sitemap.xml",
+    "target": "/var/www/creatoros/sitemap.xml",
+    "before_sha256": null,
+    "after_sha256": "b464687472eb95da2d970be12629ad2734cb091a972638879638e4a22a75c118"
+  },
+  {
+    "member": "main/index.html",
+    "target": "/var/www/creatoros/index.html",
+    "before_sha256": "19f58efbc43c554471569de35a0873b6e0adcaf568e95525783f8e97cd1d647d",
+    "after_sha256": "d0030674c0d0d5014461d106e1d497c97ec4c4144e151acaaecf311426522f78"
+  },
+  {
+    "member": "buy/creatoros/index.html",
+    "target": "/var/www/creatoros-buy/creatoros/index.html",
+    "before_sha256": null,
+    "after_sha256": "830486bc58a1c4c5a75ff608dcd4f38468ede8e2253e4fbda3025b46cef2a67e"
+  },
+  {
+    "member": "buy/products/creatoros.json",
+    "target": "/var/www/creatoros-buy/products/creatoros.json",
+    "before_sha256": "d071f31f3b84248479a65fe2727acb0a29914416d93cbee9becca216b14bdc22",
+    "after_sha256": "ab898fb455bc5f6e4866eafb039f0bfb26f69fec33896d7969b19dec9d80b5e8"
+  },
+  {
+    "member": "buy/assets/screenshots.css",
+    "target": "/var/www/creatoros-buy/assets/screenshots.css",
+    "before_sha256": null,
+    "after_sha256": "cff450d88e1057abcb8ec8bb435da9a84255ac7e97de4588e5c5f06a991cb02e"
+  },
+  {
+    "member": "buy/assets/screenshots.js",
+    "target": "/var/www/creatoros-buy/assets/screenshots.js",
+    "before_sha256": null,
+    "after_sha256": "fdb2339826344682f652689eddfdcd7c5bcd70b87695306e76e9b368cebd1757"
+  },
+  {
+    "member": "buy/robots.txt",
+    "target": "/var/www/creatoros-buy/robots.txt",
+    "before_sha256": null,
+    "after_sha256": "efe8d29da4b56bb6a7fa52bf84cba99f356a2d8ff72941d01d91dd3564fbb830"
+  },
+  {
+    "member": "buy/sitemap.xml",
+    "target": "/var/www/creatoros-buy/sitemap.xml",
+    "before_sha256": null,
+    "after_sha256": "b05aa21b802e42be9ddd68aab86ce023548c103b49d044ce20b9eb7f226a4cd1"
+  },
+  {
+    "member": "buy-nginx.conf",
+    "target": "/etc/nginx/conf.d/creatoros-buy.conf",
+    "before_sha256": "35d1b49e434ec63c325466d9d2951c3af4170d3daefb2c9e1b7ece73decaebc3",
+    "after_sha256": "06788dbcf4c8c3b7c2c5a99de89c41f712b857e13452021d2fa1e62f0115ae5b"
+  }
+]
