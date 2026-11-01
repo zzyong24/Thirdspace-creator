@@ -71,4 +71,4 @@ const report = {
   tdd_red_ref:'纯静态文案与下载区移除不制造TDD红测；真实线上旧版缺少新批次并保留旧下载区的失败见 docs/verification/t1434/production-before.log',
   open_defects:[],visible_copy:{artifact_path:'docs/verification/t1434/visible-copy.json',artifact_sha256:hash(readFileSync(resolve(out,'visible-copy.json')))}
 };
-if(!process.argv.includes('--local')) writeFileSync(resolve(out,'frontend-report.json'),JSON.stringify(report,null,2)+'\n');
+if(process.argv.includes('--report')) writeFileSync(resolve(out,'frontend-report.md'),'# 官网真实浏览器验收\n\n```frontend-validation\n'+JSON.stringify(report,null,2)+'\n```\n');
