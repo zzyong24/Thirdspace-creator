@@ -32,6 +32,8 @@ import {
   canvasNativePackageFor,
   findPnpmEntryForPackage,
   materializeRuntimePackageClosure,
+  bundlePiEngine,
+  workbenchArchiveExtractCommand,
 } from "./build-sidecar.mjs";
 
 describe("T-843 CreatorOS CLI 随包运行时", () => {
@@ -488,5 +490,43 @@ describe("PDF 附件解析桌面运行时闭包", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+
+describe("T-1435 Pi运行时完整复制与Windows归档", () => {
+  for (const entry of ["@earendil-works+pi-coding_0123456789abcdef", "@earendil-works+pi-coding-agent@1.0.0_peers"]) {
+    it(`Windows缩短或原目录${entry}均能在搬运后深导入`, async () => {
+      const { root, pnpm } = makeStore();
+      try {
+        const pi = makeEntry(pnpm, entry, "@earendil-works/pi-coding-agent");
+        const depEntry = "dep@1.0.0";
+        const dep = makeEntry(pnpm, depEntry, "pi-fixture-dep");
+        writeFileSync(join(dep, "index.js"), "module.exports = 'portable-pi';");
+        mkdirSync(join(pi, "dist/core"), { recursive: true });
+        writeFileSync(join(pi, "dist/core/sdk.js"), "module.exports = require('pi-fixture-dep');");
+        symlinkSync(relative(join(pnpm, entry, "node_modules"), dep), join(pnpm, entry, "node_modules/pi-fixture-dep"), "dir");
+        const destPnpm = join(root, "runtime/node_modules/.pnpm");
+        mkdirSync(destPnpm, { recursive: true });
+        bundlePiEngine({ srcPnpm: pnpm, destPnpm, targetPlatform: "win32", buildOnly: true });
+        const actual = join(destPnpm, "@earendil-works+pi-coding-agent@1.0.0/node_modules/@earendil-works/pi-coding-agent/dist/core/sdk.js");
+        expect(existsSync(actual)).toBe(true);
+        rmSync(join(root, "node_modules"), { recursive: true, force: true });
+        const { createRequire } = await import("node:module");
+        expect(createRequire(import.meta.url)(actual)).toBe("portable-pi");
+      } finally { rmSync(root, { recursive: true, force: true }); }
+    });
+  }
+  it("真正缺包仍拒绝残缺安装包", () => {
+    const { root, pnpm } = makeStore();
+    try {
+      mkdirSync(pnpm, { recursive: true });
+      const destPnpm = join(root, "dest");mkdirSync(destPnpm);
+      expect(() => bundlePiEngine({ srcPnpm: pnpm, destPnpm, targetPlatform: "win32", buildOnly: true })).toThrow(/缺少必备 Pi/);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+  it("Windows必须使用系统tar而非Git GNU tar处理盘符zip", () => {
+    expect(workbenchArchiveExtractCommand("C:\\cache\\browser.zip", "C:\\runtime", "win32", "C:\\Windows").command).toBe("C:\\Windows\\System32\\tar.exe");
+    expect(workbenchArchiveExtractCommand("/tmp/a.zip", "/tmp/b", "darwin").command).toBe("tar");
   });
 });

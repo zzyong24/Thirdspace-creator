@@ -22699,7 +22699,9 @@
         ".github/workflows/desktop-release.yml",
         "frontend/scripts/desktop/release-ci.mjs",
         "frontend/scripts/desktop/release-ci.test.mjs",
-        "frontend/scripts/desktop/desktop-release-workflow.test.mjs"
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/scripts/desktop/build-sidecar.test.mjs"
       ],
       "read_set": [
         "AGENTS.md",

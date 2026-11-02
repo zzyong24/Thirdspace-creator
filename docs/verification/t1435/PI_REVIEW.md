@@ -1,0 +1,7 @@
+# 后续打包修复复核
+
+review_ci_signing只读复核本次Pi与CfT diff无阻塞项，确认源store按manifest识别、Windows目标保留runtime前缀、Mac保留源entry/verbatim、CfT使用系统tar绝对路径且参数不经shell；原哈希和失败清理保持。6组88测试通过。实际Pi源依赖按Windows嵌套布局复制，独立进程以仓库外cwd真深导入四SDK/三API通过，宿主macOS，不替代Windows原生CI。
+
+Windows pnpm默认virtual-store-dir-max-length=60的事实取自安装的pnpm10.32.1/dist/pnpm.cjs:18750；目录名截断已有项目公共resolveEntryPackage/findPnpmEntryForPackage支持，本次复用其真实manifest识别。测试保留原目录与缩短目录两族，并删除源store后验证目标深导入。初次真实探针因使用固定SIDECAR_RUNTIME/frontend作为cwd而spawn失败，日志单独保留，后续改用仓库外实际cwd探针，未通过修改断言掩盖。
+
+前轮Mac包：run41454572792，Developer ID、公证/staple、Gatekeeper、DMG内应用与主页面真启动通过；下载至/Users/zyongzhu/Downloads/CreatorOS-builds/41454572792/mac/CreatorOS_1.2.0_aarch64.dmg；SHA256 8d37b9096955809e16a608f3300ed8508d7eff5f0f85ee976f3522bf7ca3f5fb，hdiutil verify通过。后续使用同一新候选重跑双端，不以前轮Mac替代新候选验证。

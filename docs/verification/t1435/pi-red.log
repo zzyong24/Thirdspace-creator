@@ -1,0 +1,62 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:30573) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/build-sidecar.test.mjs (23 tests | 4 failed) 83ms
+     × Windows缩短或原目录@earendil-works+pi-coding_0123456789abcdef均能在搬运后深导入 7ms
+     × Windows缩短或原目录@earendil-works+pi-coding-agent@1.0.0_peers均能在搬运后深导入 3ms
+     × 真正缺包仍拒绝残缺安装包 2ms
+     × Windows必须使用系统tar而非Git GNU tar处理盘符zip 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/build-sidecar.test.mjs > T-1435 Pi运行时完整复制与Windows归档 > Windows缩短或原目录@earendil-works+pi-coding_0123456789abcdef均能在搬运后深导入
+ FAIL  scripts/desktop/build-sidecar.test.mjs > T-1435 Pi运行时完整复制与Windows归档 > Windows缩短或原目录@earendil-works+pi-coding-agent@1.0.0_peers均能在搬运后深导入
+TypeError: bundlePiEngine is not a function
+ ❯ scripts/desktop/build-sidecar.test.mjs:511:23
+    509|         const destPnpm = join(root, "runtime/node_modules/.pnpm");
+    510|         mkdirSync(destPnpm, { recursive: true });
+    511|         bundlePiEngine({ srcPnpm: pnpm, destPnpm, targetPlatform: "win…
+       |                       ^
+    512|         const actual = join(destPnpm, "@earendil-works+pi-coding-agent…
+    513|         expect(existsSync(actual)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  scripts/desktop/build-sidecar.test.mjs > T-1435 Pi运行时完整复制与Windows归档 > 真正缺包仍拒绝残缺安装包
+AssertionError: expected [Function] to throw error matching /缺少必备 Pi/ but got '(0 , __vite_ssr_import_4__.bundlePiEn…'
+
+- Expected:
+/缺少必备 Pi/
+
++ Received:
+"(0 , __vite_ssr_import_4__.bundlePiEngine) is not a function"
+
+ ❯ scripts/desktop/build-sidecar.test.mjs:525:107
+    523|       mkdirSync(pnpm, { recursive: true });
+    524|       const destPnpm = join(root, "dest");mkdirSync(destPnpm);
+    525|       expect(() => bundlePiEngine({ srcPnpm: pnpm, destPnpm, targetPla…
+       |                                                                                                           ^
+    526|     } finally { rmSync(root, { recursive: true, force: true }); }
+    527|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  scripts/desktop/build-sidecar.test.mjs > T-1435 Pi运行时完整复制与Windows归档 > Windows必须使用系统tar而非Git GNU tar处理盘符zip
+TypeError: workbenchArchiveExtractCommand is not a function
+ ❯ scripts/desktop/build-sidecar.test.mjs:529:42
+    527|   });
+    528|   it("Windows必须使用系统tar而非Git GNU tar处理盘符zip", () => {
+    529|     expect(workbenchArchiveExtractCommand("C:\\cache\\browser.zip", "C…
+       |                                          ^
+    530|     expect(workbenchArchiveExtractCommand("/tmp/a.zip", "/tmp/b", "dar…
+    531|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 19 passed (23)
+   Start at  22:42:02
+   Duration  1.16s (transform 111ms, setup 162ms, import 107ms, tests 83ms, environment 582ms)

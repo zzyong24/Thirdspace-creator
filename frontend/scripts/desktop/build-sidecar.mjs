@@ -33,7 +33,7 @@ const SIDECAR_CLEAN_POLICY = "t1273-clean-no-obfuscation-v2";
 // 只由专用签名子进程接收；直接release构建也不向Next/tar/编译器继承此路径。
 const sidecarSigningEnv = { CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH: process.env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH };
 import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, statSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync, openSync, readSync, closeSync, renameSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
@@ -1479,10 +1479,13 @@ function materializeStandaloneWin() {
 //     **永不被 import**。故剪掉这三个 provider 顶包(连带其独占传递依赖 @smithy/@protobufjs/google-auth
 //     等,省 ~91MB);**openai + @anthropic-ai/sdk 必留**(三种格式共用这两项,均在闭包内)。剪枝安全网 =
 //     下面 HARD 自检真深导入 sdk.js:若剪多了导致 import 崩,build 直接失败(不假通过)。
-function bundlePiEngine() {
+export function bundlePiEngine({
+  srcPnpm = join(REPO, "node_modules", ".pnpm"),
+  destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm"),
+  targetPlatform = platform,
+  buildOnly = process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1",
+} = {}) {
   console.log("[build-sidecar] 实拷 Pi 引擎依赖闭包(修 Next tracing 漏整棵 pi 树 → 打包版 Pi 引擎失活,T-313)…");
-  const srcPnpm = join(REPO, "node_modules", ".pnpm");
-  const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
   if (!existsSync(srcPnpm) || !existsSync(destPnpm)) {
     throw new Error(`[build-sidecar] .pnpm 目录缺(src=${existsSync(srcPnpm)} dest=${existsSync(destPnpm)})`);
   }
@@ -1493,26 +1496,31 @@ function bundlePiEngine() {
   const isCut = (entry) => CUT_PKG.includes(resolveEntryPackage(srcPnpm, entry).name);
 
   // Pi 是独立 Agent Worker 的必备运行时；缺包时不能产出残缺安装包。
-  const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PI_PNPM}@`));
+  const rootEntry = findPnpmEntryForPackage(srcPnpm, PI_PKG);
   if (!rootEntry) throw new Error(`[build-sidecar] 缺少必备 Pi 运行时 ${PI_PKG}`);
+
+  // Windows源store会截短长entry；目标保留Pi运行时定位器可识别的完整名字。
+  const identity = JSON.parse(readFileSync(join(resolveEntryPackage(srcPnpm, rootEntry).dir, "package.json"), "utf8"));
+  if (typeof identity.version !== "string" || !/^[A-Za-z0-9._+-]+$/.test(identity.version)) throw new Error("[build-sidecar] Pi版本不是安全目录标识");
+  const runtimeEntry = targetPlatform === "win32" ? `${PI_PNPM}@${identity.version}` : rootEntry;
 
   // BFS 算闭包(剪掉 provider 顶包子树)。
   const visited = collectPnpmClosure(srcPnpm, rootEntry, isCut);
 
   let copied = 0;
-  if (platform === "win32") {
+  if (targetPlatform === "win32") {
     // [T-426 W] Windows:pnpm 的相对 symlink 在 Win 是**绝对 junction**,verbatim 拷进 .pnpm 后指向
     //   构建机 D:\a\ → 用户机死链 → pi-engine 深导入 sdk.js 的传递依赖(pi-ai/pi-agent-core/ws…)断
     //   → pi 引擎失活(现有 HARD 自检在**构建机** junction 有效故假过,只有用户机才崩,同 next 白屏根因)。
     //   改**嵌套物化**整棵 pi 树到 pi-engine locatePiCoreDir 找的确切位置
     //   (destPnpm/<rootEntry>/node_modules/PI_PKG,= 下方 coreDir 的父父父),全真文件零链、isCut 同剪
     //   provider(spike 实测 177MB、深导入 sdk.js+3 兄弟通过)。mac 走下方 verbatim .pnpm 闭包原方案。
-    const piBody = join(destPnpm, rootEntry, "node_modules", ...PI_PKG.split("/"));
+    const piBody = join(destPnpm, runtimeEntry, "node_modules", ...PI_PKG.split("/"));
     rmSync(piBody, { recursive: true, force: true });
     mkdirSync(dirname(piBody), { recursive: true });
     materializeNestedEntryTree(srcPnpm, rootEntry, piBody, new Set([rootEntry]), isCut);
     copied = 1;
-    console.log(`[build-sidecar]   [T-426 W] 嵌套物化 pi 闭包 → .pnpm/${rootEntry}/…/${PI_PKG}(全真文件零链,剪 provider)`);
+    console.log(`[build-sidecar]   [T-426 W] 嵌套物化 pi 闭包 → .pnpm/${runtimeEntry}/…/${PI_PKG}(全真文件零链,剪 provider)`);
   } else {
     // 逐 entry 实拷(verbatimSymlinks 保相对链;整份闭包在同一 .pnpm/ 内自洽解析)。
     //   覆盖已存在条目无害:同版本源自同一仓库 .pnpm,内容一致(complete ⊇ Next 部分 trace),app 不受损。
@@ -1531,7 +1539,7 @@ function bundlePiEngine() {
   //   图像工具会崩)。Windows 走嵌套物化,photon 落在 pi 树内深处、路径不定 → 跳过此定点自检,由下方
   //   HARD 深导入 sdk.js(嵌套树完整性总检)兜底。
   const photonEntry = [...visited].find((e) => e.startsWith("@silvia-odwyer+photon-node@"));
-  if (photonEntry && platform !== "win32") {
+  if (photonEntry && targetPlatform !== "win32") {
     const wasm = join(destPnpm, photonEntry, "node_modules", "@silvia-odwyer", "photon-node", "photon_rs_bg.wasm");
     if (!existsSync(wasm)) {
       throw new Error(`[build-sidecar] 自检失败[T-313]:photon-node .wasm 未随实拷到位(${wasm})`);
@@ -1539,7 +1547,7 @@ function bundlePiEngine() {
     console.log("[build-sidecar]   ✓ photon-node photon_rs_bg.wasm 到位");
   }
 
-  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+  if (buildOnly) {
     console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
     return;
   }
@@ -1547,7 +1555,7 @@ function bundlePiEngine() {
   //   断言 createAgentSession / provider factory 都是函数。这条同时验证:
   //   ①闭包完整(任一 entry 漏 → 相对 symlink 悬空 → import 崩)②剪枝安全(cut 的 provider 不在静态图)。
   //   假通过零容忍(教训同 playwright 自检②):import 崩则 throw,宁 build 失败也不出 Agent Worker 无法启动的包。
-  const coreDir = join(destPnpm, rootEntry, "node_modules", PI_PKG, "dist", "core");
+  const coreDir = join(destPnpm, runtimeEntry, "node_modules", PI_PKG, "dist", "core");
   const selfCheck = `
     import { existsSync } from 'node:fs';
     import { pathToFileURL } from 'node:url';
@@ -1787,13 +1795,21 @@ function sha256File(file) {
   return hash.digest("hex");
 }
 
+export function workbenchArchiveExtractCommand(archive, destination, targetPlatform = platform, systemRoot = process.env.SystemRoot ?? "C:\\Windows") {
+  return {
+    command: targetPlatform === "win32" ? win32.join(systemRoot, "System32", "tar.exe") : "tar",
+    args: ["-xf", archive, "-C", destination],
+  };
+}
+
 /** 可用显式归档供离线构建，但仍必须与冻结 SHA-256 完全一致。 */
 export function stageWorkbenchBrowserArchive(triple,archive,destination) {
   const spec=WORKBENCH_CHROME_ARCHIVES[triple];
   if (!spec) throw new Error(`[build-sidecar] 无工作台浏览器资产映射:${triple}`);
   if (sha256File(archive)!==spec.sha256) throw new Error(`[build-sidecar] 工作台 CfT ${spec.platform} SHA-256 不符`);
   rmSync(destination,{recursive:true,force:true});mkdirSync(destination,{recursive:true});
-  const extracted=spawnSync("tar",["-xf",archive,"-C",destination],{stdio:"pipe",encoding:"utf8"});
+  const extractor=workbenchArchiveExtractCommand(archive,destination);
+  const extracted=spawnSync(extractor.command,extractor.args,{stdio:"pipe",encoding:"utf8"});
   if (extracted.status!==0) {
     rmSync(destination,{recursive:true,force:true});
     throw new Error(`[build-sidecar] 工作台 CfT 解压失败:${extracted.stderr||extracted.error||extracted.status}`);

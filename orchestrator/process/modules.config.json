@@ -21601,11 +21601,13 @@
         ".github/workflows/desktop-release.yml",
         "frontend/scripts/desktop/release-ci.mjs",
         "frontend/scripts/desktop/release-ci.test.mjs",
-        "frontend/scripts/desktop/desktop-release-workflow.test.mjs"
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/scripts/desktop/build-sidecar.test.mjs"
       ],
       "verify_commands": {
         "implementation": [
-          "pnpm -C frontend exec vitest run scripts/desktop/release-ci.test.mjs scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs",
+          "pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs scripts/desktop/release-ci.test.mjs scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs",
           "git diff --check"
         ]
       }

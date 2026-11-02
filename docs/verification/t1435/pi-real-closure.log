@@ -1,0 +1,5 @@
+[build-sidecar] 实拷 Pi 引擎依赖闭包(修 Next tracing 漏整棵 pi 树 → 打包版 Pi 引擎失活,T-313)…
+[build-sidecar]   [T-426 W] 嵌套物化 pi 闭包 → .pnpm/@earendil-works+pi-coding-agent@0.80.7/…/@earendil-works/pi-coding-agent(全真文件零链,剪 provider)
+[build-sidecar] 资源已组装；额外运行时探针未运行。
+真实Pi四个SDK/三种API深导入通过
+Windows嵌套布局检查通过；执行宿主macOS，不冒Windows真机证据

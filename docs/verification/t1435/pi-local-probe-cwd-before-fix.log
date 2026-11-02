@@ -1,0 +1,17 @@
+[build-sidecar] 实拷 Pi 引擎依赖闭包(修 Next tracing 漏整棵 pi 树 → 打包版 Pi 引擎失活,T-313)…
+[build-sidecar]   [T-426 W] 嵌套物化 pi 闭包 → .pnpm/@earendil-works+pi-coding-agent@0.80.7/…/@earendil-works/pi-coding-agent(全真文件零链,剪 provider)
+file:///Users/zyongzhu/Workbase/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs:1592
+    throw new Error(
+          ^
+
+Error: [build-sidecar] 自检失败[T-313]:sidecar 内深导入 pi sdk.js 未通过 → 打包版 Pi 引擎会失活
+undefinedundefined
+    at bundlePiEngine (file:///Users/zyongzhu/Workbase/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs:1592:11)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/[eval1]:8:2
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:246:26)
+    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:243:20)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
