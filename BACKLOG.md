@@ -6,7 +6,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1435|双端CI接入sidecar签名密钥|🔨|—|—|[SPEC](docs/features/t1435-ci-root-signing.md)|用户允许将既有根私钥接入GitHub Actions Secret，修复双端打包并重跑。|
+|T-1435|双端CI接入sidecar签名密钥|⏸️|—|—|[SPEC](docs/features/t1435-ci-root-signing.md)|用户允许将既有根私钥接入GitHub Actions Secret，修复双端打包并重跑。|
 |T-1434|官网与购买页真实截图及SEO优化|✅|—|PASS:d06dc0a289c2|[SPEC](docs/features/t1434-website-changelog-refresh.md)|用户授权两站使用14张原始实拍截图、无需脱敏，并优化搜索匹配；沿用v1.2.0/v1.3.0。|
 |T-1433|重复发布同步不误改项目版本|✅|PASS[REV:22b8d85b13ac]|—|[SPEC](docs/features/t1433-project-noop-timestamps.md)|修复两个可复现空操作更新时间写入点。|
 |T-1432|修复接手看板重复与任务包生成阻塞|✅|PASS[REV:2cac63f1896c]|—|[SPEC](docs/features/t1432-handoff-control-repair.md)|用户授权逐条修复；原记录与审核票据保全，密钥和新Mac包不动。|

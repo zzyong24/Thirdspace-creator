@@ -77,7 +77,7 @@ stages:
     gate_status: "not-run"
     confirmation_required: false
     artifacts:
-      - existing: "docs/verification/t1435/REVIEW.md (CI签名接入独立评审与65聚焦测试通过；真实双端构建待验)"
+      - existing: "docs/verification/t1435/REVIEW.md (CI接入与65聚焦测试通过，Windows真实根预检通过但缺Pi运行时而出包失败；Mac构建中，任务阻塞)"
       - existing: "docs/verification/t1434/r3/frontend-report.md (用户授权官网与购买页公开使用14张真实截图；两站SEO与双视口交互验收；保留v1.2.0/v1.3.0与旧下载区移除；不代表桌面产品全量验收)"
       - existing: "docs/features/t1354-official-account-binding-completion.md (独审R2事实补录REV:e7684a0a668b；受控导航RED/worker131GREEN与最终721两窗真实strict PASS:98f1613ba0d2；原1726首因UNKNOWN，非真人扫码)"
       - existing: "docs/features/t1355-binding-dialog-completion.md (独审REV:cebfffea8899；82组件、局部视觉来源映射及最终721两窗真实strict PASS:fff9f5e92b3b；真实提交后自动回位/原run恢复保，不冒已安装)"

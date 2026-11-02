@@ -1,0 +1,4 @@
+2026-11-02T13:54:16.7412813Z [release-ci] 既有信任根预检通过，原始密钥环境已剥离
+2026-11-02T14:01:44.4598009Z Error: [build-sidecar] 缺少必备 Pi 运行时 @earendil-works/pi-coding-agent
+2026-11-02T14:01:44.4857333Z [desktop:package] ✗ 步骤失败:sidecar 二进制化(exit 1)
+2026-11-02T14:01:44.5008895Z [release] ✗ 失败:安装包构建（额外验证独立运行）(exit 1)
