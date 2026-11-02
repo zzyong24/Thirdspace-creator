@@ -102,9 +102,26 @@ export function pruneStandaloneLeaks(runtimeRoot) {
   return pruned;
 }
 
-/**
- * [T-487] tar 前的 fail-closed 哨兵。只要 runtime 里仍有壳构建树或安装包，就拒绝打包。
- */
+// SEMANTIC_BOUNDARY_ALLOW: 按固定资源路径与已锁定包身份区分Codex原生运行资源和外层安装包。
+function isLockedCodexSandboxResource(runtimeRoot, rel) {
+  const suffix = "/vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe";
+  if (!rel.endsWith(suffix)) return false;
+  const packageRel = rel.slice(0, -suffix.length);
+  if (!/(?:^|\/)node_modules\/@openai\/(?:codex|codex-win32-x64)$/.test(packageRel)) return false;
+  try {
+    const manifestPath = join(runtimeRoot, packageRel, "package.json");
+    if (!lstatSync(manifestPath).isFile()) return false;
+    const identity = JSON.parse(readFileSync(manifestPath, "utf8"));
+    const declared = JSON.parse(readFileSync(join(REPO, "ai-worker/package.json"), "utf8")).dependencies["@openai/codex"];
+    return /^\d+\.\d+\.\d+$/.test(declared ?? "")
+      && identity.name === "@openai/codex"
+      && identity.version === `${declared}-win32-x64`
+      && Array.isArray(identity.os) && identity.os.length === 1 && identity.os[0] === "win32"
+      && Array.isArray(identity.cpu) && identity.cpu.length === 1 && identity.cpu[0] === "x64";
+  } catch { return false; }
+}
+
+/** [T-487] tar 前拒绝壳构建树和外层安装包；保留已核身份的必要依赖运行资源。 */
 export function assertNoPackagedBuildArtifacts(runtimeRoot) {
   const forbidden = [];
   const visit = (dir) => {
@@ -126,7 +143,7 @@ export function assertNoPackagedBuildArtifacts(runtimeRoot) {
         || name.endsWith(".app.tar.gz")
         || name.endsWith(".dmg")
         || name.endsWith(".msi")
-        || name.endsWith("-setup.exe")
+        || (name.endsWith("-setup.exe") && !isLockedCodexSandboxResource(runtimeRoot, rel))
       ) {
         forbidden.push(rel);
       }

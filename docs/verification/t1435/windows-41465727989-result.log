@@ -1,0 +1,5 @@
+2026-11-02T15:06:35.9326349Z [release-ci] 既有信任根预检通过，原始密钥环境已剥离
+2026-11-02T15:12:35.9934080Z [build-sidecar] ✓ 工作台 CfT 149.0.7827.155 已随包放入 layers\browser\workbench-cft\149.0.7827.155\chrome-win64\chrome.exe
+2026-11-02T15:12:51.8362704Z [build-sidecar]   [T-426 W] 嵌套物化 pi 闭包 → .pnpm/@earendil-works+pi-coding-agent@0.80.7/…/@earendil-works/pi-coding-agent(全真文件零链,剪 provider)
+2026-11-02T15:22:43.9269016Z Error: [build-sidecar] [T-487] 拒绝递归打包壳构建产物：frontend/node_modules/@openai/codex/node_modules/@openai/codex/vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe, frontend/node_modules/@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe
+2026-11-02T15:22:43.9373284Z [desktop:package] ✗ 步骤失败:最终sidecar tar与既有root签名(exit 1)

@@ -1,0 +1,54 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:40553) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/build-sidecar.test.mjs (41 tests | 2 failed) 127ms
+     × 保留真实身份的原生沙箱资源frontend/node_modules/@openai/codex-win32-x64 7ms
+     × 保留真实身份的原生沙箱资源frontend/node_modules/@openai/codex/node_modules/@openai/codex 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/build-sidecar.test.mjs > T-1435 Codex沙箱运行资源不误判递归安装包 > 保留真实身份的原生沙箱资源frontend/node_modules/@openai/codex-win32-x64
+AssertionError: expected [Function] to not throw an error but 'Error: [build-sidecar] [T-487] 拒绝递归打包…' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"Error: [build-sidecar] [T-487] 拒绝递归打包壳构建产物：frontend/node_modules/@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe"
+
+ ❯ scripts/desktop/build-sidecar.test.mjs:549:86
+    547|   for (const pkg of roots) it(`保留真实身份的原生沙箱资源${pkg}`, () => {
+    548|     const root = mkdtempSync(join(tmpdir(), "codex-resource-"));
+    549|     try { fixture(root, pkg); expect(() => assertNoPackagedBuildArtifa…
+       |                                                                                      ^
+    550|     finally { rmSync(root, { recursive: true, force: true }); }
+    551|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  scripts/desktop/build-sidecar.test.mjs > T-1435 Codex沙箱运行资源不误判递归安装包 > 保留真实身份的原生沙箱资源frontend/node_modules/@openai/codex/node_modules/@openai/codex
+AssertionError: expected [Function] to not throw an error but 'Error: [build-sidecar] [T-487] 拒绝递归打包…' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"Error: [build-sidecar] [T-487] 拒绝递归打包壳构建产物：frontend/node_modules/@openai/codex/node_modules/@openai/codex/vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe"
+
+ ❯ scripts/desktop/build-sidecar.test.mjs:549:86
+    547|   for (const pkg of roots) it(`保留真实身份的原生沙箱资源${pkg}`, () => {
+    548|     const root = mkdtempSync(join(tmpdir(), "codex-resource-"));
+    549|     try { fixture(root, pkg); expect(() => assertNoPackagedBuildArtifa…
+       |                                                                                      ^
+    550|     finally { rmSync(root, { recursive: true, force: true }); }
+    551|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 39 passed (41)
+   Start at  23:28:54
+   Duration  1.07s (transform 96ms, setup 159ms, import 90ms, tests 127ms, environment 552ms)

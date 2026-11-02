@@ -11,3 +11,5 @@
 用户明确要求“遇到问题必须修复，直到打出成功的安装包，双端”。覆盖本次打包链发现的阻塞，修复后重新冻结提交并构建；不再逐次询问。仍不建tag/公开Release，不改Growth配置，不降签名/公证/安装验收标准。原run41454572792中Mac已成功签名公证并真启动，Windows根预检通过后缺Pi。
 
 首个后续修复：pnpm Windows默认virtual-store-dir-max-length=60（本机pnpm安装源码默认值已核对），Pi根entry会截断；按真实manifest定位源entry，Windows目标保持运行时可识别的完整Pi前缀，实际复制依赖闭包并验证可搬运深导入。同步修复日志已证的CfT Windows zip调用GNU tar误把C:作为远端：使用Windows系统tar.exe绝对路径，不删除浏览器能力。新增回归须经公共bundle入口，覆盖缩短名、原长名、缺包与运行时可解析结构。
+
+后续run41465727989：Windows已通过Pi闭包复制和CfT随包，最终tar阶段污染哨兵把Codex原生依赖中的codex-windows-sandbox-setup.exe误判为本产品外层安装包。修复限定为实际Codex Windows x64原生包的固定vendor相对路径，并核对其真实package.json name/version/os/cpu与项目锁定声明；不能按文件名全局豁免，不能删掉Codex沙箱能力。原递归src-tauri、sidecar.tar.gz与用户安装包拒绝规则继续有效，新增正负族经公共guard验证。
