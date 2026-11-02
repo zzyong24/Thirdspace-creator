@@ -15,7 +15,7 @@ Error: Failed to resolve import "./release-ci.mjs" from "scripts/desktop/release
   4  |  import { join } from 'node:path';
   5  |  import { runCIRelease } from './release-ci.mjs';
      |                                ^
-  6  |  
+  6  |
   7  |  describe('CI根私钥生命周期', () => {
  ❯ TransformPluginContext._formatLog ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30602:39
  ❯ TransformPluginContext.error ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30599:14
