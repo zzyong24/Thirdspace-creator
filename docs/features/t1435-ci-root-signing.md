@@ -1,0 +1,7 @@
+# T-1435 双端CI接入既有sidecar签名根
+
+用户于2026-11-02明确允许把提供的既有根私钥存入本仓GitHub Actions Secret，修复接入并重跑双端。失败基线run41448308905：双端sign-sidecar读取本机默认私钥路径ENOENT，未出安装包。
+
+只改CI签名接入：打包step接收CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM，Node包装入口先从环境删除原始PEM，写到仓库外RUNNER_TEMP下随机目录的0600临时文件；先按既有sign-sidecar固定根核验，再只向release入口传路径。现有package剥离普通构建子进程中的路径机制不变。finally清理文件，工作流always步骤兜底清理；不得把私钥放仓库/包/artifact/日志，不换根、不降低签名或公证标准。已签capsule消费保持不读私钥。用户授权改变CI私钥托管位置，记录DEC，后续正式打包仍不建tag/Release或修改Growth。
+
+验收：新增测试证明秘密不进入子进程环境、临时文件权限/位置正确，成功/失败均清理，缺/错密钥在构建前失败，capsule消费不要求新私钥；4组既有打包测试、diff检查；真实双平台run记录签名结果及包/验收情况。若另有构建失败保留实际日志，不冒称完成。不要求界面验收。

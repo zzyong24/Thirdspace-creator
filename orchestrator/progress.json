@@ -22669,6 +22669,49 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1435",
+      "archetype": [
+        "reference-config"
+      ],
+      "task_id": "T-1435",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1435-ci-root-signing.md",
+        "docs/verification/t1435/**",
+        "orchestrator/context/T-1435.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/release-ci.mjs",
+        "frontend/scripts/desktop/release-ci.test.mjs",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs"
+      ],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1435-ci-root-signing.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/sign-sidecar.mjs"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {

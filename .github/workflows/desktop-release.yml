@@ -827,6 +827,7 @@ jobs:
         if: inputs.windows_capsule_mode != 'prepare'
         working-directory: frontend
         env:
+          CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM: ${{ inputs.windows_capsule_mode != 'consume' && secrets.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM || '' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           CREATOROS_UPDATE_BASE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}
@@ -864,7 +865,11 @@ jobs:
           # [T-675] Windows 已由公共入口准备少文件闭包；package 保留正式保护链，但
           # 不得通过旧 bytecode 布局重新引入 node_modules。
           CREATOROS_PRODUCTION_CLOSURE: ${{ runner.os == 'Windows' && '1' || '0' }}
-        run: node scripts/desktop/release.mjs
+        run: node scripts/desktop/release-ci.mjs
+
+      - name: 清理本次CI临时签名密钥
+        if: always() && inputs.windows_capsule_mode != 'prepare'
+        run: node frontend/scripts/desktop/release-ci.mjs --cleanup
 
       - name: 收集用户安装包(T-492)
         if: inputs.windows_capsule_mode != 'prepare'

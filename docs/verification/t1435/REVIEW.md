@@ -1,0 +1,7 @@
+# 独立评审
+
+review_ci_signing（子代理）前置评审与实现后只读复核均通过，无阻塞缺陷。复核实际执行node --check、签名入口与workflow测试46/46通过，未读取真实私钥。
+
+确认step限定Secret、consume空注入、子进程前删除原始PEM和旧路径、Windows先限制ACL再写key、固定公根预检、finally与always清理、既有package环境剥离保持。runner硬终止不能保证清理；workspace符号链接场景不在当前托管runner范围。
+
+本地5组65/65通过，真实提供密钥只做预检与环境剥离验证，未冒称双端安装通过。根公钥指纹SHA256：54f51d62d88b4bf429acef9a21d869a9a0957e1695d79938c00bff7e869f8a4c。GitHub Secret CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM更新于2026-11-02T13:32:35Z，仅记录名称与时间。

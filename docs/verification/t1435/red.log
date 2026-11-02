@@ -1,0 +1,34 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:20605) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/release-ci.test.mjs (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/release-ci.test.mjs [ scripts/desktop/release-ci.test.mjs ]
+Error: Failed to resolve import "./release-ci.mjs" from "scripts/desktop/release-ci.test.mjs". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/scripts/desktop/release-ci.test.mjs:5:30
+  3  |  import { tmpdir } from 'node:os';
+  4  |  import { join } from 'node:path';
+  5  |  import { runCIRelease } from './release-ci.mjs';
+     |                                ^
+  6  |  
+  7  |  describe('CI根私钥生命周期', () => {
+ ❯ TransformPluginContext._formatLog ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30602:39
+ ❯ TransformPluginContext.error ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30599:14
+ ❯ normalizeUrl ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:27842:18
+ ❯ ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:27905:30
+ ❯ TransformPluginContext.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:27873:4
+ ❯ EnvironmentPluginContainer.transform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30387:14
+ ❯ loadAndTransform ../node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:24646:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  21:29:41
+   Duration  891ms (transform 26ms, setup 162ms, import 0ms, tests 0ms, environment 560ms)

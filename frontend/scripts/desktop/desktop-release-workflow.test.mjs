@@ -278,8 +278,12 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
   });
 
   it("T-635 release 与 release-fast 候选包均注入 exact CreatorOS projectKey", () => {
+    const entry = readFileSync(join(process.cwd(), "scripts/desktop/release-ci.mjs"), "utf8");
+    expect(entry).toContain("join(here, 'release.mjs')");
+    expect(workflow).toContain("secrets.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM");
+    expect(workflow).toContain("release-ci.mjs --cleanup");
     expect(workflow).toMatch(
-      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"creatoros"[\s\S]*?run:\s*node scripts\/desktop\/release\.mjs/,
+      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"creatoros"[\s\S]*?run:\s*node scripts\/desktop\/release-ci\.mjs/,
     );
     expect(workflow).toMatch(
       /name:\s*构建真实 NSIS 候选包（不发布）[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"creatoros"[\s\S]*?--profile release-fast/,
