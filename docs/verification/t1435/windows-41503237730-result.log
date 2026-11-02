@@ -1,0 +1,10 @@
+实际Windows错误及已成功的prepared结构/复用证据
+2026-11-02T18:58:59.2164734Z   "nodeModulesDirectories": 0
+2026-11-02T18:59:09.1957537Z   "nodeModulesDirectories": 0
+2026-11-02T18:59:18.9981204Z   "runtimeFiles": 12815,
+2026-11-02T18:59:18.9984385Z   "nodeModulesDirectories": 0,
+2026-11-02T18:59:20.2868812Z [release-ci] 既有信任根预检通过，原始密钥环境已剥离
+2026-11-02T18:59:23.2563636Z [build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。
+2026-11-02T18:59:26.0905500Z [build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。
+2026-11-02T18:59:26.4145216Z Error: [build-sidecar] [T-487] 拒绝递归打包壳构建产物：frontend/.next/worker-packages/p0072/vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe
+2026-11-02T18:59:26.4702808Z ##[error]Process completed with exit code 1.

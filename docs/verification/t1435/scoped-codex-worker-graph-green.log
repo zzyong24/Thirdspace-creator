@@ -1,0 +1,31 @@
+✔ 真实两父解析保留不同版本，CJS/ESM/self/subpath/relative/builtin不被全局诱饵接管 (116.48525ms)
+✔ 真实两父解析保留同版本不同来源，CJS/ESM/self/subpath/relative/builtin不被全局诱饵接管 (101.27025ms)
+✔ 图missing-map拒绝回全局借包 (86.328083ms)
+✔ 图missing-edge拒绝回全局借包 (82.551708ms)
+✔ 图unknown-node拒绝回全局借包 (89.742125ms)
+✔ 图escape拒绝回全局借包 (79.225459ms)
+✔ 图manifest拒绝回全局借包 (80.334167ms)
+✔ exports显式阻止的subpath不得回退裸文件 (83.513458ms)
+✔ 非精确Worker入口仍用原全局层，不被扩大图权限 (186.137541ms)
+✔ 可缺peer仅显式optional，必需peer缺失或导出错误不能吞 (15.993291ms)
+✔ 图内原生依赖必须完整，不能借全局诱饵掩盖图内缺文件 (15.808208ms)
+✔ 缺失optional与平台不支持仅在可选边跳过；必需边仍拒绝 (22.648375ms)
+✔ ESM未导出subpath不自动补扩展，CJS仍保原Node扩展解析 (155.938709ms)
+✔ CJS相对与裸subpath JSON和目录main沿Node规则，exports条件顺序按对象原序 (86.998ms)
+✔ Worker绝对文件路径沿原生下一跳，不作为裸依赖或借全局包 (83.203459ms)
+﹣ Windows UNC不存在路径必须由原生解析器拒绝，不误作Worker裸依赖 (0.043291ms) # SKIP
+✔ T247显式npm punycode与裸builtin/node:并存，CJS强制包路径和ESM显式文件保父边 (86.316875ms)
+✔ T247显式npm buffer与裸builtin/node:并存，CJS强制包路径和ESM显式文件保父边 (95.708833ms)
+✔ T247显式npm string_decoder与裸builtin/node:并存，CJS强制包路径和ESM显式文件保父边 (89.080167ms)
+✔ T247显式npm punycode必需声明缺真实包仍拒，不能借builtin假满足 (10.928666ms)
+✔ T247显式npm buffer必需声明缺真实包仍拒，不能借builtin假满足 (12.046958ms)
+✔ T247显式npm string_decoder必需声明缺真实包仍拒，不能借builtin假满足 (12.67475ms)
+✔ T247显式npm 真实锁定tr46声明punycode强制包路径中文转换可消费 (126.595208ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 1911.87625

@@ -22,3 +22,6 @@ run41484713756 的实际 setup 解包目录发现 1744124 条目，其中 173971
 继续修复衔接：production closure 从源头以正式 CSP 与同一 Growth 公钥配置构建；在全部复制、CLI 和结构校验完成后写本轮 clean 字节身份，区分 windows-production 来源。Windows+CREATOROS_PRODUCTION_CLOSURE=1 的已有官方入口只接受完整、clean digest 匹配、releaseCsp=true、无 node_modules/链接且 server/CLI/worker/解析器/外置 Node 齐备的 prepared runtime；缺失或篡改明确要求重做准备，不能静默回退 full builder。Mac/普通本地路径保持原有构建，最终 tar/固定根104B签名/安装验收保留。独立前审要求另由新候选真实 HTTP 响应记录 CSP，不能仅以 marker 布尔值冒证据。
 
 回归包括有效 prepared runtime 走公共复用路径且前后字节不变、旧/dev/篡改/缺资源/再引入 node_modules 负族；同轮 Windows 原生安装、主页面和卸载仍为最终验收。写集窄增 prepare-packaged-runtime.mjs 与既有 build-production-closure.test.mjs，其余沿原 T1435 范围。
+
+
+run41503237730：Windows 已通过 prepared production reuse，最终tar检查又误判搬运后的Codex原生沙箱资源（frontend/.next/worker-packages/p0072/vendor/.../codex-windows-sandbox-setup.exe）。保留旧node_modules窄规则，新增production worker图支持：固定pNNNN路径、原生name/锁定版本/os/cpu，且regular worker-dependency-map.json的schema1、节点root/name/version/manifestSHA256与实际包一致，alias及execution-worker依赖指向同一节点。非图来源、错图/旧版/假身份/同名其他路径与真正外层安装包继续拒绝。不得移除沙箱组件。独立前后审与真实双端原生验收仍必需。

@@ -329,3 +329,7 @@ PGlite.close不等于解除所有引用：Vitest4的vi.fn初始实现被mock注�
 - T-1435：大型 runtime 的 `tar -tzf` 目录可超过 Node `spawnSync.maxBuffer`，exit null 不是元数据污染；stdout 写独占临时文件并分块检查全部条目，报告子进程 error/signal，保持坏归档拒绝。守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs`（含真实 >64MiB 目录红绿回归）。
 
 - T-1435：Windows production closure 准备后若缺clean来源标记，正式package会回退full standalone并把百万node_modules条目带回包。正式CSP须从源构建传播，完成结构核对后绑定prepared来源与字节；官方模式不得默默回退。守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs scripts/desktop/desktop-release-workflow.test.mjs` 与 `node --test tools/windows-closure-rat/build-production-closure.test.mjs`；最终只认真实安装/HTTP/启动/卸载证据。
+
+- T-1435：合法原生依赖在production closure搬运后已没有node_modules路径；污染分类必须用固定vendor位置+真实包锁定身份+worker图原字节与入口边核验，不能只按旧目录或全局setup后缀豁免。守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs`（真实分层路径RED、图/身份/边负族与外层包保护）。
+
+- T-1435：GitHub continue-on-error 可把真实失败步骤的API conclusion显示为success；安装交付必须核原始日志的真实exit及原生成功标志。守卫：`python3 docs/verification/t1435/audit_ci.py <run-id>`，并核实际安装报告/CSP/下载包完整性，不能只看绿勾。

@@ -1,0 +1,7 @@
+Run 41484713756 / source 0f0874fc80cdc2eb22bcc3114439ca71c1cd2a9b
+API绿色不代表原生验收通过；实际安装结构违规与启动失败如下。
+2026-11-02T17:06:02.1644673Z [release-ci] 既有信任根预检通过，原始密钥环境已剥离
+2026-11-02T17:46:17.2427751Z [build-sidecar] sidecar签名104B digest=b8aa88727c464b7d67259b3b435419e7a60ff40978c765e2d97bf268e5dbac42
+2026-11-02T18:32:13.3511403Z ##[error]Process completed with exit code 1.
+2026-11-02T18:36:22.0870367Z ##[error]Process completed with exit code 1.
+2026-11-02T18:40:45.8050671Z [T-557] ✓ 官方卸载器已清理 runtime 与安装目录

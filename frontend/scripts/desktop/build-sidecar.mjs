@@ -108,17 +108,33 @@ function isLockedCodexSandboxResource(runtimeRoot, rel) {
   const suffix = "/vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe";
   if (!rel.endsWith(suffix)) return false;
   const packageRel = rel.slice(0, -suffix.length);
-  if (!/(?:^|\/)node_modules\/@openai\/(?:codex|codex-win32-x64)$/.test(packageRel)) return false;
+  const legacy = /(?:^|\/)node_modules\/@openai\/(?:codex|codex-win32-x64)$/.test(packageRel);
+  const scoped = /^frontend\/\.next\/worker-packages\/(p[0-9]{4,})$/.exec(packageRel);
+  if (!legacy && !scoped) return false;
   try {
     const manifestPath = join(runtimeRoot, packageRel, "package.json");
     if (!lstatSync(manifestPath).isFile()) return false;
-    const identity = JSON.parse(readFileSync(manifestPath, "utf8"));
+    const manifestBytes = readFileSync(manifestPath);
+    const identity = JSON.parse(manifestBytes);
     const declared = JSON.parse(readFileSync(join(REPO, "ai-worker/package.json"), "utf8")).dependencies["@openai/codex"];
-    return /^\d+\.\d+\.\d+$/.test(declared ?? "")
+    const locked = /^\d+\.\d+\.\d+$/.test(declared ?? "")
       && identity.name === "@openai/codex"
       && identity.version === `${declared}-win32-x64`
       && Array.isArray(identity.os) && identity.os.length === 1 && identity.os[0] === "win32"
       && Array.isArray(identity.cpu) && identity.cpu.length === 1 && identity.cpu[0] === "x64";
+    if (!locked) return false;
+    if (scoped) {
+      const mapPath = join(runtimeRoot, "frontend/worker-dependency-map.json");
+      if (!lstatSync(mapPath).isFile()) return false;
+      const graph = JSON.parse(readFileSync(mapPath, "utf8")), id = scoped[1];
+      const node = graph.nodes?.[id], alias = "@openai/codex-win32-x64";
+      if (graph.schemaVersion !== 1 || node?.root !== packageRel
+        || node.name !== identity.name || node.version !== identity.version
+        || node.manifestSHA256 !== createHash("sha256").update(manifestBytes).digest("hex")
+        || !Array.isArray(node.aliases) || !node.aliases.includes(alias)
+        || graph.entries?.["frontend/runtime/execution-worker.cjs"]?.dependencies?.[alias] !== id) return false;
+    }
+    return true;
   } catch { return false; }
 }
 

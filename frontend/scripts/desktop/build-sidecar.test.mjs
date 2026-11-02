@@ -13,6 +13,7 @@ import {
 import { dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { gzipSync, gunzipSync } from "node:zlib";
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -654,13 +655,18 @@ describe("T-1435 Pi运行时完整复制与Windows归档", () => {
 describe("T-1435 Codex沙箱运行资源不误判递归安装包", () => {
   const pinned = JSON.parse(readFileSync(join(process.cwd(), "../ai-worker/package.json"), "utf8")).dependencies["@openai/codex"];
   const identity = { name: "@openai/codex", version: `${pinned}-win32-x64`, os: ["win32"], cpu: ["x64"] };
-  const roots = ["frontend/node_modules/@openai/codex-win32-x64", "frontend/node_modules/@openai/codex/node_modules/@openai/codex"];
+  const roots = ["frontend/node_modules/@openai/codex-win32-x64", "frontend/node_modules/@openai/codex/node_modules/@openai/codex", "frontend/.next/worker-packages/p0072"];
   const resource = "vendor/x86_64-pc-windows-msvc/codex-resources/codex-windows-sandbox-setup.exe";
   function fixture(root, pkg = roots[0], manifest = identity, asset = resource) {
     const base = join(root, pkg), path = join(base, asset);
     mkdirSync(dirname(path), { recursive: true });
     if (manifest !== null) writeFileSync(join(base, "package.json"), typeof manifest === "string" ? manifest : JSON.stringify(manifest));
     writeFileSync(path, "native-codex-runtime-fixture");
+    if (/^frontend\/\.next\/worker-packages\/p[0-9]{4,}$/.test(pkg)) {
+      const id=pkg.split("/").at(-1), alias="@openai/codex-win32-x64";
+      const bytes=existsSync(join(base,"package.json")) ? readFileSync(join(base,"package.json")) : Buffer.alloc(0);
+      writeFileSync(join(root,"frontend/worker-dependency-map.json"),JSON.stringify({schemaVersion:1,nodes:{[id]:{name:identity.name,version:identity.version,root:pkg,aliases:[alias],manifestSHA256:createHash("sha256").update(bytes).digest("hex")}},entries:{"frontend/runtime/execution-worker.cjs":{dependencies:{[alias]:id}}}}));
+    }
     return path;
   }
   for (const pkg of roots) it(`保留真实身份的原生沙箱资源${pkg}`, () => {
@@ -668,23 +674,46 @@ describe("T-1435 Codex沙箱运行资源不误判递归安装包", () => {
     try { fixture(root, pkg); expect(() => assertNoPackagedBuildArtifacts(root)).not.toThrow(); }
     finally { rmSync(root, { recursive: true, force: true }); }
   });
-  for (const change of [{ name: "other" }, { version: "wrong-win32-x64" }, { os: ["linux"] }, { cpu: ["arm64"] }, { os: ["win32", "linux"] }, { cpu: ["x64", "arm64"] }, { os: { length: 1, 0: "win32" } }, { cpu: { length: 1, 0: "x64" } }, null, "broken-json"]) {
-    it(`拒绝错误或缺失身份${JSON.stringify(change)}`, () => {
+  for (const pkg of roots) for (const change of [{ name: "other" }, { version: "wrong-win32-x64" }, { os: ["linux"] }, { cpu: ["arm64"] }, { os: ["win32", "linux"] }, { cpu: ["x64", "arm64"] }, { os: { length: 1, 0: "win32" } }, { cpu: { length: 1, 0: "x64" } }, null, "broken-json"]) {
+    it(`拒绝错误或缺失身份${pkg}/${JSON.stringify(change)}`, () => {
       const root = mkdtempSync(join(tmpdir(), "codex-resource-"));
-      try { fixture(root, roots[0], change === null || typeof change === "string" ? change : { ...identity, ...change }); expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(/codex-windows-sandbox-setup/); }
+      try { fixture(root, pkg, change === null || typeof change === "string" ? change : { ...identity, ...change }); expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(/codex-windows-sandbox-setup/); }
       finally { rmSync(root, { recursive: true, force: true }); }
     });
   }
-  for (const [pkg, asset] of [["frontend/cache", resource], ["frontend/node_modules/@openai/codex-other", resource], [roots[0], "vendor/wrong/codex-resources/codex-windows-sandbox-setup.exe"]]) {
+  for (const mode of ["missing", "broken", "schema", "root", "name", "version", "hash", "alias", "alias-object", "entry", "node", "raw-bytes", "symlink-map", "symlink-manifest"]) it(`分层Codex拒绝无效图${mode}`, () => {
+    const root=mkdtempSync(join(tmpdir(),"codex-scoped-graph-"));
+    try {
+      const pkg=roots[2];fixture(root,pkg);
+      const mapPath=join(root,"frontend/worker-dependency-map.json"), graph=JSON.parse(readFileSync(mapPath,"utf8")), node=graph.nodes.p0072;
+      if(mode==="schema")graph.schemaVersion="1";
+      if(mode==="root")node.root="frontend/.next/worker-packages/p0073";
+      if(mode==="name")node.name="other";
+      if(mode==="version")node.version="old";
+      if(mode==="hash")node.manifestSHA256="0".repeat(64);
+      if(mode==="alias")node.aliases=["@openai/codex-linux-x64"];
+      if(mode==="alias-object")node.aliases={0:"@openai/codex-win32-x64",length:1};
+      if(mode==="entry")graph.entries["frontend/runtime/execution-worker.cjs"].dependencies["@openai/codex-win32-x64"]="p0073";
+      if(mode==="node")delete graph.nodes.p0072;
+      writeFileSync(mapPath,JSON.stringify(graph));
+      if(mode==="missing")rmSync(mapPath);
+      if(mode==="broken")writeFileSync(mapPath,"[");
+      if(mode==="raw-bytes")writeFileSync(join(root,pkg,"package.json"),JSON.stringify(identity)+" ");
+      if(mode==="symlink-map") { const saved=join(root,"map.saved.json");writeFileSync(saved,readFileSync(mapPath));rmSync(mapPath);symlinkSync(saved,mapPath); }
+      if(mode==="symlink-manifest") {const file=join(root,pkg,"package.json"),saved=join(root,pkg,"saved.json");writeFileSync(saved,readFileSync(file));rmSync(file);symlinkSync(saved,file);}
+      expect(()=>assertNoPackagedBuildArtifacts(root)).toThrow(/codex-windows-sandbox-setup/);
+    } finally {rmSync(root,{recursive:true,force:true});}
+  });
+  for (const [pkg, asset] of [["frontend/cache", resource], ["frontend/.next/worker-packages/other/p0072", resource], ["frontend/.next/worker-packages/p072", resource], ["frontend/node_modules/@openai/codex-other", resource], [roots[0], "vendor/wrong/codex-resources/codex-windows-sandbox-setup.exe"]]) {
     it(`同名异处仍拦截${pkg}/${asset}`, () => {
       const root = mkdtempSync(join(tmpdir(), "codex-resource-"));
       try { fixture(root, pkg, identity, asset); expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(/codex-windows-sandbox-setup/); }
       finally { rmSync(root, { recursive: true, force: true }); }
     });
   }
-  for (const artifact of ["CreatorOS_1.2.0_x64-setup.exe", "CreatorOS.msi", "CreatorOS.dmg", "CreatorOS.app.tar.gz", "sidecar.tar.gz"]) it(`合法资源不能掩盖真正外层安装包${artifact}`, () => {
+  for (const pkg of roots) for (const artifact of ["CreatorOS_1.2.0_x64-setup.exe", "CreatorOS.msi", "CreatorOS.dmg", "CreatorOS.app.tar.gz", "sidecar.tar.gz"]) it(`合法资源不能掩盖真正外层安装包${pkg}/${artifact}`, () => {
     const root = mkdtempSync(join(tmpdir(), "codex-resource-"));
-    try { fixture(root); writeFileSync(join(root, artifact), "outer-installer"); expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(artifact); }
+    try { fixture(root, pkg); writeFileSync(join(root, artifact), "outer-installer"); expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(artifact); }
     finally { rmSync(root, { recursive: true, force: true }); }
   });
 });

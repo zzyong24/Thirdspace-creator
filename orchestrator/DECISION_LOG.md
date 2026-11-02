@@ -3293,3 +3293,8 @@ Nonce: 7d837e2b-847f-466a-a809-af37845b8080
 ## DEC-143504：Windows 正式包保留本轮已准备的 production closure
 
 用户已授权持续修复直到双端成功。实际 run41484713756 安装包目录含174万条目，源码证明 T1273 clean 判断使已准备闭包回退 full standalone；保留既有零 node_modules/零链接合同与固定根签名标准，不改安装门。按独立前审，将正式 CSP/Growth 公钥从源头传给 closure，并只在最终准备成功后写区分来源的 clean 字节标记；官方 Windows 模式验证完整资源后复用，缺失/篡改报准备失败。Mac/本地普通构建不变，禁止额外混淆/字节码/诱饵。新包真实 HTTP CSP 与原生安装/启动/卸载必须独立取得实际证据。
+
+
+## DEC-143505：Codex搬运资源按既有worker图核验
+
+用户持续修复双端授权下，run41503237730实际拒绝已搬运Codex原生资源。固定vendor尾路径与既有锁定身份校验不变，只增加严格worker图来源：普通manifest/map、schema1、pNNNN root、节点身份/原始manifest SHA256、alias数组与execution-worker边一致。独立前后审无阻塞；不放宽其它安装包/递归tar规则，不删沙箱，不改运行解析器或信任根。
