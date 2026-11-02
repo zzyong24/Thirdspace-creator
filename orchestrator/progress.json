@@ -22701,7 +22701,8 @@
         "frontend/scripts/desktop/release-ci.test.mjs",
         "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
         "frontend/scripts/desktop/build-sidecar.mjs",
-        "frontend/scripts/desktop/build-sidecar.test.mjs"
+        "frontend/scripts/desktop/build-sidecar.test.mjs",
+        "docs/engineering-notes/pitfalls.md"
       ],
       "read_set": [
         "AGENTS.md",

@@ -1,0 +1,37 @@
+Run: https://github.com/zzyong24/Thirdspace-creator/actions/runs/41473263553
+2026-11-02T16:18:56.0088742Z [build-sidecar] 打 sidecar.tar.gz(供 bundle resource)…
+2026-11-02T16:33:56.3128997Z file:///D:/a/Thirdspace-creator/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs:255
+2026-11-02T16:33:56.3146194Z     throw new Error(
+2026-11-02T16:33:56.3151127Z           ^
+2026-11-02T16:33:56.3158589Z
+2026-11-02T16:33:56.3449374Z Error: [build-sidecar] 无法校验 sidecar.tar.gz AppleDouble 条目(exit null)
+2026-11-02T16:33:56.3449885Z
+2026-11-02T16:33:56.3486121Z     at assertNoAppleDoubleTarEntries (file:///D:/a/Thirdspace-creator/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs:255:11)
+2026-11-02T16:33:56.3497689Z     at packSidecarTarball (file:///D:/a/Thirdspace-creator/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs:573:3)
+2026-11-02T16:33:56.3499733Z     at main (file:///D:/a/Thirdspace-creator/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs:2412:9)
+2026-11-02T16:33:56.3503215Z     at file:///D:/a/Thirdspace-creator/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs:2731:26
+2026-11-02T16:33:56.3508682Z     at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+2026-11-02T16:33:56.3523539Z     at async node:internal/modules/esm/loader:639:26
+2026-11-02T16:33:56.3529592Z     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+2026-11-02T16:33:56.3533600Z
+2026-11-02T16:33:56.3540024Z Node.js v25.9.0
+2026-11-02T16:33:56.4441923Z [desktop:package] ✗ 步骤失败:最终sidecar tar与既有root签名(exit 1)
+2026-11-02T16:33:56.4458867Z [desktop:package]   阶段耗时报告:D:\a\Thirdspace-creator\Thirdspace-creator\frontend\src-tauri\target\runtime-reports\build-timings.package.json
+2026-11-02T16:33:56.5279354Z [release] ✗ 失败:安装包构建（额外验证独立运行）(exit 1)
+2026-11-02T16:33:56.5281492Z [release]   阶段耗时报告:D:\a\Thirdspace-creator\Thirdspace-creator\frontend\src-tauri\target\runtime-reports\build-timings.release.json
+2026-11-02T16:33:56.7254705Z ##[error]Process completed with exit code 1.
+2026-11-02T16:33:56.8924615Z ##[group]Run node frontend/scripts/desktop/release-ci.mjs --cleanup
+2026-11-02T16:33:56.8972611Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-11-02T16:33:56.8974046Z env:
+2026-11-02T16:33:56.8977011Z   CREATOROS_PACKAGE_BUILD_ONLY: 1
+2026-11-02T16:33:56.8977564Z   CREATOROS_CREATOR_RELEASE_COMMIT: 272803e45f809cbbdc0fb122081b41f44c20590e
+2026-11-02T16:33:56.8980127Z   CREATOROS_OWNED_DEVICES_ENABLED: 1
+2026-11-02T16:33:56.8980551Z   CREATOROS_MODEL_BENEFITS_ENABLED: 1
+2026-11-02T16:33:56.8983290Z   CREATOROS_GROWTH_RELEASE_COMMIT: 95cd62e891ee581faca46a14a31df9c0109ab59b
+2026-11-02T16:33:56.8983916Z   CREATOROS_ACTIVITY_RELEASE_COMMIT: c4435524a8fb96a556ffc039c025732925255e58
+2026-11-02T16:33:56.8986804Z   PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+2026-11-02T16:33:56.8987292Z   CARGO_HOME: C:\Users\runneradmin\.cargo
+2026-11-02T16:33:56.9014466Z   CARGO_INCREMENTAL: 0
+2026-11-02T16:33:56.9014967Z   CARGO_TERM_COLOR: always
+2026-11-02T16:33:56.9020163Z   CACHE_ON_FAILURE: false
+2026-11-02T16:33:56.9020597Z ##[endgroup]

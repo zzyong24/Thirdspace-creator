@@ -1,0 +1,37 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:57502) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/build-sidecar.test.mjs (45 tests | 1 failed | 44 skipped) 7293ms
+     × 真实 tar 目录超过 64MiB 仍完整检查，末尾污染仍拒绝 7292ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/build-sidecar.test.mjs > macOS AppleDouble 打包防线 > 真实 tar 目录超过 64MiB 仍完整检查，末尾污染仍拒绝
+ FAIL  scripts/desktop/build-sidecar.test.mjs > macOS AppleDouble 打包防线 > 真实 tar 目录超过 64MiB 仍完整检查，末尾污染仍拒绝
+ FAIL  scripts/desktop/build-sidecar.test.mjs > macOS AppleDouble 打包防线 > 真实 tar 目录超过 64MiB 仍完整检查，末尾污染仍拒绝
+AssertionError: expected [Function] to not throw an error but 'Error: [build-sidecar] 无法校验 sidecar.t…' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"Error: [build-sidecar] 无法校验 sidecar.tar.gz AppleDouble 条目(exit null)
+"
+
+ ❯ scripts/desktop/build-sidecar.test.mjs:185:64
+    183|       const repeats = 275000; // 目录文本 > 64MiB，复现 spawnSync stdout maxB…
+    184|       archiveWithEntries(tarball, [name], repeats);
+    185|       expect(() => assertNoAppleDoubleTarEntries(tarball)).not.toThrow…
+       |                                                                ^
+    186|       // 所有安全条目后再放污染条目，验证并非只检查目录前缀。
+    187|       const clean = Buffer.from(gunzipSync(readFileSync(tarball)).suba…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 44 skipped (45)
+   Start at  00:39:00
+   Duration  8.31s (transform 123ms, setup 187ms, import 98ms, tests 7.29s, environment 579ms)

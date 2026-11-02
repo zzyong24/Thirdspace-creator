@@ -1,0 +1,19 @@
+候选: 272803e45f809cbbdc0fb122081b41f44c20590e
+Run: https://github.com/zzyong24/Thirdspace-creator/actions/runs/41473263553
+2026-11-02T15:47:07.9087320Z [T-709] ✓ Developer ID 已导入一次性钥匙串；公证 profile 已就绪
+2026-11-02T15:54:53.2721920Z [release-ci] 既有信任根预检通过，原始密钥环境已剥离
+2026-11-02T16:23:15.7784810Z Current status: Accepted.........................................Processing complete
+2026-11-02T16:23:15.7786630Z   status: Accepted
+2026-11-02T16:23:18.8311390Z [notarize] ✅ 公证 + staple 完成。
+2026-11-02T16:24:05.0903000Z frontend/src-tauri/target/release/bundle/macos/CreatorOS.app: valid on disk
+2026-11-02T16:24:05.0903880Z frontend/src-tauri/target/release/bundle/macos/CreatorOS.app: satisfies its Designated Requirement
+2026-11-02T16:24:15.5799180Z /Users/runner/work/_temp/creatoros-notarized-dmg/CreatorOS.app: valid on disk
+2026-11-02T16:24:15.5812510Z /Users/runner/work/_temp/creatoros-notarized-dmg/CreatorOS.app: satisfies its Designated Requirement
+2026-11-02T16:24:17.0907260Z [T-709] ✓ Developer ID、notary staple、Gatekeeper 与 DMG 内应用验收通过
+2026-11-02T16:24:30.4780940Z /Users/runner/work/_temp/creatoros-sidecar-tar-replay/server.app: valid on disk
+2026-11-02T16:24:30.4782600Z /Users/runner/work/_temp/creatoros-sidecar-tar-replay/server.app: satisfies its Designated Requirement
+2026-11-02T16:24:30.4836770Z [T-705] ✓ 归档零 AppleDouble；解压后的 server.app 严格签名有效
+2026-11-02T16:25:15.4205180Z /Users/runner/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app: valid on disk
+2026-11-02T16:25:15.4207160Z /Users/runner/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app: satisfies its Designated Requirement
+2026-11-02T16:25:15.6188080Z [T-663] ✓ macOS CreatorOS 真启动并完成主页面加载
+2026-11-02T16:25:19.9233200Z [T-709] ✓ 一次性签名钥匙串与证书文件已清理

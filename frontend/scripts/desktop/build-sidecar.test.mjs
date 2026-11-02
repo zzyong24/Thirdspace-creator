@@ -12,6 +12,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
+import { gzipSync, gunzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -26,6 +27,7 @@ import {
   assertNoPackagedBuildArtifacts,
   assertCreatorOsCliRuntime,
   assertNoPortableMetadataFiles,
+  assertNoAppleDoubleTarEntries,
   portableTarEnv,
   prunePortableMetadataFiles,
   copyPortableBundleTree,
@@ -147,6 +149,65 @@ describe("sidecar 构建产物递归污染哨兵", () => {
 });
 
 describe("macOS AppleDouble 打包防线", () => {
+  const tarBin = process.platform === "win32" ? join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "tar";
+  function archiveWithEntries(path, names, repeats = 1) {
+    const headers = names.map((name) => {
+      const header = Buffer.alloc(512);
+      const slash = name.lastIndexOf("/");
+      const prefix = slash > 0 ? name.slice(0, slash) : "";
+      const leaf = slash > 0 ? name.slice(slash + 1) : name;
+      header.write(leaf, 0, 100);
+      header.write("0000755\0", 100);
+      header.write("0000000\0", 108);
+      header.write("0000000\0", 116);
+      header.write("00000000000\0", 124);
+      header.write("00000000000\0", 136);
+      header.fill(32, 148, 156);
+      header.write("5", 156);
+      header.write("ustar\0", 257);
+      header.write("00", 263);
+      header.write(prefix, 345, 155);
+      const sum = header.reduce((a, b) => a + b, 0);
+      header.write(`${sum.toString(8).padStart(6, "0")}\0 `, 148);
+      return header;
+    });
+    const bytes = Buffer.alloc(headers.length * repeats * 512 + 1024);
+    for (let i = 0; i < repeats; i++) headers.forEach((h, n) => h.copy(bytes, (i * headers.length + n) * 512));
+    writeFileSync(path, gzipSync(bytes, { level: 1 }));
+  }
+
+  it("真实 tar 目录超过 64MiB 仍完整检查，末尾污染仍拒绝", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-tar-large-"));
+    try {
+      const tarball = join(root, "large.tar.gz");
+      const name = `${"p".repeat(150)}/${"f".repeat(99)}`;
+      const repeats = 275000; // 目录文本 > 64MiB，复现 spawnSync stdout maxBuffer。
+      archiveWithEntries(tarball, [name], repeats);
+      expect(() => assertNoAppleDoubleTarEntries(tarball, tarBin)).not.toThrow();
+      // 所有安全条目后再放污染条目，验证并非只检查目录前缀。
+      const clean = Buffer.from(gunzipSync(readFileSync(tarball)).subarray(0, repeats * 512));
+      const tail = join(root, "tail.tar.gz");
+      archiveWithEntries(tail, ["server.app/._Info.plist"]);
+      writeFileSync(tarball, gzipSync(Buffer.concat([clean, gunzipSync(readFileSync(tail))]), { level: 1 }));
+      expect(() => assertNoAppleDoubleTarEntries(tarball, tarBin)).toThrow(/AppleDouble\/Finder/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 60000);
+
+  it("归档含 Finder 元数据或损坏时仍失败", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-tar-invalid-"));
+    try {
+      const tarball = join(root, "test.tar.gz");
+      archiveWithEntries(tarball, ["nested/.DS_Store"]);
+      expect(() => assertNoAppleDoubleTarEntries(tarball, tarBin)).toThrow(/AppleDouble\/Finder/);
+      writeFileSync(tarball, "broken archive");
+      expect(() => assertNoAppleDoubleTarEntries(tarball, tarBin)).toThrow(/无法校验/);
+      expect(() => assertNoAppleDoubleTarEntries(tarball, join(root, "missing-tar"))).toThrow(/ENOENT/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
   it("macOS tar 强制关闭 copyfile 元数据编码", () => {
     expect(portableTarEnv({ MARKER: "kept" }, "darwin")).toEqual({
       MARKER: "kept",

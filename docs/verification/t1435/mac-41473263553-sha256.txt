@@ -1,0 +1,3 @@
+272648bd52a85ce491affb78acbe635ae57989860ed4c1deb85053d6dc2be2e0  CreatorOS_1.2.0_aarch64.dmg
+本地路径: /Users/zyongzhu/Downloads/CreatorOS-builds/41473263553/mac/CreatorOS_1.2.0_aarch64.dmg
+hdiutil verify: VALID（exit 0）

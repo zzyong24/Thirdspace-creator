@@ -28,6 +28,7 @@ import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerEx
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
+import { StringDecoder } from "node:string_decoder";
 import { runSidecarSigning, sidecarSigningRequired } from "./sign-sidecar.mjs";
 const SIDECAR_CLEAN_POLICY = "t1273-clean-no-obfuscation-v2";
 // 只由专用签名子进程接收；直接release构建也不向Next/tar/编译器继承此路径。
@@ -246,24 +247,52 @@ export function assertNoPortableMetadataFiles(root) {
 export function assertNoAppleDoubleTarEntries(tarball, tarBin = "tar") {
   // COPYFILE_DISABLE=1 对“读取”同样重要：否则 macOS bsdtar 会把 `._*` 当 xattr 隐藏，
   // 普通 `tar -tzf` 看起来是干净的，Rust tar 却会把它们真实展开。
-  const listed = spawnSync(tarBin, ["-tzf", tarball], {
-    encoding: "utf8",
-    maxBuffer: 64 * 1024 * 1024,
-    env: portableTarEnv(process.env, "darwin"),
-  });
-  if (listed.status !== 0) {
-    throw new Error(
-      `[build-sidecar] 无法校验 sidecar.tar.gz AppleDouble 条目(exit ${listed.status ?? "null"})\n${listed.stderr ?? ""}`,
-    );
-  }
-  const bad = listed.stdout
-    .split("\n")
-    .map((entry) => entry.replace(/^\.\//, ""))
-    .filter((entry) => entry && entry.split("/").some((part) => part === ".DS_Store" || part.startsWith("._")));
-  if (bad.length > 0) {
-    throw new Error(
-      `[build-sidecar] sidecar.tar.gz 含 AppleDouble/Finder 条目，解压后会破坏签名：${bad.slice(0, 12).join(", ")}`,
-    );
+  // 大闭包的目录清单可超过 64MiB；落临时文件后逐块扫描，避免 spawnSync 缓冲上限。
+  const scratch = mkdtempSync(join(tmpdir(), "creatoros-tar-list-"));
+  let fd;
+  try {
+    fd = openSync(join(scratch, "entries.txt"), "wx+", 0o600);
+    const listed = spawnSync(tarBin, ["-tzf", tarball], {
+      encoding: "utf8",
+      stdio: ["ignore", fd, "pipe"],
+      maxBuffer: 64 * 1024,
+      env: portableTarEnv(process.env, "darwin"),
+    });
+    if (listed.error || listed.status !== 0 || listed.signal) {
+      throw new Error(
+        `[build-sidecar] 无法校验 sidecar.tar.gz AppleDouble 条目(error ${listed.error?.code ?? "none"}; exit ${listed.status ?? "null"}; signal ${listed.signal ?? "none"})\n${(listed.stderr ?? "").slice(-8192)}`,
+      );
+    }
+    const bad = [];
+    const inspect = (line) => {
+      const entry = line.replace(/^\.\//, "").replace(/\r$/, "");
+      if (entry && entry.split("/").some((part) => part === ".DS_Store" || part.startsWith("._"))) {
+        if (bad.length < 12) bad.push(entry);
+      }
+    };
+    const decoder = new StringDecoder("utf8");
+    const chunk = Buffer.alloc(64 * 1024);
+    let pending = "";
+    let offset = 0;
+    let count;
+    while ((count = readSync(fd, chunk, 0, chunk.length, offset)) > 0) {
+      offset += count;
+      const lines = (pending + decoder.write(chunk.subarray(0, count))).split("\n");
+      pending = lines.pop();
+      for (const line of lines) inspect(line);
+    }
+    inspect(pending + decoder.end());
+    if (bad.length > 0) {
+      throw new Error(
+        `[build-sidecar] sidecar.tar.gz 含 AppleDouble/Finder 条目，解压后会破坏签名：${bad.join(", ")}`,
+      );
+    }
+  } finally {
+    try {
+      if (fd !== undefined) closeSync(fd);
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
   }
 }
 

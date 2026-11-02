@@ -315,3 +315,15 @@ PGlite.close不等于解除所有引用：Vitest4的vi.fn初始实现被mock注�
 **正解**(T-992):撤掉该步。这组测试是纯 `std` 临时目录测试,不需要真实 Windows 也不需要发布流水线,留在本地 / reconcile LED-057 guard 即可。若确实要进 CI,必须排在 closure 构建**之后**。**同时**:撤步后要回头改 LESSON_LEDGER 里「Windows 流水线必须用原生独占文件句柄复现」那句 —— 步骤没了,声明就成了假的;`reconcile.config.json` 那条同名 check 也脆(任何没有 `binaries/` + `sidecar.tar.gz` 的干净检出跑它都会 panic,reconcile 会报 "LED-057 RECURRED" 假红)。
 
 **教训**:**给一个修复加守护时,守护自身的依赖前置条件要跟着排序**。「加个测试步骤总不会错」是错的 —— 在有构建产物依赖的流水线里,步骤位置和测试内容同等重要。另一条:**声明和机制要同步改**。ledger / config 里写「流水线必须 X」,当 X 被撤掉时那句话不会自己失效,它会变成一条误导后人的假证据。
+
+
+## 2026-11-03 · 双端打包必须按真实包身份与资源用途识别（T-1435）
+
+- CI机器没有开发机的签名文件。正式sidecar签名要显式接入已授权Secret，原始PEM在启动子进程前从环境移除，只让专用签名链读取仓库外受控临时文件，完成后清理。不能提交私钥或靠开发机默认路径蒙混过关。
+- pnpm Windows默认将长虚拟store目录截短。Pi等带长scope/peer后缀的包不能靠目录名前缀猜位置；复用manifest身份定位和依赖图，目标保留运行时能够识别的目录。回归要移除源store后从搬运目标深导入，不能靠构建机现有依赖假绿。
+- Git Bash的GNU tar会把Windows盘符C:当作远端归档。Windows zip解包用SystemRoot/System32/tar.exe的绝对路径和argv，不删掉浏览器能力、不绕过归档哈希校验。
+- 递归打包污染哨兵不能把依赖原生运行组件当成外层安装包。Codex的codex-windows-sandbox-setup.exe必须保留；只在固定vendor路径且manifest name/锁定版本/os/cpu全部吻合时允许。其他同名异处文件和真正外层安装包仍拒绝。不能全局忽略setup后缀，也不能删组件来让门变绿。
+
+守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs scripts/desktop/release-ci.test.mjs scripts/desktop/desktop-release-workflow.test.mjs`。真实双端安装、启动和签名仍以对应候选的CI日志与安装包为准；局部单测不代替真机结果。原始失败及修复证据见`docs/verification/t1435/`。
+
+- T-1435：大型 runtime 的 `tar -tzf` 目录可超过 Node `spawnSync.maxBuffer`，exit null 不是元数据污染；stdout 写独占临时文件并分块检查全部条目，报告子进程 error/signal，保持坏归档拒绝。守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs`（含真实 >64MiB 目录红绿回归）。
