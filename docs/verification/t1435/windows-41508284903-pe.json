@@ -1,0 +1,8 @@
+{
+  "file": "/Users/zyongzhu/Downloads/CreatorOS-builds/41508284903/windows/CreatorOS_1.2.0_x64-setup.exe",
+  "size_bytes": 913251151,
+  "pe_signature": "valid",
+  "certificate_table_offset": 0,
+  "certificate_table_size": 0,
+  "authenticode_certificate_present": false
+}

@@ -1,0 +1,7 @@
+{
+  "sourceCommit": "b451b027433f5f1ed38d252f1742d9ee7d8f1fad",
+  "sourceConstant": "frontend/scripts/desktop/desktop-csp.mjs:DESKTOP_RELEASE_CSP",
+  "actualHttpStatus": 200,
+  "actualHeader": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://growth.aitongban.cloud https://creatoros.aitongban.cloud https://license.aitongban.cloud; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; font-src 'self' data:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'",
+  "exactMatch": true
+}

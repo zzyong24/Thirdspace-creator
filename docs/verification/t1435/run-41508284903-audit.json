@@ -1,0 +1,155 @@
+{
+  "run_id": "41508284903",
+  "head_sha": "b451b027433f5f1ed38d252f1742d9ee7d8f1fad",
+  "run_status": "completed",
+  "run_conclusion": "success",
+  "url": "https://github.com/zzyong24/Thirdspace-creator/actions/runs/41508284903",
+  "platforms": [
+    {
+      "target": "darwin",
+      "job_id": 125497840321,
+      "job_status": "completed",
+      "job_conclusion": "success",
+      "gates": [
+        {
+          "requirement": "打包(release.mjs 全链)",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "清理本次CI临时签名密钥",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "收集用户安装包(T-492)",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "上传已生成的安装包（额外验收不阻断）",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "校验 Chromium 已打进 sidecar",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "校验 updater 产物",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "macOS Developer ID、公证与 Gatekeeper 门",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "macOS sidecar 可搬运归档与解压后签名门",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "macOS 真启动与主页面加载冒烟",
+          "result": "success",
+          "status": "completed"
+        }
+      ],
+      "all_failed_steps": [],
+      "raw_execution_errors": [],
+      "raw_missing_native_success_markers": [],
+      "raw_log_review_passed": true,
+      "artifact": [
+        {
+          "id": 13176195757,
+          "name": "desktop-darwin-aarch64",
+          "size_in_bytes": 886154413,
+          "digest": "sha256:ed00891940eebba51514e37681e005904e825d57a39090d75d37659745cd3dd1",
+          "expired": false
+        }
+      ],
+      "passed": true
+    },
+    {
+      "target": "windows",
+      "job_id": 125497840773,
+      "job_status": "completed",
+      "job_conclusion": "success",
+      "gates": [
+        {
+          "requirement": "打包(release.mjs 全链)",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "清理本次CI临时签名密钥",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "收集用户安装包(T-492)",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "上传已生成的安装包（额外验收不阻断）",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "校验 Chromium 已打进 sidecar",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "校验 updater 产物",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "校验 Windows 安装包 tarball 化",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "Windows 安装期 runtime 原生冒烟",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "Windows 已安装 runtime verdict 只读泄漏扫描",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "Windows 安装后真启动与主页面加载冒烟",
+          "result": "success",
+          "status": "completed"
+        },
+        {
+          "requirement": "Windows 主动卸载清理冒烟",
+          "result": "success",
+          "status": "completed"
+        }
+      ],
+      "all_failed_steps": [],
+      "raw_execution_errors": [],
+      "raw_missing_native_success_markers": [],
+      "raw_log_review_passed": true,
+      "artifact": [
+        {
+          "id": 13174211464,
+          "name": "desktop-windows-x86_64",
+          "size_in_bytes": 913225438,
+          "digest": "sha256:d07be7d0e8e810d5d7b700d7373f485d00a8e1dde70b67d3d37d0e0467a91ac1",
+          "expired": false
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "ci_requirements_passed": true,
+  "local_installer_hash_and_integrity": "separate evidence required"
+}

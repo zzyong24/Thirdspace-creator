@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "target": "windows-x86_64",
+  "runtimeFiles": 12815,
+  "capacityWarnings": [
+    "运行文件数 12815 超过容量参考值 3500；请查看文件清单与安装运行验收。"
+  ],
+  "runtimeBytes": 2273312964,
+  "nodeModulesDirectories": 0,
+  "linksOrReparsePoints": 0,
+  "externalBinBytes": 95618048,
+  "cliBundle": "frontend/cli/creatoros.cjs",
+  "cliBundleBytes": 1420597,
+  "cliNode": "cli/node.exe",
+  "cliNodeBytes": 95618048,
+  "serverEntry": "frontend/server.js"
+}

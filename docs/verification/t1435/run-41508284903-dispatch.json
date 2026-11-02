@@ -1,0 +1,27 @@
+{
+  "run_id": 41508284903,
+  "url": "https://github.com/zzyong24/Thirdspace-creator/actions/runs/41508284903",
+  "candidate_sha": "b451b027433f5f1ed38d252f1742d9ee7d8f1fad",
+  "remote_main_verified_equal_before_dispatch": true,
+  "inputs": {
+    "only": "all",
+    "validate_installers": "true"
+  },
+  "preflight": {
+    "packaging_tests": 170,
+    "production_plan_tests": 17,
+    "worker_graph_local": {
+      "passed": 22,
+      "skipped_windows_only": 1
+    },
+    "timeout_policy": "exit 0",
+    "independent_review": "no blockers",
+    "reconcile_quick": {
+      "errors": 0,
+      "existing_warnings": 2
+    }
+  },
+  "superseded_run": 41503237730,
+  "superseded_reason": "Windows实际失败已定位且新修复候选冻结推送后请求停止旧Mac任务；非观察超时取消",
+  "goal_status": "active: 尚需新候选双端原始日志/实际安装包/Windows CSP原生验收"
+}

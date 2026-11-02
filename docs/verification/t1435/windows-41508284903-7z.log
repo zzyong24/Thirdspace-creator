@@ -1,0 +1,23 @@
+
+7-Zip (z) 26.01 (arm64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-04-27
+ 64-bit arm_v:8.5-A locale=C.UTF-8 Threads:12 OPEN_MAX:1048575, ASM
+
+Scanning the drive for archives:
+1 file, 913251151 bytes (871 MiB)
+
+Testing archive: /Users/zyongzhu/Downloads/CreatorOS-builds/41508284903/windows/CreatorOS_1.2.0_x64-setup.exe
+--
+Path = /Users/zyongzhu/Downloads/CreatorOS-builds/41508284903/windows/CreatorOS_1.2.0_x64-setup.exe
+Type = Nsis
+Physical Size = 913251151
+Method = Deflate
+Solid = +
+Headers Size = 75010
+Embedded Stub Size = 54784
+SubType = NSIS-3 Unicode BadCmd=13
+
+Everything is Ok
+
+Files: 11
+Size:       885398380
+Compressed: 913251151

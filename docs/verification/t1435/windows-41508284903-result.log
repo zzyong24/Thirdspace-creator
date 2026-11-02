@@ -1,0 +1,8 @@
+Run 41508284903 / source b451b027433f5f1ed38d252f1742d9ee7d8f1fad
+2026-11-02T19:36:51.8833654Z [release-ci] 既有信任根预检通过，原始密钥环境已剥离
+2026-11-02T19:38:53.2104069Z [build-sidecar] sidecar签名104B digest=c158f90b469b73c927d7764167272cdc7365bd832f75bfd97f5af7a339920dbd
+2026-11-02T19:47:52.7056330Z [T-675] ✓ 原生安装期物化通过: D:\a\_temp\CreatorOS 中文 RAT02 Space\runtime-images\1.2.0-d78722dbfe46\sidecar\frontend\server.js
+2026-11-02T19:49:37.8038561Z WARNING: [T-775] Windows 首次启动超过 45 秒（继续发布验证，120 秒真实主页加载仍为硬门）:00:01:34.3854751
+2026-11-02T19:49:38.5893534Z [T-1435] 已安装页面HTTP CSP证据:{"status":"observed","httpStatus":200,"csp":"default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://growth.aitongban.cloud https://creatoros.aitongban.cloud https://license.aitongban.cloud; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; font-src 'self' data:; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'"}
+2026-11-02T19:49:39.2081399Z [T-675] ✓ 已安装 CreatorOS 真启动并完成主页面加载:00:01:34.3854751
+2026-11-02T19:49:43.6082712Z [T-557] ✓ 官方卸载器已清理 runtime 与安装目录

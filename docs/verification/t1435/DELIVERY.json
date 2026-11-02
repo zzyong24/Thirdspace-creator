@@ -1,0 +1,58 @@
+{
+  "source_commit": "b451b027433f5f1ed38d252f1742d9ee7d8f1fad",
+  "main_at_dispatch": "b451b027433f5f1ed38d252f1742d9ee7d8f1fad",
+  "run_id": 41508284903,
+  "run_url": "https://github.com/zzyong24/Thirdspace-creator/actions/runs/41508284903",
+  "versions": [
+    "1.2.0",
+    "1.2.0",
+    "1.2.0",
+    "1.2.0"
+  ],
+  "installers": {
+    "mac": {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-builds/41508284903/mac/CreatorOS_1.2.0_aarch64.dmg",
+      "sha256": "c05dd72f4842043085d1d36f82f18da319a1de3128cddda9d6dbc20c0435137b",
+      "bytes": 887811054,
+      "source_attestation_matches": true,
+      "integrity": "hdiutil verify exit 0 / VALID"
+    },
+    "windows": {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-builds/41508284903/windows/CreatorOS_1.2.0_x64-setup.exe",
+      "sha256": "270c32c15763d880eca6525bbe4b7e653bbdd834fb8b18a703fd32353ff95b27",
+      "bytes": 913251151,
+      "source_attestation_matches": true,
+      "integrity": "7zz t exit 0 / Everything is Ok"
+    }
+  },
+  "ci_raw_log_review_passed": true,
+  "windows_native": {
+    "schemaVersion": 1,
+    "setupBytes": 913251151,
+    "installMilliseconds": 27392,
+    "runtimeFiles": 12817,
+    "runtimeBytes": 2273313206.0,
+    "nodeModulesDirectories": 0,
+    "linksOrReparsePoints": 0,
+    "retainedSignedResources": {
+      "sidecar.tar.gz": {
+        "bytes": 874870032,
+        "sha256": "d78722dbfe468dc412f59042df31736354d002f5aea3f6e88039b1565de693e7"
+      },
+      "sidecar.tar.gz.sig": {
+        "bytes": 104,
+        "sha256": "d516d1b9f063aeb8c12e79c6260fd21639bf01d4c719063c9e9e70d00c6f5394"
+      }
+    },
+    "firstLaunchMilliseconds": 94385,
+    "mainPageLoadFinished": true,
+    "cliHelpVerified": true
+  },
+  "windows_tar_inventory": {
+    "tar_entries": 14349,
+    "entries_under_node_modules": 0,
+    "links": 0,
+    "tar_bytes": 874870032,
+    "tar_sha256": "d78722dbfe468dc412f59042df31736354d002f5aea3f6e88039b1565de693e7"
+  }
+}

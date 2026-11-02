@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-11-02T20:03:02.101Z",
+  "validation": {
+    "status": "not-run",
+    "reason": "T-1063 制品生成与额外质量验证分开"
+  },
+  "updatedAt": "2026-11-02T20:13:03.578Z",
+  "codesign": {
+    "signed": true,
+    "platform": "darwin",
+    "identity": "Developer ID Application: zhu zyong (2K9D3QH3YJ)",
+    "artifacts": [
+      "/Users/runner/work/Thirdspace-creator/Thirdspace-creator/frontend/src-tauri/target/release/bundle/macos/CreatorOS.app"
+    ]
+  },
+  "notarize": {
+    "notarized": true,
+    "platform": "darwin",
+    "method": "keychain-profile",
+    "keychainProfile": "creatoros-ci-notary",
+    "artifacts": [
+      "/Users/runner/work/Thirdspace-creator/Thirdspace-creator/frontend/src-tauri/target/release/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg"
+    ]
+  },
+  "productIdentity": {
+    "schema": "thirdspace-product-manifest/v1",
+    "productRef": "creatoros",
+    "appIdentifier": "cloud.aitongban.creatoros",
+    "projectKey": "creatoros",
+    "productManifest": "/Users/runner/work/Thirdspace-creator/Thirdspace-creator/frontend/src-tauri/target/release/bundle/creatoros-product-manifest.json",
+    "releaseAttestation": "/Users/runner/work/Thirdspace-creator/Thirdspace-creator/frontend/src-tauri/target/release/bundle/creatoros-release-attestation.json",
+    "claimEnabled": false,
+    "publishAuthorized": false
+  }
+}

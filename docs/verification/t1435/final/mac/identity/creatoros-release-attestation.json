@@ -1,0 +1,37 @@
+{
+  "schema": "thirdspace-release-attestation/v1",
+  "generatedAt": "2026-11-02T20:12:55.438Z",
+  "releaseProfile": "release",
+  "productIdentity": {
+    "schema": "thirdspace-product-manifest/v1",
+    "productRef": "creatoros",
+    "appIdentifier": "cloud.aitongban.creatoros",
+    "projectKey": "creatoros",
+    "manifestPath": "creatoros-product-manifest.json",
+    "manifestSha256": "sha256:42a9b39118ac1e6b2a7d9110e2675d4c2c107ac100f4902a06112af9ed0beb8c",
+    "binaryPath": "CreatorOS",
+    "binarySha256": "sha256:1029106882aef6d876d6129948bc6f55c75062aadaa51391adb2a821ec9b341c",
+    "binaryContainsCanonicalManifest": true
+  },
+  "artifacts": [
+    {
+      "path": "dmg/CreatorOS_1.2.0_aarch64.dmg",
+      "sha256": "sha256:c05dd72f4842043085d1d36f82f18da319a1de3128cddda9d6dbc20c0435137b",
+      "bytes": 887811054
+    },
+    {
+      "path": "macos/CreatorOS.app.tar.gz",
+      "sha256": "sha256:5012a8f01d9cb77fc9423ba6c0f22ecd5a0ac25dc263c428e47ec9e8d41768b3",
+      "bytes": 885680119
+    }
+  ],
+  "releaseCommits": {
+    "creator": "b451b027433f5f1ed38d252f1742d9ee7d8f1fad",
+    "growth": "95cd62e891ee581faca46a14a31df9c0109ab59b",
+    "activity": "c4435524a8fb96a556ffc039c025732925255e58",
+    "complete": true
+  },
+  "claimEnabled": false,
+  "publishAuthorized": false,
+  "publishBlocker": "T-575 live program-gate GO 尚未附着"
+}

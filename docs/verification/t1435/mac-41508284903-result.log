@@ -1,0 +1,19 @@
+Run 41508284903 / source b451b027433f5f1ed38d252f1742d9ee7d8f1fad
+2026-11-02T19:31:34.4821770Z [T-709] ✓ Developer ID 已导入一次性钥匙串；公证 profile 已就绪
+2026-11-02T19:41:58.1820190Z [release-ci] 既有信任根预检通过，原始密钥环境已剥离
+2026-11-02T19:53:15.7512860Z [build-sidecar] sidecar签名104B digest=27039cc9bc9719a2712c1a52068e94c588307ffe23a7347ab159a4e18145e6e9
+2026-11-02T20:12:51.5604380Z Current status: Accepted........................................Processing complete
+2026-11-02T20:12:51.5605880Z   status: Accepted
+2026-11-02T20:12:55.3970620Z [notarize] ✅ 公证 + staple 完成。
+2026-11-02T20:13:40.0995090Z frontend/src-tauri/target/release/bundle/macos/CreatorOS.app: valid on disk
+2026-11-02T20:13:40.0996150Z frontend/src-tauri/target/release/bundle/macos/CreatorOS.app: satisfies its Designated Requirement
+2026-11-02T20:13:48.3529810Z /Users/runner/work/_temp/creatoros-notarized-dmg/CreatorOS.app: valid on disk
+2026-11-02T20:13:48.3535480Z /Users/runner/work/_temp/creatoros-notarized-dmg/CreatorOS.app: satisfies its Designated Requirement
+2026-11-02T20:13:49.9441730Z [T-709] ✓ Developer ID、notary staple、Gatekeeper 与 DMG 内应用验收通过
+2026-11-02T20:14:02.1756890Z /Users/runner/work/_temp/creatoros-sidecar-tar-replay/server.app: valid on disk
+2026-11-02T20:14:02.1766280Z /Users/runner/work/_temp/creatoros-sidecar-tar-replay/server.app: satisfies its Designated Requirement
+2026-11-02T20:14:02.1847760Z [T-705] ✓ 归档零 AppleDouble；解压后的 server.app 严格签名有效
+2026-11-02T20:14:50.8704070Z /Users/runner/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app: valid on disk
+2026-11-02T20:14:50.8705910Z /Users/runner/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app: satisfies its Designated Requirement
+2026-11-02T20:14:51.2489400Z [T-663] ✓ macOS CreatorOS 真启动并完成主页面加载
+2026-11-02T20:14:55.4982690Z [T-709] ✓ 一次性签名钥匙串与证书文件已清理

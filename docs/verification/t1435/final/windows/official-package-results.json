@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "setupBytes": 913251151,
+  "installMilliseconds": 27392,
+  "runtimeFiles": 12817,
+  "runtimeBytes": 2273313206.0,
+  "nodeModulesDirectories": 0,
+  "linksOrReparsePoints": 0,
+  "retainedSignedResources": {
+    "sidecar.tar.gz": {
+      "bytes": 874870032,
+      "sha256": "d78722dbfe468dc412f59042df31736354d002f5aea3f6e88039b1565de693e7"
+    },
+    "sidecar.tar.gz.sig": {
+      "bytes": 104,
+      "sha256": "d516d1b9f063aeb8c12e79c6260fd21639bf01d4c719063c9e9e70d00c6f5394"
+    }
+  },
+  "firstLaunchMilliseconds": 94385,
+  "mainPageLoadFinished": true,
+  "cliHelpVerified": true
+}
