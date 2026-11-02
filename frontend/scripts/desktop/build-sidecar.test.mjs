@@ -28,6 +28,8 @@ import {
   assertCreatorOsCliRuntime,
   assertNoPortableMetadataFiles,
   assertNoAppleDoubleTarEntries,
+  assertPreparedProductionRuntime,
+  writeCleanSidecarPolicy,
   portableTarEnv,
   prunePortableMetadataFiles,
   copyPortableBundleTree,
@@ -37,6 +39,62 @@ import {
   bundlePiEngine,
   workbenchArchiveExtractCommand,
 } from "./build-sidecar.mjs";
+
+describe("Windows prepared production closure 接续", () => {
+  const env = { CREATOROS_PRODUCTION_CLOSURE: "1", CREATOROS_SKIP_SIDECAR_REBUILD: "1", CREATOROS_SIDECAR_SIGNING_REQUIRED: "1" };
+  function fixture() {
+    const base = mkdtempSync(join(tmpdir(), "creatoros-production-reuse-"));
+    const root = join(base, "sidecar"), externalBin = join(base, "creatoros-server.exe");
+    for (const dir of ["frontend/.next", "layers/browser/browsers", "layers/media/bin", "layers/local-ai/vendor"]) mkdirSync(join(root, dir), { recursive: true });
+    const workers = ["codex-acp", "codex-status-worker", "execution-worker", "agentic-worker", "intelligence-generation-worker", "intelligence-transcript-worker", "embedding-worker", "flywheel-generation-worker", "model-probe-worker", "video-visual-review-worker"];
+    for (const file of ["frontend/server.js", "frontend/creatoros-module-resolver.cjs", "frontend/cli/creatoros.cjs", "cli/node.exe", ...workers.map(x => `frontend/runtime/${x}.cjs`)]) {
+      mkdirSync(dirname(join(root, file)), { recursive: true }); writeFileSync(join(root, file), "fixture runtime");
+    }
+    writeFileSync(externalBin, "fixture node");
+    writeCleanSidecarPolicy(root, env, { runtimeKind: "windows-production" });
+    return { base, root, externalBin, targetPlatform: "win32", env };
+  }
+  it("正确来源和完整资源可复用且不改运行时字节，Mac/普通模式不被选择", () => {
+    const f = fixture();
+    try {
+      const before = readFileSync(join(f.root, "frontend/server.js"));
+      expect(assertPreparedProductionRuntime(f)).toBe(true);
+      expect(readFileSync(join(f.root, "frontend/server.js"))).toEqual(before);
+      expect(assertPreparedProductionRuntime({ ...f, targetPlatform: "darwin" })).toBe(false);
+      expect(assertPreparedProductionRuntime({ ...f, env: {} })).toBe(false);
+      expect(assertPreparedProductionRuntime({ ...f, env: { ...env, CREATOROS_SIGNED_SIDECAR_CAPSULE_PATH: "verified-by-package" } })).toBe(false);
+    } finally { rmSync(f.base, { recursive: true, force: true }); }
+  });
+  for (const mode of ["missing", "old", "dev", "full", "tampered"]) it(`拒绝${mode} clean来源，不能退回full builder`, () => {
+    const f = fixture();
+    try {
+      const marker = join(f.root, ".creatoros-clean-policy");
+      if (mode === "missing") rmSync(marker);
+      if (mode === "old") { const m=JSON.parse(readFileSync(marker));m.policy="old-obfuscated";writeFileSync(marker,JSON.stringify(m)); }
+      if (mode === "dev") writeCleanSidecarPolicy(f.root, {}, { runtimeKind: "windows-production" });
+      if (mode === "full") writeCleanSidecarPolicy(f.root, env);
+      if (mode === "tampered") writeFileSync(join(f.root,"frontend/server.js"),"changed");
+      expect(() => assertPreparedProductionRuntime(f)).toThrow(/不能回退 full builder/);
+    } finally { rmSync(f.base, { recursive: true, force: true }); }
+  });
+  for (const file of ["frontend/server.js", "frontend/creatoros-module-resolver.cjs", "frontend/cli/creatoros.cjs", "cli/node.exe", "frontend/runtime/agentic-worker.cjs", "layers/browser/browsers"]) it(`拒绝缺失资源${file}`, () => {
+    const f=fixture();
+    try {
+      rmSync(join(f.root,file), { recursive:true, force:true });
+      // 重新记录其余JS，证明完整性清单检查独立于digest检查。
+      writeCleanSidecarPolicy(f.root,env,{runtimeKind:"windows-production"});
+      expect(() => assertPreparedProductionRuntime(f)).toThrow();
+    } finally { rmSync(f.base, { recursive:true,force:true }); }
+  });
+  it("拒绝外置Node丢失、重新出现node_modules或链接", () => {
+    const f=fixture();
+    try {
+      rmSync(f.externalBin);expect(() => assertPreparedProductionRuntime(f)).toThrow();writeFileSync(f.externalBin,"node");
+      mkdirSync(join(f.root,"node_modules"));expect(() => assertPreparedProductionRuntime(f)).toThrow(/node_modules/);rmSync(join(f.root,"node_modules"),{recursive:true});
+      symlinkSync(f.externalBin,join(f.root,"outside-link"));expect(() => assertPreparedProductionRuntime(f)).toThrow(/outside-link/);
+    } finally { rmSync(f.base, { recursive:true,force:true }); }
+  });
+});
 
 describe("T-843 CreatorOS CLI 随包运行时", () => {
   it("双平台都要求 CLI bundle 与随包 Node 同时存在", () => {

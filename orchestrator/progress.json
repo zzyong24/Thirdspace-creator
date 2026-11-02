@@ -22702,7 +22702,9 @@
         "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
         "frontend/scripts/desktop/build-sidecar.mjs",
         "frontend/scripts/desktop/build-sidecar.test.mjs",
-        "docs/engineering-notes/pitfalls.md"
+        "docs/engineering-notes/pitfalls.md",
+        "tools/windows-closure-rat/prepare-packaged-runtime.mjs",
+        "tools/windows-closure-rat/build-production-closure.test.mjs"
       ],
       "read_set": [
         "AGENTS.md",

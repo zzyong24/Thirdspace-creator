@@ -13,6 +13,8 @@ import { dirname, relative, resolve, sep } from "node:path";
 import { bakeVerdictPublicKey } from "./bake-verdict-public-key.mjs";
 import { stageCreatorOsCliRuntime } from "../../frontend/scripts/desktop/creatoros-cli-runtime.mjs";
 
+import { writeCleanSidecarPolicy } from "../../frontend/scripts/desktop/build-sidecar.mjs";
+
 import { reportCapacity } from "./runtime-diagnostics.mjs";
 
 const [closureArg] = process.argv.slice(2);
@@ -134,6 +136,8 @@ if (nodeModulesDirectories !== 0 || linksOrReparsePoints !== 0) {
     `[T-565] package runtime 结构违规:node_modules=${nodeModulesDirectories}, links=${linksOrReparsePoints}`,
   );
 }
+// 只在本次复制、CLI生成与完整结构检查结束后盖clean字节标记；旧目录不会被package补盖。
+writeCleanSidecarPolicy(sidecarRoot, process.env, { runtimeKind: "windows-production" });
 const capacity = reportCapacity({runtimeFiles: files});
 
 const summary = {

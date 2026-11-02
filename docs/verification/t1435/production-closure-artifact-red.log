@@ -1,0 +1,35 @@
+实际setup SHA256=e7667fb5c2508a06b4e9196f2012ad89c78627615fac232881f07cbf7cf65d12
+{
+  tar_entries: 1744124,
+  entries_under_node_modules: 1739717,
+  examples: [
+    './node_modules/',
+    './node_modules/.pnpm/',
+    './node_modules/.pnpm/@ai-sdk+gateway@4.0.4_zod@4.4.3/',
+    './node_modules/.pnpm/@ai-sdk+gateway@4.0.6_zod@4.4.3/',
+    './node_modules/.pnpm/@ai-sdk+provider-utils@5.0.1_zod@4.4.3/'
+  ]
+}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 同轮Windows production runtime不得重引入node_modules树
+
+1739717 !== 0
+
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/[eval1]:5:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:246:26)
+    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:243:20)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1739717,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v25.9.0

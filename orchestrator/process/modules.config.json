@@ -21604,11 +21604,14 @@
         "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
         "frontend/scripts/desktop/build-sidecar.mjs",
         "frontend/scripts/desktop/build-sidecar.test.mjs",
-        "docs/engineering-notes/pitfalls.md"
+        "docs/engineering-notes/pitfalls.md",
+        "tools/windows-closure-rat/prepare-packaged-runtime.mjs",
+        "tools/windows-closure-rat/build-production-closure.test.mjs"
       ],
       "verify_commands": {
         "implementation": [
           "pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs scripts/desktop/release-ci.test.mjs scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs",
+          "node --test tools/windows-closure-rat/build-production-closure.test.mjs",
           "git diff --check"
         ]
       }

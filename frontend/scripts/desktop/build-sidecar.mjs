@@ -192,9 +192,10 @@ function cleanSidecarDigest(root) {
   return hash.digest("hex");
 }
 
-export function writeCleanSidecarPolicy(root, env = process.env) {
+export function writeCleanSidecarPolicy(root, env = process.env, { runtimeKind } = {}) {
   writeFileSync(join(root, ".creatoros-clean-policy"), JSON.stringify({
     policy: SIDECAR_CLEAN_POLICY, releaseCsp: sidecarSigningRequired(env), digest: cleanSidecarDigest(root),
+    ...(runtimeKind ? { runtimeKind } : {}),
   }));
 }
 
@@ -204,6 +205,48 @@ export function cleanSidecarReusable(root) {
     return marker.policy === SIDECAR_CLEAN_POLICY && marker.releaseCsp === true
       && marker.digest === cleanSidecarDigest(root);
   } catch { return false; }
+}
+
+// 只选择本轮正式 Windows 少文件闭包；失败不得回退 full builder 再引入 node_modules。
+export function assertPreparedProductionRuntime({
+  root = SIDECAR_RUNTIME,
+  externalBin = join(BINARIES, "creatoros-server-x86_64-pc-windows-msvc.exe"),
+  targetPlatform = platform,
+  env = process.env,
+} = {}) {
+  if (targetPlatform !== "win32" || env.CREATOROS_PRODUCTION_CLOSURE !== "1"
+    || env.CREATOROS_SIGNED_SIDECAR_CAPSULE_PATH?.trim()) return false;
+  const fail = (reason) => { throw new Error(`[build-sidecar] Windows production closure 准备无效(${reason})；请重新执行 build-production-closure --prepare-package，不能回退 full builder`); };
+  if (env.CREATOROS_SKIP_SIDECAR_REBUILD !== "1") fail("未选择prepared runtime");
+  if (!cleanSidecarReusable(root)) fail("clean来源/正式CSP/字节身份不符");
+  const marker = JSON.parse(readFileSync(join(root, ".creatoros-clean-policy"), "utf8"));
+  if (marker.runtimeKind !== "windows-production") fail("不是prepared production来源");
+  const required = [
+    [externalBin, false],
+    [join(root, "frontend/server.js"), false],
+    [join(root, "frontend/creatoros-module-resolver.cjs"), false],
+    [join(root, "frontend/.next"), true],
+    [join(root, "layers/browser/browsers"), true],
+    [join(root, "layers/media/bin"), true],
+    [join(root, "layers/local-ai/vendor"), true],
+  ];
+  for (const [path, directory] of required) {
+    try {
+      const stat = lstatSync(path);
+      if (stat.isSymbolicLink() || (directory ? !stat.isDirectory() : !stat.isFile() || stat.size === 0)) fail(path);
+    } catch { fail(path); }
+  }
+  const visit = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name), stat = lstatSync(path);
+      if (stat.isSymbolicLink() || name === "node_modules") fail(path);
+      if (stat.isDirectory()) visit(path);
+    }
+  };
+  visit(root);
+  assertCreatorOsCliRuntime(root, "win32");
+  assertExecutionWorkerRuntime(root);
+  return true;
 }
 
 function collectPortableMetadataFiles(root) {
@@ -2378,6 +2421,7 @@ function main() {
   // [T-586] 必须早于所有局部构建/缓存短路：即使复用 clean runtime，也不能让安装声明与
   // 实际会随包复制的 Node Mach-O 要求漂移。
   assertMacosRuntimeCompatibility();
+  assertPreparedProductionRuntime();
 
   // [T-487] 只重建 Playwright 解析锚，用于本地验证双份实拷已消除。
   if (process.env.CREATOROS_SIDECAR_PLAYWRIGHT_ONLY === "1") {

@@ -328,3 +328,18 @@ test("T247 三阶段原字节门保原plan步序且build-only不能跳过",()=>{
  const workflow=readFileSync(resolve(REPO_ROOT,".github/workflows/desktop-release.yml"),"utf8");assert.equal((workflow.match(/CREATOROS_MIGRATION_ASSET_GIT_VERIFY: "1"/g)||[]).length,1);
  assert.match(workflow,/构建并接入 Windows production closure\(T-675\)[\s\S]*?env:\s*CREATOROS_MIGRATION_ASSET_GIT_VERIFY: "1"/);
 });
+
+
+test("T1435 prepared closure 在完整物化后才绑定clean身份，正式CSP和配置从源头一致", () => {
+  const prepared=readFileSync(resolve(HERE,"prepare-packaged-runtime.mjs"),"utf8");
+  const stamp=prepared.indexOf('writeCleanSidecarPolicy(sidecarRoot, process.env, { runtimeKind: "windows-production" })');
+  assert.ok(stamp>prepared.indexOf('if (nodeModulesDirectories !== 0 || linksOrReparsePoints !== 0)'));
+  assert.ok(stamp>prepared.indexOf('stageCreatorOsCliRuntime({'));
+  const workflow=readFileSync(resolve(REPO_ROOT,".github/workflows/desktop-release.yml"),"utf8");
+  const closureStep=workflow.match(/- name: 构建并接入 Windows production closure[\s\S]*?(?=\n      - name:)/)?.[0];
+  assert.ok(closureStep);
+  assert.match(closureStep,/CREATOROS_SIDECAR_SIGNING_REQUIRED: "1"/);
+  assert.match(closureStep,/CREATOROS_CLIENT_CONFIG_PULL_ENABLED: "1"/);
+  assert.match(closureStep,/CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: \$\{\{ secrets\.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 \}\}/);
+  assert.doesNotMatch(closureStep,/windows_capsule_mode == 'prepare'/);
+});

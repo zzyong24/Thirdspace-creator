@@ -1,0 +1,25 @@
+✔ official and RAT closure use one deterministic build plan (3.730417ms)
+✔ packaged runtime stages CreatorOS CLI before copying the closure into Tauri (0.44725ms)
+✔ production closure pins target and adapter evidence (0.187166ms)
+✔ channel closure forwards one trusted package brand input into Next and verifies final closure (0.157292ms)
+✔ official runtime smoke keeps the official brand default (0.135375ms)
+✔ runtime smoke uses a real short-lived verdict instead of the removed bypass (2.387791ms)
+✔ T-845 production HyperFrames spawn and Windows RAT preload the same layered resolver (7.715125ms)
+✔ T-886 Windows closure smoke loads Xenova from a real worker consumer (5.566458ms)
+✔ official Windows release and RAT are wired to the same guarded closure (4.784875ms)
+✔ closure and packaged runtime share one verdict-key baker (0.562292ms)
+✔ materializer physically excludes traced engineering inputs without changing budgets (0.891125ms)
+✔ Windows 分层入口必须装配 Worker 并由公共 smoke 真握手 (0.925333ms)
+✔ T247 完整当前迁移资产在真实autocrlf checkout保持Git原字节 (8018.677958ms)
+✔ T247 原Git身份全集跨source trace sidecar严格核验并拒绝外来身份 (1721.694125ms)
+✔ T247 受控路径明确要求Git和准确source而通用无Git入口不添前提 (17.632791ms)
+✔ T247 三阶段原字节门保原plan步序且build-only不能跳过 (1.414625ms)
+✔ T1435 prepared closure 在完整物化后才绑定clean身份，正式CSP和配置从源头一致 (0.574166ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9966.776625

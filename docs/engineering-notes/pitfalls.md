@@ -327,3 +327,5 @@ PGlite.close不等于解除所有引用：Vitest4的vi.fn初始实现被mock注�
 守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs scripts/desktop/release-ci.test.mjs scripts/desktop/desktop-release-workflow.test.mjs`。真实双端安装、启动和签名仍以对应候选的CI日志与安装包为准；局部单测不代替真机结果。原始失败及修复证据见`docs/verification/t1435/`。
 
 - T-1435：大型 runtime 的 `tar -tzf` 目录可超过 Node `spawnSync.maxBuffer`，exit null 不是元数据污染；stdout 写独占临时文件并分块检查全部条目，报告子进程 error/signal，保持坏归档拒绝。守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs`（含真实 >64MiB 目录红绿回归）。
+
+- T-1435：Windows production closure 准备后若缺clean来源标记，正式package会回退full standalone并把百万node_modules条目带回包。正式CSP须从源构建传播，完成结构核对后绑定prepared来源与字节；官方模式不得默默回退。守卫：`pnpm -C frontend exec vitest run scripts/desktop/build-sidecar.test.mjs scripts/desktop/desktop-release-workflow.test.mjs` 与 `node --test tools/windows-closure-rat/build-production-closure.test.mjs`；最终只认真实安装/HTTP/启动/卸载证据。

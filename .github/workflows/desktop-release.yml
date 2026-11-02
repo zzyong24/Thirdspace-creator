@@ -469,16 +469,16 @@ jobs:
           CREATOROS_MIGRATION_ASSET_GIT_VERIFY: "1"
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
-          CREATOROS_CLIENT_CONFIG_PULL_ENABLED: ${{ inputs.windows_capsule_mode == 'prepare' && '1' || '' }}
-          CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN: ${{ inputs.windows_capsule_mode == 'prepare' && 'https://growth.aitongban.cloud' || '' }}
-          CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: ${{ inputs.windows_capsule_mode == 'prepare' && secrets.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 || '' }}
-          CREATOROS_GROWTH_CONFIG_KEY_ID: ${{ inputs.windows_capsule_mode == 'prepare' && vars.CREATOROS_GROWTH_CONFIG_KEY_ID || '' }}
+          CREATOROS_CLIENT_CONFIG_PULL_ENABLED: "1"
+          CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN: "https://growth.aitongban.cloud"
+          CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64: ${{ secrets.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 }}
+          CREATOROS_GROWTH_CONFIG_KEY_ID: ${{ vars.CREATOROS_GROWTH_CONFIG_KEY_ID }}
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
           CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
           CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
-          CREATOROS_SIDECAR_SIGNING_REQUIRED: ${{ inputs.windows_capsule_mode == 'prepare' && '1' || '' }}
+          CREATOROS_SIDECAR_SIGNING_REQUIRED: "1"
         run: node tools/windows-closure-rat/build-production-closure.mjs --prepare-package --build-only
 
       - name: 验证固定tar工具负例(T-247)
@@ -858,7 +858,7 @@ jobs:
           #   release-fast)—— 后续 T-446/updater/收集产物 校验步骤全按 target/release/bundle 找。
           #   本地日常打包不设此 env,走 release-fast 快通道。
           CREATOROS_RELEASE: "1"
-          # 上面已精确恢复或构建 clean runtime；package 只做混淆/字节码/Tauri，
+          # 上面已精确恢复或构建 clean runtime；package 只做最终签名与Tauri，
           # 不再重复跑 Next build + 生产依赖闭包组装。
           CREATOROS_SKIP_SIDECAR_REBUILD: "1"
           CREATOROS_SIGNED_SIDECAR_CAPSULE_PATH: ${{ inputs.windows_capsule_mode == 'consume' && format('{0}/frontend/src-tauri/target/t247-capsule', github.workspace) || '' }}
@@ -1280,6 +1280,17 @@ jobs:
             if ($launchWatch.Elapsed.TotalSeconds -gt 45) {
               Write-Warning "[T-775] Windows 首次启动超过 45 秒（继续发布验证，120 秒真实主页加载仍为硬门）:$($launchWatch.Elapsed)"
             }
+            # T-1435：记录真实已安装Next响应的CSP，不用clean marker布尔值冒充HTTP证据。
+            $cspProof = [ordered]@{ status = "unavailable" }
+            try {
+              $mainUrl = [regex]::Match($content, 'MAIN_PAGE_LOAD_FINISHED (http://127\.0\.0\.1:[^\s]+)').Groups[1].Value
+              $mainResponse = Invoke-WebRequest -Uri $mainUrl -TimeoutSec 120
+              $cspProof = [ordered]@{ status = "observed"; httpStatus = [int]$mainResponse.StatusCode; csp = [string]$mainResponse.Headers["Content-Security-Policy"] }
+            } catch { $cspProof.errorType = $_.Exception.GetType().FullName }
+            $cspProofPath = "tools/windows-closure-rat/out/desktop-csp.json"
+            $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $cspProofPath)
+            $cspProof | ConvertTo-Json -Depth 4 | Out-File $cspProofPath -Encoding utf8
+            Write-Host ("[T-1435] 已安装页面HTTP CSP证据:" + ($cspProof | ConvertTo-Json -Compress))
             $migratedPointer = Join-Path $appDataRuntime "runtime-current.txt"
             if (-not (Test-Path $migratedPointer -PathType Leaf)) {
               throw "[T-826] 升级机旧 runtime 未被当前安装 runtime 替换"
@@ -1384,6 +1395,7 @@ jobs:
             tools/windows-closure-rat/out/build-timings.json
             frontend/src-tauri/target/runtime-reports/build-timings.package.json
             tools/windows-closure-rat/out/official-package-results.json
+            tools/windows-closure-rat/out/desktop-csp.json
             frontend/src-tauri/target/t247-installer-control-materialization.json
             frontend/src-tauri/target/t247-installer-import-diagnostics.json
             frontend/src-tauri/target/t247-installer-vitest-results.json
