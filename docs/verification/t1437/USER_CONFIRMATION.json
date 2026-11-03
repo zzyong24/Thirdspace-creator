@@ -1,0 +1,13 @@
+{
+  "source": "用户直接回复本轮折扣问题",
+  "answer": "是的 image2没有折扣就不调整",
+  "confirmed": {
+    "claude-haiku-5-5": "4.5折",
+    "gemini-3.8-flash": "4.2折",
+    "gpt-6.1-sol": "4.2折",
+    "kimi-k3": "6.5折",
+    "minimax-m3": "6.5折",
+    "deepseek-v4.1-flash": "6折",
+    "openai/gpt-image-2-edit": "无折扣，不调整当前价格"
+  }
+}

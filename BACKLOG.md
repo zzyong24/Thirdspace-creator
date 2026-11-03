@@ -6,6 +6,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1437|飞书模型折扣与折后价更新|✅|—|—|[SPEC](docs/features/t1437-model-discount-price-docs.md)|核实当前型号与计价，按用户确认折扣补齐两篇文档。|
 |T-1436|飞书体验与正式交付文档更新|✅|—|—|[SPEC](docs/features/t1436-feishu-guides-refresh.md)|同步当前功能、模型说明及已验收双端安装包，保留历史附件。|
 |T-1435|双端CI接入sidecar签名密钥|✅|—|—|[SPEC](docs/features/t1435-ci-root-signing.md)|用户允许将既有根私钥接入GitHub Actions Secret，修复双端打包并重跑。|
 |T-1434|官网与购买页真实截图及SEO优化|✅|—|PASS:d06dc0a289c2|[SPEC](docs/features/t1434-website-changelog-refresh.md)|用户授权两站使用14张原始实拍截图、无需脱敏，并优化搜索匹配；沿用v1.2.0/v1.3.0。|

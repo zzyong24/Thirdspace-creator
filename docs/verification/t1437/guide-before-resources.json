@@ -1,0 +1,113 @@
+{
+  "documentId": "Us4ddaMjeokvvZxNmOxcu9oinZe",
+  "revisionId": 224,
+  "resources": [
+    {
+      "tag": "img",
+      "id": "KPardcY1iowNdXxb0wychwpLnJe",
+      "name": "image.png",
+      "height": "660",
+      "mime": "image/png",
+      "scale": "1.000000",
+      "src": "PKl1buAU8oscz2xnIbNc2h2Znod",
+      "width": "500"
+    },
+    {
+      "tag": "cite",
+      "doc-id": "GaHrwmGHHiU8MQkovQZcNjxMnpe",
+      "file-type": "wiki",
+      "title": "CreatorOS v1.2｜1 天体验与快速上手（体验版）",
+      "type": "doc"
+    },
+    {
+      "tag": "img",
+      "id": "UYwTd6yBBoKHTlx7L5wc3KKsnAf",
+      "name": "image.png",
+      "height": "1821",
+      "mime": "image/png",
+      "scale": "1.000000",
+      "src": "VoiVbtaNaoZn46xLsLpcv1lqnQe",
+      "width": "864"
+    },
+    {
+      "tag": "source",
+      "id": "doxcnmjZqwOXj52GRLKbCbn0uvd",
+      "name": "CreatorOS_1.2.0_aarch64.dmg",
+      "mime": "application/x-apple-diskimage",
+      "size": "887811054",
+      "token": "EwPebroQ9othbJxIq0WcSjTTnzc"
+    },
+    {
+      "tag": "source",
+      "id": "doxcndybrzCpQERocbTR64lI5uc",
+      "name": "CreatorOS_1.2.0_x64-setup.exe",
+      "mime": "application/x-msdos-program",
+      "size": "913251151",
+      "token": "LsQUbKxfRo1VwDxQlPWch7jFnjZ"
+    },
+    {
+      "tag": "source",
+      "id": "O8uRdUisJoysfnxGbZ3cZBZPnRd",
+      "name": "CreatorOS_1.2.0_aarch64.dmg",
+      "size": "487979980",
+      "token": "KTQHbyh33ogHgHxJAt6cDUXSnfc"
+    },
+    {
+      "tag": "source",
+      "id": "WeEbdugYNoj74Pxx4YDcLR92n4f",
+      "name": "CreatorOS_1.2.0_x64-setup.exe",
+      "mime": "application/x-msdownload",
+      "size": "555862213",
+      "token": "LjQfbkGUsoA3CBxL59ycYBBDnch"
+    },
+    {
+      "tag": "source",
+      "id": "WRP0deurhotDXCxs21hcYaYRn5e",
+      "name": "creatoros-cli.zip",
+      "mime": "application/zip",
+      "size": "9559",
+      "token": "TE3CbkQSboajTQxVcfFcMEsPnid"
+    },
+    {
+      "tag": "img",
+      "id": "DKvUdWFamoeZ1WxZLCYcO1glnQg",
+      "name": "73c265d7a61c564b56d6939b91ffa5ea.png",
+      "height": "1658",
+      "mime": "image/png",
+      "scale": "1.000000",
+      "src": "VGNwbYv2koJJgExRCANc1Xs5nvh",
+      "width": "1986"
+    },
+    {
+      "tag": "cite",
+      "doc-id": "GaHrwmGHHiU8MQkovQZcNjxMnpe",
+      "file-type": "wiki",
+      "title": "CreatorOS v1.2｜1 天体验与快速上手（体验版）",
+      "type": "doc"
+    },
+    {
+      "tag": "source",
+      "id": "D3AhdlCxHoOR3yxeVNEcBVTQndb",
+      "name": "creatoros-sales-expert.zip",
+      "mime": "application/zip",
+      "size": "12459",
+      "token": "YxstbvFGtojw1FxBPPrczmC2n9g"
+    },
+    {
+      "tag": "source",
+      "id": "UYbRdltcqoCeAoxEXRCcHHnVngh",
+      "name": "CreatorOS-v1.0-完整使用手册.pdf",
+      "mime": "application/pdf",
+      "size": "33721129",
+      "token": "R4ShbpM9HojFb5xNK94cFQE1nwM"
+    },
+    {
+      "tag": "source",
+      "id": "MALTdC3sFom15NxSQq8cIvSunUd",
+      "name": "CreatorOS_小白用户成交销售SOP_v1.0(1).pdf",
+      "mime": "application/pdf",
+      "size": "50532",
+      "token": "IFZsbQLFBoT7zHxQdgFcEqO3n7b"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "documentId": "IUYFdrytdoT2emxg8xzcc1NnnPN",
+  "revisionId": 186,
+  "resources": [
+    {
+      "tag": "img",
+      "id": "doxcnBwe1HUg5dChPXveOkHmjbf",
+      "name": "creatoros-creator-overview.webp",
+      "height": "575",
+      "mime": "image/webp",
+      "scale": "1.000000",
+      "src": "YJZwbuYjGoX4ozx7S2Hc7pZEnuf",
+      "width": "1000"
+    },
+    {
+      "tag": "img",
+      "id": "doxcnMlJpryGQbYKdSSHQqtLeAg",
+      "name": "creatoros-positioning.webp",
+      "height": "575",
+      "mime": "image/webp",
+      "scale": "1.000000",
+      "src": "L6B1bTNX7oB9UzxG74sclgALnme",
+      "width": "1000"
+    },
+    {
+      "tag": "img",
+      "id": "doxcnzWCZMmojdzQBKuSOS3llAc",
+      "name": "creatoros-script-workbench.webp",
+      "height": "575",
+      "mime": "image/webp",
+      "scale": "1.000000",
+      "src": "DrAWbWet2o3ImZxNV29cfNPCn8d",
+      "width": "1000"
+    },
+    {
+      "tag": "img",
+      "id": "Wfc3dpCH1oEPWlxuQC7cgA5WnKe",
+      "name": "image.png",
+      "height": "1800",
+      "mime": "image/png",
+      "scale": "0.142014",
+      "src": "OzMkb9qYvogNNbxMfRTcrYyKnHf",
+      "width": "2880"
+    },
+    {
+      "tag": "img",
+      "id": "WSP3dfdCyoSdFGxa7YGcRYvGnAe",
+      "name": "image.png",
+      "height": "1580",
+      "mime": "image/png",
+      "scale": "0.374359",
+      "src": "B79obDHcCoD7KtxDaUicSiWCniN",
+      "width": "1950"
+    },
+    {
+      "tag": "img",
+      "id": "KvL8d42LUor4VPxaiXPcRuhcnbg",
+      "name": "image.png",
+      "height": "1988",
+      "mime": "image/png",
+      "scale": "1.000000",
+      "src": "AgOZb80fMoN4Jnxgm9ucPVbinNh",
+      "width": "3456"
+    },
+    {
+      "tag": "source",
+      "id": "ClRqdCFt3oHIM0xw7PlcmvS2nwb",
+      "name": "CreatorOS_1.2.0_aarch64.dmg",
+      "size": "487979980",
+      "token": "Mr6ebcIK8oLl3nxUpdvcYF15nch"
+    },
+    {
+      "tag": "source",
+      "id": "WW67deOsCoJphhxhk4kc7Tp9nee",
+      "name": "CreatorOS_1.1.0_x64-setup.exe",
+      "mime": "application/x-msdownload",
+      "size": "515059685",
+      "token": "H30ibhafjo8fUHxmOxlcezmlnve"
+    },
+    {
+      "tag": "img",
+      "id": "doxcnUFfwNb37n4TSeFX1mZ7SL8",
+      "name": "content-flywheel.png",
+      "caption": "CreatorOS 内容飞轮：真实结果回到下一轮定位、选题和创作\n",
+      "height": "461",
+      "mime": "image/png",
+      "scale": "1.000000",
+      "src": "IelSbODN6o6BE9x8dBmc3P7Gnsh",
+      "width": "820"
+    },
+    {
+      "tag": "img",
+      "id": "doxcn57hZpTRK2M6eMT3SLtynyg",
+      "name": "home.png",
+      "caption": "CreatorOS v1.0 桌面端主界面（身份信息已遮挡）\n",
+      "height": "486",
+      "mime": "image/png",
+      "scale": "1.000000",
+      "src": "EnYwbhobhoQRWMxd3aYcKcWunCf",
+      "width": "820"
+    },
+    {
+      "tag": "img",
+      "id": "doxcnXzRTZuWXNh9WLNhlPQbdxd",
+      "name": "project-script.png",
+      "caption": "项目脚本工作台：Brief、素材、脚本和项目编导在同一工作面推进（身份信息已遮挡）\n",
+      "height": "494",
+      "mime": "image/png",
+      "scale": "1.000000",
+      "src": "Ceh4bi9MRoDYdux82WfcMqAfnZd",
+      "width": "820"
+    },
+    {
+      "tag": "source",
+      "id": "LDuSdiZm5orvyfxyxYxcBOEanYe",
+      "name": "01-模型配置与数据导入.mov",
+      "mime": "video/quicktime",
+      "size": "457758389",
+      "token": "AyMebYZ8aoT0srxdoVdcNnZMneg"
+    },
+    {
+      "tag": "source",
+      "id": "XUdhdcm90ogcLtxMpehc5kTXncb",
+      "name": "2-定位前采.mov",
+      "mime": "video/quicktime",
+      "size": "381810306",
+      "token": "JxUVbmMRLo1li7xoH5scQnPnnIf"
+    },
+    {
+      "tag": "source",
+      "id": "Q52YdtRDDou1KixffOncKCbTnaf",
+      "name": "3-选题生成.mov",
+      "mime": "video/quicktime",
+      "size": "542744613",
+      "token": "IQnkbtQa4oBIbLxm119cHr2XnNe"
+    },
+    {
+      "tag": "source",
+      "id": "OxJqdQvZNo8GfHx0VOUcFx6KnqS",
+      "name": "4-项目制作.mov",
+      "mime": "video/quicktime",
+      "size": "697900440",
+      "token": "EiHcbFkdfo3LWKxLabZcE4evnxg"
+    }
+  ]
+}

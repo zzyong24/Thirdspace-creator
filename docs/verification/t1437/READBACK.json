@@ -1,0 +1,26 @@
+{
+  "independentFractionArithmeticChecks": 62,
+  "allPricesExact": true,
+  "imageEditDiscountChanged": false,
+  "growthBillingChanged": false,
+  "documents": {
+    "trial": {
+      "documentId": "IUYFdrytdoT2emxg8xzcc1NnnPN",
+      "revisionId": 188,
+      "summaryRowsVerified": 9,
+      "cacheRowsVerified": 13,
+      "originalResourcesPreserved": true,
+      "originalResourceCount": 15,
+      "currentResourceCount": 15
+    },
+    "guide": {
+      "documentId": "Us4ddaMjeokvvZxNmOxcu9oinZe",
+      "revisionId": 226,
+      "summaryRowsVerified": 9,
+      "cacheRowsVerified": 13,
+      "originalResourcesPreserved": true,
+      "originalResourceCount": 13,
+      "currentResourceCount": 13
+    }
+  }
+}

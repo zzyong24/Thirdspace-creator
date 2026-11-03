@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 317,
+    "verticals": 318,
     "tasks_done": 89,
-    "tasks_total": 444,
-    "tasks_pending": 355,
+    "tasks_total": 445,
+    "tasks_pending": 356,
     "verticals_complete": 28
   },
   "verticals": [
@@ -22748,6 +22748,41 @@
         "docs/features/t1436-feishu-guides-refresh.md",
         "docs/verification/t1435/DELIVERY.json",
         "website/index.html"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1437",
+      "archetype": [
+        "reference-config"
+      ],
+      "task_id": "T-1437",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1437-model-discount-price-docs.md",
+        "docs/verification/t1437/**",
+        "orchestrator/context/T-1437.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json"
+      ],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1437-model-discount-price-docs.md"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

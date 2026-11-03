@@ -1,0 +1,196 @@
+{
+  "observedAt": "2026-11-03T05:51:33.701Z",
+  "kind": "公开中转目录原价；不是Growth已验证计费或折扣",
+  "models": [
+    {
+      "model": "claude-haiku-5-5",
+      "url": "https://omnihi.ai/model-detail?model=claude-haiku-5-5",
+      "rows": [
+        [
+          "类型",
+          "价格"
+        ],
+        [
+          "Input(0-100000)",
+          "$0.1/Mts"
+        ],
+        [
+          "Input(≥100001)",
+          "$0.5/Mts"
+        ],
+        [
+          "Output(0-100000)",
+          "$0.5/Mts"
+        ],
+        [
+          "Output(≥100001)",
+          "$2.5/Mts"
+        ],
+        [
+          "Cached reads(0-100000)",
+          "$0.01/Mts"
+        ],
+        [
+          "Cached reads(≥100001)",
+          "$0.05/Mts"
+        ],
+        [
+          "Cached Writes (5m)(0-100000)",
+          "$0.125/Mts"
+        ],
+        [
+          "Cached Writes (5m)(≥100001)",
+          "$0.625/Mts"
+        ]
+      ]
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "url": "https://omnihi.ai/model-detail?model=gemini-3.8-flash",
+      "rows": [
+        [
+          "类型",
+          "价格"
+        ],
+        [
+          "Input",
+          "$0.75/Mts"
+        ],
+        [
+          "Output",
+          "$3.75/Mts"
+        ],
+        [
+          "Cached reads",
+          "$0.075/Mts"
+        ],
+        [
+          "Cached Writes (1h)",
+          "$0.5/Mts"
+        ]
+      ]
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "url": "https://omnihi.ai/model-detail?model=gpt-6.1-sol",
+      "rows": [
+        [
+          "类型",
+          "价格"
+        ],
+        [
+          "输入价格(0-272000)",
+          "$2/Mts"
+        ],
+        [
+          "输入价格(≥272001)",
+          "$4/Mts"
+        ],
+        [
+          "输出价格(0-272000)",
+          "$10/Mts"
+        ],
+        [
+          "输出价格(≥272001)",
+          "$15/Mts"
+        ],
+        [
+          "Cached reads(0-272000)",
+          "$0.1/Mts"
+        ],
+        [
+          "Cached reads(≥272001)",
+          "$0.2/Mts"
+        ],
+        [
+          "Cached Writes (0-272000)",
+          "$2.5/Mts"
+        ],
+        [
+          "Cached Writes (≥272001)",
+          "$5/Mts"
+        ]
+      ]
+    },
+    {
+      "model": "kimi-k3",
+      "url": "https://omnihi.ai/model-detail?model=kimi-k3",
+      "rows": [
+        [
+          "类型",
+          "价格"
+        ],
+        [
+          "输入价格",
+          "¥20/Mts"
+        ],
+        [
+          "输出价格",
+          "¥100/Mts"
+        ],
+        [
+          "Cached reads",
+          "¥2/Mts"
+        ]
+      ]
+    },
+    {
+      "model": "minimax-m3",
+      "url": "https://omnihi.ai/model-detail?model=minimax-m3",
+      "rows": [
+        [
+          "类型",
+          "价格"
+        ],
+        [
+          "输入价格(0-512000)",
+          "¥2.1/Mts"
+        ],
+        [
+          "输入价格(≥512001)",
+          "¥4.2/Mts"
+        ],
+        [
+          "输出价格(0-512000)",
+          "¥8.4/Mts"
+        ],
+        [
+          "输出价格(≥512001)",
+          "¥16.8/Mts"
+        ],
+        [
+          "Cached reads",
+          "¥0.42/Mts"
+        ]
+      ]
+    },
+    {
+      "model": "deepseek-v4.1-flash",
+      "url": "https://omnihi.ai/model-detail?model=deepseek-v4.1-flash",
+      "rows": [
+        [
+          "类型",
+          "价格"
+        ],
+        [
+          "Input",
+          "¥2/Mts"
+        ],
+        [
+          "Output",
+          "¥8/Mts"
+        ],
+        [
+          "Cached reads",
+          "¥0.04/Mts"
+        ]
+      ]
+    }
+  ],
+  "imageEdit": {
+    "model": "openai/gpt-image-2-edit",
+    "catalogPage": "https://omnihi.ai/market-list",
+    "catalogText": " Flare Text-to-Image（OpenAI）正式上线\n【上新】Kimi K3（Moonshot AI）锐意升级\n【上新】Gemini 4 Argon（Google）重磅上架\n【上新】Deepseek V4.1 Flash（Deepseek）崭新发布\n【上新】Claude Opus 5.5（Anthropic）正式上线\n【上新】GPT 6.1 Sol（OpenAI）全新上线\n【上新】GLM 5.3 Flash（Zhipu AI）正式上线\n【上新】MiniMax M3（MiniMax）崭新发布\n【上新】MiniMax Music（MiniMax）崭新发布\n【上新】Doubao-Seedance 2.5（豆包）重磅上架\n【上新】MiniMax H3（MiniMax）全新上线\n【上新】Seedance 2.5（Seedance）正式上线\n【上新】Kling v3.0 Standard 文生视频（快手可灵）正式上线\n【上新】Nano Banana 2 Text-to-Image（NanoBanana）重磅上架\n【上新】GPT Image 2.5 Flare Text-to-Image（OpenAI）正式上线\n【上新】Kimi K3（Moonshot AI）锐意升级\n【上新】Gemini 4 Argon（Google）重磅上架\n【上新】Deepseek V4.1 Flash（Deepseek）崭新发布\n【上新】Claude Opus 5.5（Anthropic）正式上线\n【上新】GPT 6.1 Sol（OpenAI）全新上线\n【上新】GLM 5.3 Flash（Zhipu AI）正式上线\n【上新】MiniMax M3（MiniMax）崭新发布\n【上新】MiniMax Music（MiniMax）崭新发布\n【上新】Doubao-Seedance 2.5（豆包）重磅上架\n【上新】MiniMax H3（MiniMax）全新上线\n【上新】Seedance 2.5（Seedance）正式上线\n【上新】Kling v3.0 Standard 文生视频（快手可灵）正式上线\n全部厂商\nAnthropic\nOpenAI\nGoogle\nDeepseek\nZhipu AI\nMoonshot AI\nMiniMax\nSeedance\nNanoBanana\nDoubao\nKling AI\n清空\nGPT Image 2 Image-to-Image\nopenai/gpt-image-2-edit · OpenAI\n所有模型\n大语言模型\n图像模型\n视频模型\n音乐模型\n新发布模型\n高性价比\n热门模型\nGPT Image 2 Image-to-Image\nopenai/gpt-image-2-edit\nOpenAI\nImage\n起步价：$0.0021/张\nImage to Image\n查看详情",
+    "detailStatus": "详情页面服务暂时不可用；只验证起步价，不代表各规格价格"
+  }
+}
