@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "identity": "user",
+  "data": {
+    "document": {
+      "revision_id": 161,
+      "url": "https://my.feishu.cn/docx/IUYFdrytdoT2emxg8xzcc1NnnPN"
+    },
+    "result": "failed",
+    "warnings": [
+      "degrade_code=1011,msg=Instruction produced no document changes. The instruction content may be identical to the current document, or the format is unexpected; check the instruction content and retry"
+    ]
+  },
+  "_notice": {
+    "update": {
+      "command": "lark-cli update",
+      "current": "1.0.68",
+      "latest": "1.0.98",
+      "message": "lark-cli 1.0.98 available, current 1.0.68, run: lark-cli update"
+    }
+  }
+}

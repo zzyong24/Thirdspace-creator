@@ -1,0 +1,98 @@
+[
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_insert_after",
+    "doxcnSjxXjx3m7s5R8rMjjhZBCg",
+    "<p><b>当前安装包：1.2.0，更新于2026年11月3日。</b>Mac Apple 芯片与 Windows x64 本轮包均已完成安装与启动验收。请到<a href=\"https://my.feishu.cn/wiki/QY1owmFUjit7VgkpmQ1chGPCnTR\">正式版下载与安装页</a>顶部“当前安装包”下载；体验码和正式码使用同一软件，授权期限按你的激活结果确定。</p><p>Mac 需要 macOS 13.5及以上、Apple 芯片，已完成签名与Apple公证；Windows需要Windows 10/11 x64，本轮安装包未做Windows代码签名。Intel Mac暂不支持。</p><h2>历史安装包（仅留档，请使用上方当前下载入口）</h2><p>下表为早期附件，其中Windows旧文件为1.1.0；同名旧1.2.0包也不是本轮构建，请勿把它们当作最新包。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_insert_after",
+    "doxcnLV3DlHQPRkRaIXKWgOsBgy",
+    "<p>CreatorOS 面向抖音、小红书、视频号、快手、B站、YouTube 与公众号组织内容创作和发布管理。不同平台的账号连接、作品同步和实际发布能力各有差异，请以客户端连接状态及具体操作提示为准，不代表所有平台都支持全自动发布或相同的数据采集。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnLV3DlHQPRkRaIXKWgOsBgy",
+    "<p>它更像一位长期住在你电脑里的编导：围绕账号组，把<b>定位、内容雷达、选题、脚本、文章、图文、素材、视频制作、发布管理、数据复盘和经验沉淀</b>连接起来。一个创作项目可以继续产出不同内容形态，复用自己的资料与素材。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnOYa7N8M6qizRRPY6Xpq5Dc",
+    "<p><b>发布决定仍在你手里。</b>软件帮助准备文章、图文、视频与发布物料，并管理排期、作品记录和复盘。实际发布按对应平台入口和客户端提示，由你检查并确认；需要去平台完成的步骤仍由你完成。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnU5LAzZgf1eqbwQEh7AIUt6",
+    "<ol><li>适合你的系统的CreatorOS 1.2.0当前安装包（见上方统一下载入口）；</li></ol>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnpOPImAx9H6lorXZ2Hf9Fzg",
+    "<ol><li>一个真实创作想法，以及能说明你经验、优势或目标的资料；平台账号可稍后按需连接；</li></ol>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnTGbtVIqCW2V8AOWqtFYvzc",
+    "<p>不需要先登录抖音才能开始。可以先在账号组中创建定位、选择选题或手动建立项目；需要同步平台作品或数据时，再连接相应账号。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcn6E2jAL7QA8Ruoi3sgLCPLg",
+    "<ol><li><b>确认模型。</b>进入“设置 → 模型配置”，按文本、图片、视频、语音转文字等用途检查来源和可用状态；官方模型按当前权益启用，自配模型填写自己的服务商信息。配置完成后按界面提示保存并检查。</li></ol>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnOVuofzK2PA7l0WxRUSXA0c",
+    "<ol><li><b>先建立定位。</b>在当前账号组中打开“定位中心”，直接描述经历、优势、目标与受众；AI给出定位候选后，由你确认采纳。不要求先登录抖音。</li></ol>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcn1BYsxlcZVjEkSQ2kRC0e3c",
+    "<ol><li><b>确认账号组，再按需连接平台。</b>在侧栏检查当前账号组，确保项目、定位与数据归属正确。需要作品同步或运营分析时，再按应用中的支持情况连接平台账号。</li></ol>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnkJ2waPOeqUoWDIs9T8BkCh",
+    "<p>如果当天来得及真实发布，把对应平台的作品链接或发布结果登记回项目；按平台实际连接能力同步作品指标，在“运营分析”中复盘。内容雷达的公开作品信息与项目里的转写、你补充的受众反馈各有来源，不把未采集到的评论当作已有数据。AI提出的经验候选经过你确认后，再用于后续创作。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnsbgGQ2GeBZlTrrVXcDI4x1",
+    "<p>如果答案大多是“是”，可以联系向你推荐CreatorOS的授权合作伙伴了解适合的权益，也可通过<a href=\"https://buy.aitongban.cloud/creatoros/\">官方购买页</a>自助购买。通过推荐渠道购买时，按购买页规则填写推荐人；价格、授权期限和模型权益以购买及激活页面为准。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnUfTLEYtrZKf9D15VN0XfPc",
+    "<p><b>没有自己的模型API Key能不能用？</b>可以先查看官方模型权益：有效正式激活码默认含官方模型权益，试用以当前设备实际显示为准。官方模型就绪即可按权益使用；也可自配模型。不向任何人发送API Key，余额或权益异常时按设置页提示处理。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnJIwDMkn4Qt2YFWzteq4Jdd",
+    "<p><b>能管理多个内容平台吗？</b>CreatorOS 面向抖音、小红书、视频号、快手、B站、YouTube 与公众号组织内容创作和发布管理。不同平台的账号连接、作品同步和实际发布能力各有差异，请以客户端连接状态及具体操作提示为准，不代表所有平台都支持全自动发布或相同的数据采集。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_replace",
+    "doxcnd1IfZDlSCg6dTKYocS0Ufb",
+    "<p><b>适用安装包：</b>CreatorOS 1.2.0（2026年11月3日本轮构建）<br/><b>内容核对：</b>2026年11月3日。官网更新日志按1.2.0/1.3.0介绍功能批次，不代表本页提供1.3.0安装包。</p>"
+  ],
+  [
+    "IUYFdrytdoT2emxg8xzcc1NnnPN",
+    "block_insert_after",
+    "doxcn4utkzrCiWGRqqEV5MFmNLc",
+    "<p><b>想试文章和图文：</b>进入同一项目的“文章”或“图文”工作面，基于已确认脚本继续组织长文、逐页图片与配文；“创作画布”可以从封面和小红书图文案例开始制作。图片、文章与视频所需模型能力不同，生成前先确认对应用途可用。</p><p><b>想看运营闭环：</b>“创作者总览”按平台和日期汇总已同步的真实作品；“发布中心”管理创作日历、排期与作品记录；“运营分析”基于已保存的数据复盘；“自动化”查看采集计划及运行状态。数据缺失时显示空态，不等于自动补全所有平台数据。</p>"
+  ]
+]

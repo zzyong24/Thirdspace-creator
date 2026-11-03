@@ -1,0 +1,56 @@
+[
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_replace",
+    "doxcndWATOKo1qHVxzs4yLNfH6c",
+    "<p><b>当前安装包：</b>1.2.0（2026年11月3日本轮构建）　<b>支持系统：</b>macOS 13.5及以上的Apple芯片Mac、Windows 10/11 x64。官网1.3.0为功能日志批次命名，本页安装包版本仍为1.2.0。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_replace",
+    "doxcndEJtexCZjqGRY9nibpSTEf",
+    "<p><b>下载请认准下方“当前安装包”。</b>本轮Mac已完成签名、Apple公证与启动检查；Windows已完成安装、启动与卸载检查，但安装程序未做Windows代码签名。历史附件保留在下方，不用于本轮更新。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_insert_after",
+    "doxcnIC7l37TrZriiE8H0booCof",
+    "<h2>当前安装包｜2026年11月3日</h2><p>两端来自同一构建。首次安装可直接使用；已安装用户先保存工作并退出软件，再安装对应系统的新包，不要同时运行多个旧版本。</p><h3>Mac Apple芯片｜当前下载</h3><p>文件：CreatorOS_1.2.0_aarch64.dmg；887811054字节；SHA256：<code>c05dd72f4842043085d1d36f82f18da319a1de3128cddda9d6dbc20c0435137b</code>。仅适用于Apple芯片、macOS 13.5及以上；已完成Apple公证。</p><h3>Windows x64｜当前下载</h3><p>文件：CreatorOS_1.2.0_x64-setup.exe；913251151字节；SHA256：<code>270c32c15763d880eca6525bbe4b7e653bbdd834fb8b18a703fd32353ff95b27</code>。适用于Windows 10/11 x64；安装程序未做Windows代码签名，可能出现系统安全提示，请核实文件来源与发布者。</p><p>安装后第一次启动需要初始化运行环境，请等待窗口完成加载，不要连续重复启动。本轮Windows CI首次页面加载约94秒，这不是所有设备的耗时承诺；若长时间无法进入，请提交完整错误和版本信息。</p><h2>历史安装包（仅留档）</h2><p>下表为此前上传的旧构建，同名1.2.0文件也有不同字节数；请使用上方2026年11月3日的当前包。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_replace",
+    "doxcnCKOky4VgyZv38tbSVnextf",
+    "<p><b>模型权益与来源：</b>有效正式激活码默认包含官方模型权益，可在“设置 → 模型配置”中查看并启用；已有模型账户、历史权益及余额按当前账户显示，不因安装新版重复发放。你也可以继续使用自配模型；支持的用途还可选择本地 Codex。模型清单、用量、价格和充值入口以应用实时显示为准，无需为切换模型来源重新安装或更换正式激活码。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_insert_after",
+    "doxcnBf3AM5INxJFCANBcLBky3c",
+    "<p>CreatorOS 面向抖音、小红书、视频号、快手、B站、YouTube 与公众号组织内容创作和发布管理。不同平台的账号连接、作品同步和实际发布能力各有差异，请以客户端连接状态及具体操作提示为准，不代表所有平台都支持全自动发布或相同的数据采集。</p><p><b>当前主要工作面：</b>首页与上手引导、创作者总览、定位中心、内容雷达、选题中心、项目（脚本/文章/图文/制作视频/复盘）、知识库、素材中心、创作画布、发布中心、运营分析和自动化。AI先提供候选，正式采纳和发布仍由你确认。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_replace",
+    "doxcnBf3AM5INxJFCANBcLBky3c",
+    "<p>进入软件后，先确认当前账号组，再检查“设置 → 模型配置”。不需要先绑定抖音：可以直接在“定位中心”描述自己的经历、优势和目标，确认定位候选后继续选题或建立项目。需要平台作品与数据时，再按客户端支持情况连接账号。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_replace",
+    "RoMNdUHKMo0iIXxx9IHckuAanpd",
+    "<p><b>模型使用说明：</b>按用途选择官方模型、自配模型或支持用途的本地Codex；语音转文字可按设置页选择可用来源。下图为历史模型示例，当前名称、价格、可用性及额度以应用实时显示为准。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_replace",
+    "CWsFdtTm1o05Gyx8AXOcRPuhnMe",
+    "<p><b>历史完整使用手册（v1.0）：</b>保留供参考，界面、平台及模型权益以本页当前说明和客户端为准。最新功能可查看<a href=\"https://creatoros.aitongban.cloud/#changelog\">官网更新日志与真实截图</a>。</p>"
+  ],
+  [
+    "Us4ddaMjeokvvZxNmOxcu9oinZe",
+    "block_replace",
+    "doxcnzex306H4GqoNjEkxYwY5Qf",
+    "<p><b>CreatorOS官网：</b><a href=\"https://creatoros.aitongban.cloud/\">creatoros.aitongban.cloud</a>　<b>自助购买：</b><a href=\"https://buy.aitongban.cloud/creatoros/\">buy.aitongban.cloud/creatoros/</a><br/><b>本文档更新：</b>2026年11月3日</p>"
+  ]
+]

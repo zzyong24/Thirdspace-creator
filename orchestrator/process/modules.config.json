@@ -21615,6 +21615,37 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1436": {
+      "task_id": "T-1436",
+      "archetype": [
+        "reference-config"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1436-feishu-guides-refresh.md",
+        "docs/verification/t1435/DELIVERY.json",
+        "website/index.html"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1436-feishu-guides-refresh.md",
+        "docs/verification/t1436/**",
+        "orchestrator/context/T-1436.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check"
+        ]
+      }
     }
   }
 }

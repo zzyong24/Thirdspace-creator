@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "identity": "user",
+  "data": {
+    "document": {
+      "revision_id": 177,
+      "url": "https://my.feishu.cn/docx/IUYFdrytdoT2emxg8xzcc1NnnPN"
+    },
+    "result": "success",
+    "warnings": []
+  },
+  "_notice": {
+    "update": {
+      "command": "lark-cli update",
+      "current": "1.0.68",
+      "latest": "1.0.98",
+      "message": "lark-cli 1.0.98 available, current 1.0.68, run: lark-cli update"
+    }
+  }
+}
