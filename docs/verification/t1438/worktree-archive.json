@@ -1,0 +1,17 @@
+{
+  "path": "/Users/zyongzhu/.codex/worktrees/legacy-license-upgrade/Thirdspace-creator",
+  "branch": "codex/cos-ux-closure",
+  "head": "568a3091e3960fbaef578cb1c022897101fe1aff",
+  "clean": true,
+  "archive": "/Volumes/T7-MacData/CodexArchives/2026-11-04/legacy-license-upgrade",
+  "excludes": [
+    ".git",
+    "node_modules",
+    ".next",
+    "target"
+  ],
+  "removeExitCode": 0,
+  "removeOutput": "",
+  "removed": true,
+  "archiveChecksumVerified": true
+}

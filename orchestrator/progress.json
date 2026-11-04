@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 318,
+    "verticals": 319,
     "tasks_done": 89,
-    "tasks_total": 445,
-    "tasks_pending": 356,
+    "tasks_total": 446,
+    "tasks_pending": 357,
     "verticals_complete": 28
   },
   "verticals": [
@@ -22783,6 +22783,43 @@
       "read_set": [
         "AGENTS.md",
         "docs/features/t1437-model-discount-price-docs.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1438",
+      "archetype": [
+        "reference-config"
+      ],
+      "task_id": "T-1438",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1438-storage-cleanup.md",
+        "docs/verification/t1438/**",
+        "orchestrator/context/T-1438.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json",
+        "frontend/src-tauri/target/**",
+        "frontend/.next/**"
+      ],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1438-storage-cleanup.md"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

@@ -1,0 +1,31 @@
+{
+  "freeBytesBefore": 1861480448,
+  "freeBytesAfter": 11748741120,
+  "items": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug",
+      "allocatedBytesBefore": 5372440576,
+      "removed": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/.next",
+      "allocatedBytesBefore": 1556480,
+      "removed": true
+    },
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-builds/41454572792",
+      "allocatedBytesBefore": 887816192,
+      "removed": true
+    },
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-builds/41473263553",
+      "allocatedBytesBefore": 887816192,
+      "removed": true
+    },
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-builds/41484713756",
+      "allocatedBytesBefore": 2906353664,
+      "removed": true
+    }
+  ]
+}

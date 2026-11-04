@@ -21675,6 +21675,37 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1438": {
+      "task_id": "T-1438",
+      "archetype": [
+        "reference-config"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1438-storage-cleanup.md"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1438-storage-cleanup.md",
+        "docs/verification/t1438/**",
+        "orchestrator/context/T-1438.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json",
+        "frontend/src-tauri/target/**",
+        "frontend/.next/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check"
+        ]
+      }
     }
   }
 }

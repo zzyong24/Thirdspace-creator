@@ -1,0 +1,19 @@
+{
+  "freeBytesBefore": 1861480448,
+  "freeBytesAfter": 15592001536,
+  "netFreedBytes": 13730521088,
+  "latestInstallersPreserved": {
+    "mac/CreatorOS_1.2.0_aarch64.dmg": {
+      "exists": true,
+      "bytes": 887811054
+    },
+    "windows/CreatorOS_1.2.0_x64-setup.exe": {
+      "exists": true,
+      "bytes": 913251151
+    }
+  },
+  "trackedFilesDeleted": [],
+  "nextDependencyStillPresent": true,
+  "worktrees": "worktree /Users/zyongzhu/Workbase/Thirdspace-creator\nHEAD 9db2ba87d994ed833a6a0b8625f7314b38eb5ae1\nbranch refs/heads/main\n\n",
+  "preservedBranchCommit": "568a3091e3960fbaef578cb1c022897101fe1aff"
+}

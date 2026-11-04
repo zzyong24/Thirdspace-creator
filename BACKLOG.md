@@ -6,6 +6,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1438|释放编译产物与闲置worktree占用|✅|—|—|[SPEC](docs/features/t1438-storage-cleanup.md)|用户授权清理编译与worktree，保留源码、未提交内容及最新双端安装包。|
 |T-1437|飞书模型折扣与折后价更新|✅|—|—|[SPEC](docs/features/t1437-model-discount-price-docs.md)|核实当前型号与计价，按用户确认折扣补齐两篇文档。|
 |T-1436|飞书体验与正式交付文档更新|✅|—|—|[SPEC](docs/features/t1436-feishu-guides-refresh.md)|同步当前功能、模型说明及已验收双端安装包，保留历史附件。|
 |T-1435|双端CI接入sidecar签名密钥|✅|—|—|[SPEC](docs/features/t1435-ci-root-signing.md)|用户允许将既有根私钥接入GitHub Actions Secret，修复双端打包并重跑。|
