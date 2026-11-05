@@ -25,5 +25,8 @@
 - 初次HTTPS检查误用了购买页被既有Nginx禁止的/creatoros/index.html路径，返回404；改为实际公开入口/creatoros/通过，无需更改服务器策略。
 
 ## 治理收尾
-按顺序执行pmem sync、quick reconcile、taskctl complete；最终结果以命令日志和任务状态为准。
+初次quick reconcile发现本轮修改使T1434旧watched_paths收据失效，未当作既有欠债忽略。已通过taskctl正式撤销旧收据并重开回归；按T1439用户新授权更新展示字段比较、首屏版本入口与r4输出目录，未放宽SKU、金额、API和共享脚本断言。原14图/SEO/鼠标与键盘放大/7个版本/兑换入口/刷新旅程在两站两个真实视口全部通过；taskctl complete T1434实际执行验证并写入r4新收据。旧r3原证据未改。实现提交53c51a886。
+后续pmem sync、quick reconcile与taskctl complete的真实结果记录在本轮日志和事件链。
 
+
+最终收尾：pmem sync通过，quick/read-only reconcile为0错误、2条既有看板警告（BACKLOG体积和T1420长行），未运行全产品验证。taskctl已完成T1439。

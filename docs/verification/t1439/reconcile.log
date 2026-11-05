@@ -1,0 +1,32 @@
+Coverage: quick read-only control audit only; full verification NOT RUN (incomplete coverage).
+Skipped: project lesson commands; asset example execution; program fresh verification and execution-record updates. Run an authorized `reconcile.mjs --profile full` for executable checks.
+
+── orchestrator reconcile ─────────────────────────────
+! [WARN] backlog-health.mjs: BACKLOG.md 31.1KB 超硬上限 30.0KB — 必须压缩/归档(backlog-compact.mjs 可机械迁走 ✅ 行)。
+! [WARN] backlog-health.mjs: L25 长 449 字(>300 软限):「|T-1420|以文生图生成小红书逐页配图与独立配文|⏸️|PASS[REV:a…」
+✓ [OK] delivery phase: maintenance (legacy-compat)
+✓ [OK] required artifact present: ARTIFACT_MANIFEST.yaml
+✓ [OK] required artifact present: DECISION_LOG.md
+✓ [OK] governance-guard: scope authorization + complexity budget clean.
+✓ [OK] autonomy-guard: execution claim + delivery progress clean.
+✓ [OK] parsed 43 stages
+✓ [OK] CHANGE_IMPACT.md present
+✓ [OK] orphan-scan.mjs: bidirectional trace clean (computed, not attested).
+✓ [OK] asset-check.mjs: reuse-asset library static integrity clean.
+✓ [OK] boundary-scan.mjs: no NEW physical-architecture violation (or guard not configured).
+✓ [OK] reviewctl: review receipts + current snapshots + event chain reconcile.
+✓ [OK] frontend-validation: journey receipts reconcile (or no UI receipts yet).
+✓ [OK] research-gate: implementation paused for T-1135, T-1155, T-1181; bounded research may continue.
+✓ [OK] knowledge-drift.mjs: clean (or knowledge layer not enabled).
+✓ [OK] knowledge-coverage.mjs: clean (or knowledge layer not enabled).
+✓ [OK] docs-health.mjs: clean (or knowledge layer not enabled).
+✓ [OK] consistency_gate blocks 5-ship (status draft) — OK
+✓ [OK] consistency_gate blocks 17-integration-release (status draft) — OK
+✓ [OK] probe 2-contract ↔ contract/package.json: consistent (status passed, present true)
+✓ [OK] probe 4-build ↔ backend/src: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ ai-worker: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ frontend/src/app/api/v1/dispatch: consistent (status draft, present true)
+✓ [OK] updated_at (2026-11-01) is >= newest decision (2026-10-26).
+───────────────────────────────────────────────────────
+0 error(s), 2 warning(s).
+✓ Control audit passed; full verification remains unperformed.

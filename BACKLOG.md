@@ -6,12 +6,12 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1439|官网权益说明与产品演示视频|🔨|—|—|[SPEC](docs/features/t1439-website-rights-video.md)|两站讲清分销和源码共创，在官网嵌入真实视频并完善购买引导。|
+|T-1439|官网权益说明与产品演示视频|✅|—|—|[SPEC](docs/features/t1439-website-rights-video.md)|两站讲清分销和源码共创，在官网嵌入真实视频并完善购买引导。|
 |T-1438|释放编译产物与闲置worktree占用|✅|—|—|[SPEC](docs/features/t1438-storage-cleanup.md)|用户授权清理编译与worktree，保留源码、未提交内容及最新双端安装包。|
 |T-1437|飞书模型折扣与折后价更新|✅|—|—|[SPEC](docs/features/t1437-model-discount-price-docs.md)|核实当前型号与计价，按用户确认折扣补齐两篇文档。|
 |T-1436|飞书体验与正式交付文档更新|✅|—|—|[SPEC](docs/features/t1436-feishu-guides-refresh.md)|同步当前功能、模型说明及已验收双端安装包，保留历史附件。|
 |T-1435|双端CI接入sidecar签名密钥|✅|—|—|[SPEC](docs/features/t1435-ci-root-signing.md)|用户允许将既有根私钥接入GitHub Actions Secret，修复双端打包并重跑。|
-|T-1434|官网与购买页真实截图及SEO优化|🔨|—|待验|[SPEC](docs/features/t1434-website-changelog-refresh.md)|用户授权两站使用14张原始实拍截图、无需脱敏，并优化搜索匹配；沿用v1.2.0/v1.3.0。|
+|T-1434|官网与购买页真实截图及SEO优化|✅|—|PASS:fb8e2d3855ba|[SPEC](docs/features/t1434-website-changelog-refresh.md)|用户授权两站使用14张原始实拍截图、无需脱敏，并优化搜索匹配；沿用v1.2.0/v1.3.0。|
 |T-1433|重复发布同步不误改项目版本|✅|PASS[REV:22b8d85b13ac]|—|[SPEC](docs/features/t1433-project-noop-timestamps.md)|修复两个可复现空操作更新时间写入点。|
 |T-1432|修复接手看板重复与任务包生成阻塞|✅|PASS[REV:2cac63f1896c]|—|[SPEC](docs/features/t1432-handoff-control-repair.md)|用户授权逐条修复；原记录与审核票据保全，密钥和新Mac包不动。|
 
