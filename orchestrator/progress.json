@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 319,
+    "verticals": 320,
     "tasks_done": 89,
-    "tasks_total": 446,
-    "tasks_pending": 357,
+    "tasks_total": 447,
+    "tasks_pending": 358,
     "verticals_complete": 28
   },
   "verticals": [
@@ -22820,6 +22820,53 @@
       "read_set": [
         "AGENTS.md",
         "docs/features/t1438-storage-cleanup.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1439",
+      "archetype": [
+        "reference-config"
+      ],
+      "task_id": "T-1439",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1439-website-rights-video.md",
+        "docs/verification/t1439/**",
+        "orchestrator/context/T-1439.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        "website/index.html",
+        "website/pricing.test.mjs",
+        "website/media/**",
+        "website/buy/creatoros/index.html",
+        "website/buy/products/creatoros.json",
+        "website/buy/assets/rights.css",
+        "website/sitemap.xml",
+        "website/buy/sitemap.xml"
+      ],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1439-website-rights-video.md",
+        "website/index.html",
+        "website/buy/creatoros/index.html",
+        "website/buy/products/creatoros.json"
       ],
       "exclusive_resources": [],
       "step_write_set": {},

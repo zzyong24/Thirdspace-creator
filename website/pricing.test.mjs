@@ -36,7 +36,7 @@ test("官网保留线上产品导览与更新日志，不恢复已撤下的交�
   assert.doesNotMatch(html, /href=["']#(?:delivery|partner)["']/i);
 });
 
-test("官网源码不再公开任何价盘、利润或个人联系方式", () => {
+test("官网公开用户确认的分销与二开结算，不包含私人联系方式和旧价盘", () => {
   const forbiddenExact = [
     "zyong181818z",
     "R15929072019",
@@ -55,13 +55,13 @@ test("官网源码不再公开任何价盘、利润或个人联系方式", () =>
     assert.ok(!html.includes(forbidden), `仍存在敏感公开信息：${forbidden}`);
   }
 
-  for (const pattern of [
-    /[¥￥$€£]\s*[\d,.]+/,
-    /(?:RMB|CNY|USD|EUR|GBP|人民币|美元|美金|欧元|英镑)\s*[\d,.]+/i,
-    /[\d,.]+\s*(?:元|块|美元|美金|欧元|英镑)/,
-  ]) {
-    assert.doesNotMatch(html, pattern, `仍存在金额表达：${pattern}`);
-  }
+  assert.match(visibleText, /599/);
+  assert.match(visibleText, /299\.50/);
+  assert.match(visibleText, /授权与签名/);
+  assert.match(html, /<video[^>]*controls[^>]*playsinline/);
+  assert.doesNotMatch(html, /<video[^>]*autoplay/);
+  assert.match(html, /https:\/\/buy\.aitongban\.cloud\/creatoros\//);
+
 });
 
 test("官网不再展示旧验收包下载及其构建说明", () => {

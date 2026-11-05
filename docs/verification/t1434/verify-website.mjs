@@ -5,24 +5,28 @@ import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
-const out=resolve(root,'docs/verification/t1434/r3');
+const out=resolve(root,'docs/verification/t1434/r4');
+const baseline=resolve(root,'docs/verification/t1434/r3');
 const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
 const local=process.argv.includes('--local');
 const sites=[{name:'官网',url:local?'http://127.0.0.1:8764/':'https://creatoros.aitongban.cloud/',canonical:'https://creatoros.aitongban.cloud/'},{name:'购买页',url:local?'http://127.0.0.1:8765/creatoros/':'https://buy.aitongban.cloud/creatoros/',canonical:'https://buy.aitongban.cloud/creatoros/'}];
 const checkIds=['download-removed','versions','keyboard-refresh','responsive','real-screenshots','seo','storefront-preserved'];
 const hash=x=>createHash('sha256').update(x).digest('hex');
-const manifest=JSON.parse(readFileSync(resolve(out,'image-manifest.json'),'utf8'));
+const manifest=JSON.parse(readFileSync(resolve(baseline,'image-manifest.json'),'utf8'));
 assert.equal(manifest.length,14);
 for(const row of manifest){assert.equal(row.pixel_identical,true);assert.equal(hash(readFileSync(resolve(root,'website'+row.src))),row.webp_sha256);}
 const buy=JSON.parse(readFileSync(resolve(root,'website/buy/products/creatoros.json'),'utf8'));
-const original=JSON.parse(readFileSync(resolve(out,'buy-product-before.json'),'utf8'));
-for(const key of ['commerce','downloads','downloadSection','support'])assert.deepEqual(buy[key],original[key]);
-assert.equal(hash(readFileSync(resolve(root,'website/buy/assets/store.js'))),readFileSync(resolve(out,'store-js-before.sha256'),'utf8').trim());
+const original=JSON.parse(readFileSync(resolve(baseline,'buy-product-before.json'),'utf8'));
+for(const key of ['downloads','downloadSection','support'])assert.deepEqual(buy[key],original[key]);
+const transactionalCommerce=commerce=>({...commerce,plans:commerce.plans.map(({summary,activationNote,...operational})=>operational)});
+assert.deepEqual(transactionalCommerce(buy.commerce),transactionalCommerce(original.commerce));
+assert.match(buy.faq.find(row=>row.question.includes('功能有区别')).answer,/仅限购买599元永久版，月卡不包含/);
+assert.equal(hash(readFileSync(resolve(root,'website/buy/assets/store.js'))),readFileSync(resolve(baseline,'store-js-before.sha256'),'utf8').trim());
 for(const [path,canonical] of [['website/index.html',sites[0].canonical],['website/buy/creatoros/index.html',sites[1].canonical]]){
  const html=readFileSync(resolve(root,path),'utf8');assert.ok(html.includes('rel="canonical" href="'+canonical+'"'));assert.equal((html.match(/<h1\b/g)||[]).length,1);assert.ok(html.includes('schema.org/SoftwareApplication'));assert.ok(html.includes('og:image'));assert.equal(new Set([...html.matchAll(/src="(\/shots\/real\/[^" ]+)"/g)].map(m=>m[1])).size,14);
 }
 const script=`
-const task=await taskSpace('CreatorOS 两站真实截图与 SEO T1434'), page=task.page('p1');
+const task=await taskSpace(18), page=task.page('p1');
 const fs=await import('node:fs/promises');
 const sites=${JSON.stringify(sites)}, viewports=[{width:1440,height:1000},{width:390,height:844}], checks=${JSON.stringify(checkIds)};
 const captures=[], observations=[];
@@ -32,7 +36,7 @@ for(const site of sites)for(const viewport of viewports){
  await page.cdp('Emulation.setDeviceMetricsOverride',{...viewport,deviceScaleFactor:1,mobile:false});
  await page.waitForFunction(w=>innerWidth===w,viewport.width);
  if(site.name==='官网'){
-  await page.click('loc=css:.version-peek');
+  await page.click('loc=css:.hero-version a');
   await page.waitForFunction(()=>Math.abs(document.querySelector('#changelog').getBoundingClientRect().top)<180);
   if(await page.evaluate(()=>document.querySelectorAll('img[loading="lazy"]').length)===0)throw Error('导航不应提前加载所有原图');
  }
@@ -93,6 +97,6 @@ const output=`${result.stdout??''}${result.stderr??''}`;
 writeFileSync(resolve(out,'browser-run.log'),output.trimEnd()+'\n');process.stdout.write(output);
 if(result.status!==0)process.exit(result.status||1);
 const contract=readFileSync(resolve(root,'docs/features/t1434-website-changelog-refresh.md'),'utf8');
-const evidence='docs/verification/t1434/r3/browser-observations.json';
-const report={schema:'frontend-validation/v1',task_id:'T-1434',commit_sha:commit,contract_sha:hash(contract).slice(0,12),contract_path:'docs/features/t1434-website-changelog-refresh.md',observed_at:new Date().toISOString(),status:'pass',run:{verify_key:'website-t1434',command:'node docs/verification/t1434/verify-website.mjs',exit_code:0,output_ref:'docs/verification/t1434/r3/browser-run.log'},environment:{surface:'browser',runtime:'Ego Lite Chromium，真实官网与购买页',viewports:[{width:1440,height:1000,result:'pass'},{width:390,height:844,result:'pass'}]},data:{mode:'non-fixture',witnesses:[{id:'creatoros-public-site',role:'官网实际截图'},{id:'creatoros-public-store',role:'购买站实际截图'}]},levels:{logic:{status:'pass',evidence_ref:'docs/verification/t1434/r3/website-tests.log'},surface:{status:'pass',evidence_ref:evidence},journey:{status:'pass',evidence_ref:evidence},experience:{status:'not-requested',evidence_ref:'真实浏览器自动检查，不冒用户人工验收'}},checks:checkIds.map(id=>({id,test_id:'website-'+id,result:'pass',evidence_ref:evidence})),coverage:['refresh','keyboard'].map(condition=>({condition,result:'pass',evidence_ref:evidence})),tdd_red_ref:'静态内容不制造TDD红测；线上旧页面缺少14张截图及SEO的失败见 docs/verification/t1434/r3/production-before.log',open_defects:[],visible_copy:{artifact_path:'docs/verification/t1434/r3/visible-copy.json',artifact_sha256:hash(readFileSync(resolve(out,'visible-copy.json')))}};
+const evidence='docs/verification/t1434/r4/browser-observations.json';
+const report={schema:'frontend-validation/v1',task_id:'T-1434',commit_sha:commit,contract_sha:hash(contract).slice(0,12),contract_path:'docs/features/t1434-website-changelog-refresh.md',observed_at:new Date().toISOString(),status:'pass',run:{verify_key:'website-t1434',command:'node docs/verification/t1434/verify-website.mjs',exit_code:0,output_ref:'docs/verification/t1434/r4/browser-run.log'},environment:{surface:'browser',runtime:'Ego Lite Chromium，真实官网与购买页',viewports:[{width:1440,height:1000,result:'pass'},{width:390,height:844,result:'pass'}]},data:{mode:'non-fixture',witnesses:[{id:'creatoros-public-site',role:'官网实际截图'},{id:'creatoros-public-store',role:'购买站实际截图'}]},levels:{logic:{status:'pass',evidence_ref:'docs/verification/t1434/r4/website-tests.log'},surface:{status:'pass',evidence_ref:evidence},journey:{status:'pass',evidence_ref:evidence},experience:{status:'not-requested',evidence_ref:'真实浏览器自动检查，不冒用户人工验收'}},checks:checkIds.map(id=>({id,test_id:'website-'+id,result:'pass',evidence_ref:evidence})),coverage:['refresh','keyboard'].map(condition=>({condition,result:'pass',evidence_ref:evidence})),tdd_red_ref:'静态内容不制造TDD红测；线上旧页面缺少14张截图及SEO的失败见 docs/verification/t1434/r3/production-before.log',open_defects:[],visible_copy:{artifact_path:'docs/verification/t1434/r4/visible-copy.json',artifact_sha256:hash(readFileSync(resolve(out,'visible-copy.json')))}};
 if(process.argv.includes('--report'))writeFileSync(resolve(out,'frontend-report.md'),'# 两站真实截图与SEO验收\n\n```frontend-validation\n'+JSON.stringify(report,null,2)+'\n```\n');

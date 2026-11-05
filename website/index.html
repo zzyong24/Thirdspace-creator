@@ -464,6 +464,18 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
 .product-faq summary{font-size:17px;font-weight:600;cursor:pointer}
 .product-faq details p{margin-top:12px;color:var(--muted);line-height:1.8}
 @media(max-width:760px){.real-gallery{grid-template-columns:1fr;gap:18px}}
+
+/* 2026-11-05：真实视频与明确的购买权益。沿用现有品牌tokens。 */
+.rights-section{padding:76px 0;background:linear-gradient(180deg,var(--ground,#fbfbfd),#f5f2ff)}
+.rights-heading{max-width:800px;margin-bottom:30px}.rights-heading h2{font-size:clamp(28px,3.3vw,44px);line-height:1.25;letter-spacing:-.035em;margin:14px 0}.rights-heading p{color:var(--muted,#6e6e73);font-size:17px;line-height:1.8}
+.rights-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.rights-card{background:#fff;border:1px solid var(--hair,#e3e1ea);border-radius:24px;padding:32px;min-width:0}.rights-card-featured{border-color:#c8b9f7;box-shadow:0 10px 40px rgba(109,59,239,.07)}
+.rights-number{font-size:13px;letter-spacing:.06em;color:var(--brand,#6d3bef);font-weight:650}.rights-card h3{font-size:25px;line-height:1.4;letter-spacing:-.02em;margin:14px 0}.rights-card p{font-size:16px;line-height:1.85;color:var(--muted,#6e6e73)}.rights-card b{color:var(--ink,#1d1d1f)}
+.rights-metric{margin:26px 0;padding-bottom:22px;border-bottom:1px solid var(--hair,#e3e1ea);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}.rights-metric strong{font-size:38px;line-height:1.2;color:var(--brand,#6d3bef);letter-spacing:-.035em}.rights-metric span{font-size:14px;color:var(--muted,#6e6e73)}.rights-card .rights-detail{font-size:14px;margin-top:18px}.rights-bottom{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:26px}.rights-bottom p{color:var(--muted,#6e6e73);font-size:15px}.rights-cta{display:inline-flex;gap:18px;align-items:center;justify-content:center;background:var(--brand,#6d3bef);color:#fff;border-radius:999px;padding:14px 23px;font-weight:650;white-space:nowrap;text-decoration:none}.rights-cta:hover{filter:brightness(.94)}.rights-cta:focus-visible{outline:3px solid #a78bfa;outline-offset:4px}
+@media(max-width:760px){.rights-grid{grid-template-columns:1fr}.rights-section{padding:48px 0}.rights-card{padding:24px}.rights-card h3{font-size:22px}.rights-bottom{align-items:flex-start;flex-direction:column}.rights-cta{width:100%;white-space:normal}}
+
+.hero{padding:68px 0 32px;text-align:left}.hero-intro{display:grid;grid-template-columns:1fr 1.12fr;gap:48px;align-items:center}.hero h1{font-size:clamp(38px,4.4vw,62px);line-height:1.12}.hero .sub{font-size:18px;max-width:none;margin:22px 0 0;text-wrap:pretty}.hero .cta-row{justify-content:flex-start;margin-top:28px}.hero .hero-foot{margin:18px 0 0}.demo-frame{border:1px solid var(--hair);border-radius:24px;background:#fff;padding:12px;box-shadow:0 24px 70px rgba(64,38,109,.1);min-width:0;scroll-margin-top:100px}.demo-frame video{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;background:#f5f2fa;border-radius:15px}.demo-caption{padding:15px 10px 7px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;color:var(--muted)}.demo-caption strong{font-size:15px;color:var(--ink)}.demo-caption a{text-decoration:underline;text-underline-offset:3px}.demo-links{display:flex;gap:8px;flex-wrap:wrap;padding:10px 10px 2px}.demo-links span{font-size:12px;background:var(--panel2);border:1px solid var(--hair2);border-radius:999px;padding:3px 9px;color:var(--muted)}.hero-paths{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}.hero-paths a{padding:20px;border:1px solid var(--hair);border-radius:16px;background:rgba(255,255,255,.75);display:grid;gap:5px}.hero-paths a:hover{border-color:var(--brand-soft)}.hero-paths strong{font-size:17px}.hero-paths span{font-size:14px;color:var(--muted)}.hero-version{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:13px;color:var(--muted);padding-top:24px}.hero-version a{color:var(--brand)}
+@media(max-width:960px){.hero-intro{grid-template-columns:1fr;gap:30px}.hero h1 br{display:none}.hero .sub{max-width:720px}.demo-frame{max-width:760px;width:100%;margin:auto}.hero{padding-top:40px}.hero h1{font-size:clamp(38px,7vw,60px)}}
+@media(max-width:600px){.hero-paths{grid-template-columns:1fr;gap:10px;margin-top:24px}.hero-paths a{padding:16px}.demo-frame{padding:8px;border-radius:18px}.demo-caption{align-items:flex-start;flex-direction:column}.hero .sub{font-size:16px}.hero .cta-row .btn{padding:13px 20px}.hero-version{line-height:1.8}}
 </style>
 </head>
 <body>
@@ -477,11 +489,11 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
       <a href="#why">为什么不一样</a>
       <a href="#platforms">多平台</a>
       <a href="#screenshots">真实界面</a>
-      <a href="#usecase">适用</a>
+      <a href="#rights">购买权益</a>
       <a href="#changelog" onclick="jumpToSection(event,'changelog')">更新日志</a>
     </div>
     <div class="nav-tools">
-      <a class="nav-cta" href="#flywheel">查看产品能力</a>
+      <a class="nav-cta" href="https://buy.aitongban.cloud/creatoros/">查看套餐与购买</a>
     </div>
   </div>
 </header>
@@ -494,43 +506,14 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
 <meta itemprop="description" content="AI自媒体创作工具，支持账号定位、短视频脚本、小红书图文、公众号排版、素材管理与多平台内容运营。">
 </div>
 <!-- HERO -->
-<section class="hero" id="top">
-  <div class="wrap">
-    <span class="eyebrow rv">多平台创作 · macOS / Windows · 数据本机</span>
-    <h1 class="rv">AI 自媒体创作，<br>从灵感到<span class="em">作品</span>。</h1>
-    <p class="sub rv">CreatorOS 是一套住在你本机的<b>「多平台 AI 编导创作系统」</b>。用 AI 完成账号定位、短视频选题与脚本、小红书图文、公众号文章排版和封面素材，把<b>创作、发布管理、数据复盘与经验积累</b>接成一条持续运转的内容工作流。</p>
-    <div class="release-rail rv">
-      <div class="release-seal"><span>NOW</span><b>1.3</b></div>
-      <div class="release-copy">
-        <small>Latest release</small>
-        <strong>CreatorOS v1.3.0</strong>
-        <span>抖音、小红书、视频号与公众号等多平台，统一创作与运营</span>
-      </div>
-      <a class="release-rail-btn" href="#changelog" onclick="jumpToSection(event,'changelog')">查看更新</a>
-    </div>
-    <div class="cta-row rv">
-      <a class="btn btn-p" href="#flywheel">查看产品能力</a>
-      <a class="btn btn-g" href="#flywheel">看飞轮怎么转 ↓</a>
-    </div>
-    <p class="hero-foot rv">数据本机优先 · 加密落盘 · v1.3.0 · 更新至 2026.10.29</p>
-    <a class="version-peek rv" href="#changelog" onclick="jumpToSection(event,'changelog')"><span>NEW</span> v1.3.0 更新日志 →</a>
-
-    <div class="spec-strip rv">
-      <div class="it"><div class="n">1.3.0</div><div class="l">当前版本</div></div>
-      <div class="it"><div class="n">7</div><div class="l">步飞轮闭环</div></div>
-      <div class="it"><div class="n">100%</div><div class="l">数据本机落盘</div></div>
-      <div class="it"><div class="n">Mac·Win</div><div class="l">桌面端</div></div>
-    </div>
-
-    <div class="shot-stage rv">
-      <div class="shot-frame">
-        <div class="bar"><i></i><i></i><i></i><span class="addr">CreatorOS · 多平台创作者总览</span></div>
-        <img class="zoomable" src="/shots/real/creatoros-creator-overview.webp" alt="CreatorOS 多平台创作者总览真实软件截图" width="3456" height="1988" loading="eager" decoding="async" fetchpriority="high">
-      </div>
-      <div class="shot-cap"><span>创作者总览 — 真实账号、作品与运营数据</span><span>LOCAL · 数据本机</span></div>
-    </div>
-  </div>
-</section>
+<section class="hero" id="top"><div class="wrap"><div class="hero-intro"><div class="hero-copy">
+<span class="eyebrow">多平台 AI 创作工作台 · Mac / Windows</span><h1>把灵感做成作品，<br>把经验留给<span class="em">下一次创作</span>。</h1>
+<p class="sub">从账号定位、选题和脚本，到小红书图文、公众号文章、视频制作与数据复盘，CreatorOS 把创作放进同一个本机工作台。</p>
+<div class="cta-row"><a class="btn btn-p" href="https://buy.aitongban.cloud/creatoros/">查看套餐与购买</a><a class="btn btn-g" href="#demo">先看 87 秒演示 ↓</a></div>
+<p class="hero-foot">真实产品界面 · 数据本机优先 · 按需选择官方或自配模型</p></div>
+<div class="demo-frame" id="demo"><video id="product-demo" controls playsinline preload="none" poster="/media/creatoros-product-demo-poster.jpg" width="1920" height="1080" aria-label="CreatorOS 产品介绍视频，约87秒"><source src="/media/creatoros-product-demo-20261105.mp4" type="video/mp4">你的浏览器暂不支持内嵌视频，可通过下方链接打开。</video><div class="demo-caption"><strong>87 秒，看懂 CreatorOS 怎么用</strong><a href="/media/creatoros-product-demo-20261105.mp4" target="_blank" rel="noopener">单独打开视频 ↗</a></div><div class="demo-links"><span>定位与选题</span><span>多形式创作</span><span>发布与复盘</span></div></div></div>
+<div class="hero-paths"><a href="#flywheel"><strong>我想提高创作效率 ↗</strong><span>查看产品能力与真实界面</span></a><a href="#rights"><strong>我想了解分销 ↗</strong><span>销售原版产品，双方五五分成</span></a><a href="#rights"><strong>我想二开自己的产品 ↗</strong><span>核心客户端源码共创，二开可销售</span></a></div>
+<div class="hero-version"><span>macOS · Windows 双端支持</span><a href="#changelog" onclick="jumpToSection(event,'changelog')">v1.3.0 更新日志 →</a></div></div></section>
 
 <!-- 飞轮工序 -->
 <section class="sect" id="flywheel">
@@ -727,6 +710,12 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
 </section>
 
 <!-- 适用人群 -->
+<section class="rights-section" id="rights" aria-labelledby="rights-title">
+<div class="wrap"><div class="rights-heading"><span class="eyebrow">使用 · 分销 · 源码共创</span><h2 id="rights-title">自己用来创作，也能销售和二次开发。</h2><p class="rights-scope">以下两项权益仅限购买 599 元永久版，月卡不包含。永久版可用于日常创作，也包含分销资格与核心客户端源码共创。</p></div>
+<div class="rights-grid">
+<article class="rights-card"><span class="rights-number">01 / 分销合作</span><h3>销售原版产品，双方各分 50%</h3><p>你可以销售 CreatorOS。成交后，你与原作者按五五分成。</p><div class="rights-metric"><strong>50%</strong><span>你的销售分成比例</span></div><p class="rights-example">以 599 元的产品为例，你分得 <b>299.50 元</b>，原作者分得 299.50 元。</p><p class="rights-detail">适合希望把产品推荐给客户、学员或合作伙伴的人。购买后按交付指引对接分销。</p></article>
+<article class="rights-card rights-card-featured"><span class="rights-number">02 / 源码共创</span><h3>拿到核心客户端源码，二开产品可以销售</h3><p>原作者会与你共享 GitHub 核心客户端代码仓库。你可以基于源码二次开发，做出自己的产品，并自行定价销售。</p><div class="rights-metric"><strong>自主定价</strong><span>二开产品的销售价格由你决定</span></div><p class="rights-example">当前每售出一份，向原作者结算 <b>299.50 元</b>（599 元 × 50%）。你卖 499 元或 999 元，结算基准相同。</p><p class="rights-detail"><b>源码范围：</b>仅核心客户端部分，<b>不包含授权与签名部分</b>。后续如调整官方基准价，结算标准另行说明。</p></article>
+</div><div class="rights-bottom"><p>买现成工具来用，或把它做成自己的产品。先选适合你的方式。</p><a class="rights-cta" href="https://buy.aitongban.cloud/creatoros/">查看套餐与购买方式 <span aria-hidden="true">→</span></a></div></div></section>
 <section class="sect" id="usecase" style="padding-top:36px">
   <div class="wrap">
     <div class="sect-head rv">
@@ -959,7 +948,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
   </div>
 </section>
 
-<section class="sect" id="product-faq"><div class="wrap"><div class="sect-head"><div class="rule"><span class="eyebrow">CreatorOS FAQ</span></div><h2>关于AI自媒体创作，你可能想了解</h2></div><div class="product-faq"><details><summary>CreatorOS适合做什么内容？</summary><p>CreatorOS面向自媒体创作者、内容团队和多账号运营者，把账号定位、选题、写稿、图片素材、视频制作、发布管理与数据复盘放在同一个本机工作台。</p></details><details><summary>支持哪些内容平台？</summary><p>支持面向抖音、小红书、视频号、快手、B站、YouTube和公众号组织创作与发布管理；具体发布、采集功能以客户端中的账号连接状态为准。</p></details><details><summary>能做小红书图文和公众号文章吗？</summary><p>可以。图文和文章有各自的创作工作面，小红书图文可组织正文、逐页配图与封面，公众号文章可处理长文、配图和排版，并复用项目资料与素材。</p></details><details><summary>需要先登录抖音才能开始吗？</summary><p>不需要。你可以先描述经验、优势和目标，生成账号定位候选，确认采纳后继续选题与创作。</p></details><details><summary>支持Mac和Windows吗？</summary><p>CreatorOS提供macOS与Windows桌面端。安装系统要求与当前可用安装包请查看购买页中的下载说明。</p></details></div></div></section>
+<section class="sect" id="product-faq"><div class="wrap"><div class="sect-head"><div class="rule"><span class="eyebrow">CreatorOS FAQ</span></div><h2>关于AI自媒体创作，你可能想了解</h2></div><div class="product-faq"><details><summary>CreatorOS适合做什么内容？</summary><p>CreatorOS面向自媒体创作者、内容团队和多账号运营者，把账号定位、选题、写稿、图片素材、视频制作、发布管理与数据复盘放在同一个本机工作台。</p></details><details><summary>支持哪些内容平台？</summary><p>支持面向抖音、小红书、视频号、快手、B站、YouTube和公众号组织创作与发布管理；具体发布、采集功能以客户端中的账号连接状态为准。</p></details><details><summary>能做小红书图文和公众号文章吗？</summary><p>可以。图文和文章有各自的创作工作面，小红书图文可组织正文、逐页配图与封面，公众号文章可处理长文、配图和排版，并复用项目资料与素材。</p></details><details><summary>需要先登录抖音才能开始吗？</summary><p>不需要。你可以先描述经验、优势和目标，生成账号定位候选，确认采纳后继续选题与创作。</p></details><details><summary>支持Mac和Windows吗？</summary><p>CreatorOS提供macOS与Windows桌面端。安装系统要求与当前可用安装包请查看购买页中的下载说明。</p></details><details><summary>购买后的分销资格是什么意思？</summary><p>购买599元永久版后可获得分销资格，月卡不包含。你可以销售CreatorOS，成交后与原作者五五分成。以599元的产品为例，双方各分299.50元。</p></details><details><summary>共创会提供哪些源码？二开后的产品可以卖吗？</summary><p>购买599元永久版包含源码共创，月卡不包含。共享GitHub核心客户端代码仓库，你可以二次开发并自行定价销售；授权与签名部分不包含在内。当前每售出一份二开产品，向原作者按599元×50%结算，即299.50元；后续基准价调整另行说明。</p></details></div></div></section>
 <!-- 尾部产品导览 -->
 <section class="final" id="join">
   <div class="wrap">
@@ -971,7 +960,7 @@ footer{border-top:1px solid var(--hair);padding:36px 0}
       <div class="trial-step"><b>02</b><span><strong>跑通完整流程</strong>从选题到发布都在同一项目中推进</span></div>
       <div class="trial-step"><b>03</b><span><strong>让经验持续回流</strong>用真实数据校准下一轮创作</span></div>
     </div>
-  </div>
+  <div class="cta-row"><a class="btn btn-p" href="https://buy.aitongban.cloud/creatoros/">选择套餐，开始使用 CreatorOS</a><a class="btn btn-g" href="#demo">再看一遍产品演示</a></div></div>
 </section>
 
 <footer>

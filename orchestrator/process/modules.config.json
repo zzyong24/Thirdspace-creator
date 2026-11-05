@@ -21706,6 +21706,51 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1439": {
+      "task_id": "T-1439",
+      "archetype": [
+        "reference-config"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "AGENTS.md",
+        "docs/features/t1439-website-rights-video.md",
+        "website/index.html",
+        "website/buy/creatoros/index.html",
+        "website/buy/products/creatoros.json"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1439-website-rights-video.md",
+        "docs/verification/t1439/**",
+        "orchestrator/context/T-1439.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        "website/index.html",
+        "website/pricing.test.mjs",
+        "website/media/**",
+        "website/buy/creatoros/index.html",
+        "website/buy/products/creatoros.json",
+        "website/buy/assets/rights.css",
+        "website/sitemap.xml",
+        "website/buy/sitemap.xml",
+        "docs/features/t1434-website-changelog-refresh.md",
+        "docs/verification/t1434/verify-website.mjs",
+        "docs/verification/t1434/r4/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node --test website/*.test.mjs",
+          "git diff --check"
+        ]
+      }
     }
   }
 }

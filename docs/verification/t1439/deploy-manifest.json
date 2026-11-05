@@ -1,0 +1,56 @@
+{
+  "task": "T-1439",
+  "scopeConfirmed": "仅599元永久版；月卡不含分销和源码共创",
+  "files": [
+    {
+      "source": "website/index.html",
+      "destination": "/var/www/creatoros/index.html",
+      "bytes": 97776,
+      "sha256": "fac9b5431161ba07cb5e95f55054be44940cecd97b489ebd68bb40d1cb71e1c9",
+      "expectedBefore": "d0030674c0d0d5014461d106e1d497c97ec4c4144e151acaaecf311426522f78"
+    },
+    {
+      "source": "website/buy/creatoros/index.html",
+      "destination": "/var/www/creatoros-buy/creatoros/index.html",
+      "bytes": 21833,
+      "sha256": "21af34e17f04b7b6f1f02ad296c5b06e0bbd2d15648e04b52cf844bd48eac269",
+      "expectedBefore": "830486bc58a1c4c5a75ff608dcd4f38468ede8e2253e4fbda3025b46cef2a67e"
+    },
+    {
+      "source": "website/buy/products/creatoros.json",
+      "destination": "/var/www/creatoros-buy/products/creatoros.json",
+      "bytes": 11552,
+      "sha256": "15f5326ee25d564ee18c501fe13a145c5f7379eb63813db2d35dd5eb68d618dd",
+      "expectedBefore": "ab898fb455bc5f6e4866eafb039f0bfb26f69fec33896d7969b19dec9d80b5e8"
+    },
+    {
+      "source": "website/buy/assets/rights.css",
+      "destination": "/var/www/creatoros-buy/assets/rights.css",
+      "bytes": 2450,
+      "sha256": "3ecc0346035aeac594881bad0849a0d6d4ac4e868dd3b7ebef4ce9c1e3c497cc",
+      "expectedBefore": null
+    },
+    {
+      "source": "website/media/creatoros-product-demo-20261105.mp4",
+      "destination": "/var/www/creatoros/media/creatoros-product-demo-20261105.mp4",
+      "bytes": 24393654,
+      "sha256": "435328b871e91095197d4d69d9199a5d2e65b018f9cd233bba23c6d5de171fe0",
+      "expectedBefore": null
+    },
+    {
+      "source": "website/media/creatoros-product-demo-poster.jpg",
+      "destination": "/var/www/creatoros/media/creatoros-product-demo-poster.jpg",
+      "bytes": 25575,
+      "sha256": "9991b57e3ad549e34a4aa7e63def5dc87746e34ce0525167b26deae351184b41",
+      "expectedBefore": null
+    }
+  ],
+  "protected": [
+    "/var/www/creatoros-buy/assets/store.js",
+    "/var/www/creatoros-buy/assets/store.css",
+    "/var/www/creatoros-buy/index.html",
+    "/var/www/creatoros-buy/products/moving.json",
+    "/etc/nginx/conf.d/creatoros.conf",
+    "/etc/nginx/conf.d/creatoros-buy.conf"
+  ]
+}

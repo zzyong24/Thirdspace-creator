@@ -1,0 +1,39 @@
+[
+  {
+    "url": "https://creatoros.aitongban.cloud/",
+    "status": 200,
+    "type": "text/html; charset=utf-8",
+    "sha256": "fac9b5431161ba07cb5e95f55054be44940cecd97b489ebd68bb40d1cb71e1c9"
+  },
+  {
+    "url": "https://buy.aitongban.cloud/creatoros/",
+    "status": 200,
+    "type": "text/html; charset=utf-8",
+    "sha256": "21af34e17f04b7b6f1f02ad296c5b06e0bbd2d15648e04b52cf844bd48eac269"
+  },
+  {
+    "url": "https://buy.aitongban.cloud/products/creatoros.json",
+    "status": 200,
+    "type": "application/json",
+    "sha256": "15f5326ee25d564ee18c501fe13a145c5f7379eb63813db2d35dd5eb68d618dd"
+  },
+  {
+    "url": "https://buy.aitongban.cloud/assets/rights.css",
+    "status": 200,
+    "type": "text/css",
+    "sha256": "3ecc0346035aeac594881bad0849a0d6d4ac4e868dd3b7ebef4ce9c1e3c497cc"
+  },
+  {
+    "url": "https://creatoros.aitongban.cloud/media/creatoros-product-demo-20261105.mp4",
+    "status": 206,
+    "type": "video/mp4",
+    "contentRange": "bytes 0-1023/24393654",
+    "bytesRead": 1024
+  },
+  {
+    "url": "https://creatoros.aitongban.cloud/media/creatoros-product-demo-poster.jpg",
+    "status": 200,
+    "type": "image/jpeg",
+    "sha256": "9991b57e3ad549e34a4aa7e63def5dc87746e34ce0525167b26deae351184b41"
+  }
+]

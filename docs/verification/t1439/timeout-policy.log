@@ -1,0 +1,101 @@
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node tools/timeout-policy/check.mjs
+{
+  "ok": true,
+  "minimumExecutionMs": 120000,
+  "scannedFiles": 2939,
+  "failures": [],
+  "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+}
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/timeout-policy/check.test.mjs tools/timeout-policy/hyperframes.test.mjs tools/timeout-policy/spawn-check.test.mjs
+✔ detects short request, browser default and abort timer consumers (5.972042ms)
+✔ does not turn polling, sleeps, TTL or shared remaining deadline into execution budgets (1.417542ms)
+✔ accepts normalized defaults and longer outer budget instead of bare numeric replacement (0.650917ms)
+✔ T1250 精确调度和词法绑定，不给未知正执行泛豁免 (1.151583ms)
+✔ T1250 shadow的同名调度函数及未知destroy仍执行门拒绝 (0.863625ms)
+✔ T1250 六个关闭动画只接受原冻结文件及原AST节点，修改字节不得豁免 (2604.004292ms)
+✔ T1250 named表达式/方法/for词法声明不能掩盖外层真实小预算 (0.404583ms)
+✔ T1252 headers/body/connect短门不被父case或未知dispatcher掩盖 (0.160125ms)
+✔ 锁定实际安装的同版本补丁，依赖升级必须重新核对内部等待 (1248.038333ms)
+✔ 实际安装的归一入口保留零值、拒绝非法值并明确覆盖页面默认 (3.8555ms)
+✔ 真实公共CLI拒绝一秒浏览器超时，错误单位为秒 (1569.678ms)
+ℹ {"schema":"hyperframes-real-cli-proof/v1","isolation":{"schema":"hyperframes-cli-isolation/v1","root":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r","cwd":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/work","home":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/home","node":"/opt/homebrew/Cellar/node/25.9.0_2/bin/node","cli":"/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/hyperframes@0.7.54_patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472_70958a7107250b568c92e6d443cdd8c9/node_modules/hyperframes/dist/cli.js","cliSha256":"1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b","profile":"(version 1)\n(deny default)\n(deny network*)\n(allow process-exec (literal \"/opt/homebrew/Cellar/node/25.9.0_2/bin/node\"))\n(deny process-fork)\n(allow sysctl-read)\n(allow file-read-metadata)\n(allow file-read* (subpath \"/System/Library\") (subpath \"/usr/lib\") (subpath \"/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm\") (subpath \"/opt/homebrew/Cellar/node/25.9.0_2/bin\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/bin/node\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libssl.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib\") (literal \"/opt/homebrew/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib\") (literal \"/opt/homebrew/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib\") (literal \"/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib\") (literal \"/opt/homebrew/Cellar/sqlite/3.53.2/lib/libsqlite3.3.53.2.dylib\") (literal \"/opt/homebrew/Cellar/libngtcp2/1.23.0/lib/libngtcp2.16.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp3/1.16.0/lib/libnghttp3.9.7.0.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib\") (literal \"/opt/homebrew/Cellar/nbytes/0.1.4/lib/libnbytes.dylib\") (literal \"/opt/homebrew/Cellar/merve/1.2.2_1/lib/libmerve.1.2.2.dylib\") (literal \"/opt/homebrew/Cellar/simdutf/9.0.0/lib/libsimdutf.34.0.0.dylib\") (literal \"/opt/homebrew/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib\") (literal \"/opt/homebrew/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/simdjson/4.6.4/lib/libsimdjson.33.0.0.dylib\") (literal \"/opt/homebrew/Cellar/ada-url/3.4.4/lib/libada.3.4.4.dylib\") (literal \"/opt/homebrew/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib\"))\n(allow file-map-executable (subpath \"/System/Library\") (subpath \"/usr/lib\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/bin/node\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib\") (literal \"/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libssl.3.dylib\") (literal \"/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib\") (literal \"/opt/homebrew/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib\") (literal \"/opt/homebrew/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib\") (literal \"/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib\") (literal \"/opt/homebrew/Cellar/sqlite/3.53.2/lib/libsqlite3.3.53.2.dylib\") (literal \"/opt/homebrew/Cellar/libngtcp2/1.23.0/lib/libngtcp2.16.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp3/1.16.0/lib/libnghttp3.9.7.0.dylib\") (literal \"/opt/homebrew/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib\") (literal \"/opt/homebrew/Cellar/nbytes/0.1.4/lib/libnbytes.dylib\") (literal \"/opt/homebrew/Cellar/merve/1.2.2_1/lib/libmerve.1.2.2.dylib\") (literal \"/opt/homebrew/Cellar/simdutf/9.0.0/lib/libsimdutf.34.0.0.dylib\") (literal \"/opt/homebrew/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib\") (literal \"/opt/homebrew/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib\") (literal \"/opt/homebrew/Cellar/simdjson/4.6.4/lib/libsimdjson.33.0.0.dylib\") (literal \"/opt/homebrew/Cellar/ada-url/3.4.4/lib/libada.3.4.4.dylib\") (literal \"/opt/homebrew/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib\") (literal \"/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib\"))\n(allow file-read* file-map-executable (subpath \"/System/Cryptexes/OS\") (subpath \"/System/Volumes/Preboot/Cryptexes/OS\"))\n(allow file-read* (literal \"/\") (literal \"/System\") (literal \"/System/Cryptexes\") (literal \"/System/Volumes\") (literal \"/System/Volumes/Preboot\") (literal \"/System/Volumes/Preboot/Cryptexes\"))\n(allow file-read* (literal \"/Users/zyongzhu/Workbase/Thirdspace-creator/package.json\") (literal \"/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/package.json\") (literal \"/private/etc/localtime\") (literal \"/dev/random\") (literal \"/dev/urandom\") (literal \"/dev/null\"))\n(allow file-read* file-write* (subpath \"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r\"))\n(allow file-write* (literal \"/dev/null\"))\n","environment":{"PATH":"/usr/bin:/bin","LANG":"C","LC_ALL":"C","HOME":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/home","TMPDIR":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/tmp","XDG_CONFIG_HOME":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/config","XDG_CACHE_HOME":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/cache","XDG_DATA_HOME":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/data","OPENSSL_CONF":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/config/openssl.cnf","OPENSSL_CONF_INCLUDE":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/config","HYPERFRAMES_NO_TELEMETRY":"1","HYPERFRAMES_NO_AUTO_INSTALL":"1","HYPERFRAMES_NO_UPDATE_CHECK":"1"},"libraries":["/opt/homebrew/Cellar/node/25.9.0_2/bin/node","/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib","/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib","/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib","/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libssl.3.dylib","/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib","/opt/homebrew/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib","/opt/homebrew/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib","/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib","/opt/homebrew/Cellar/sqlite/3.53.2/lib/libsqlite3.3.53.2.dylib","/opt/homebrew/Cellar/libngtcp2/1.23.0/lib/libngtcp2.16.dylib","/opt/homebrew/Cellar/libnghttp3/1.16.0/lib/libnghttp3.9.7.0.dylib","/opt/homebrew/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib","/opt/homebrew/Cellar/nbytes/0.1.4/lib/libnbytes.dylib","/opt/homebrew/Cellar/merve/1.2.2_1/lib/libmerve.1.2.2.dylib","/opt/homebrew/Cellar/simdutf/9.0.0/lib/libsimdutf.34.0.0.dylib","/opt/homebrew/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib","/opt/homebrew/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib","/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib","/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib","/opt/homebrew/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib","/opt/homebrew/Cellar/simdjson/4.6.4/lib/libsimdjson.33.0.0.dylib","/opt/homebrew/Cellar/ada-url/3.4.4/lib/libada.3.4.4.dylib","/opt/homebrew/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib","/opt/homebrew/Cellar/node/25.9.0_2/lib/libnode.141.dylib"],"verified":true,"probe":{"readDenied":true,"writeDenied":true,"networkDenied":true,"forkDenied":true,"detachedSetsidDenied":true,"home":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/home","cwd":"/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-hyperframes-isolated-CqgQ8r/work","parentSecretsAbsent":true,"connections":0,"durationMs":103}},"child":{"status":1,"signal":null,"stdout":"","stderr":"\n✗  Invalid browser-timeout\n\n   Got \"1\" seconds, which is below the 120-second execution floor. Puppeteer treats 0 as 'no timeout' — pass a value of at least 120 seconds.\n\n","durationMs":665,"pid":64410,"remainingOwnedProcesses":0}}
+✔ 真实Node检查保留非零退出码，不掩盖检查失败 (99.504917ms)
+✔ 仅Windows固定pnpm入口走cmd，其他平台与Node检查保持直接启动 (1.260667ms)
+✔ 固定pnpm入口拒绝空格、引号和CMD展开/连接参数，不形成注入命令 (0.240458ms)
+﹣ Windows真实cmd入口保留固定pnpm参数与退出码 (0.043292ms) # SKIP
+ℹ tests 15
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 3078.384459
+验证：pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  20:51:56
+   Duration  424ms (transform 164ms, setup 0ms, import 286ms, tests 5ms, environment 0ms)
+
+验证：pnpm --dir ai-worker exec vitest run src/execution/worker-timeout-policy.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  20:51:57
+   Duration  1.28s (transform 649ms, setup 0ms, import 1.21s, tests 27ms, environment 0ms)
+
+验证：pnpm --dir backend exec vitest run src/modules/execution/new-execution-budget.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/execution-call-ledger.service.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  37 passed (37)
+   Start at  20:52:00
+   Duration  11.27s (transform 4.09s, setup 0ms, import 6.84s, tests 15.17s, environment 0ms)
+
+验证：pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-dump-zone.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/draft-workbench/content-direction-actions.test.tsx src/features/draft-workbench/script-review-gate.test.tsx src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+
+ Test Files  6 passed (6)
+      Tests  68 passed (68)
+   Start at  20:52:12
+   Duration  2.34s (transform 2.60s, setup 1.35s, import 4.60s, tests 724ms, environment 4.07s)
+
+验证：pnpm --dir mcp-server test tests/cli.test.ts --testTimeout=120000 --hookTimeout=120000
+
+> @creatoros/mcp-server@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server
+> vitest run tests/cli.test.ts --testTimeout=120000 --hookTimeout=120000
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server
+
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  20:52:16
+   Duration  1.40s (transform 456ms, setup 0ms, import 835ms, tests 437ms, environment 0ms)
+
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/windows-closure-rat/render-probe-policy.test.mjs frontend/scripts/desktop/timeout-policy.node.mjs
+✔ 短预算归一，更长不缩短，非法值明确拒绝 (0.846709ms)
+✔ 绝对deadline向内传播，最后剩余不能被floor重新延长 (0.244458ms)
+✔ 页面配置端口收到动作与导航两分钟策略 (0.74875ms)
+✔ 两个build-only消费者统一跳过外部依赖探针，正常验证传入两分钟 (0.913666ms)
+✔ 完整渲染探针无外层短帽子，已更长内层保留且拒绝非法配置 (154.984792ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 279.06025
