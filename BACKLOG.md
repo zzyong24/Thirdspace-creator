@@ -6,7 +6,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1440|GitHub项目首页视觉与产品介绍更新|🔨|—|—|[SPEC](docs/features/t1440-github-product-readme.md)|参考OpenMausBot，以真实截图、视频和清楚的产品入口重做README，保留开发指引及商业授权边界。|
+|T-1440|GitHub项目首页视觉与产品介绍更新|✅|—|—|[SPEC](docs/features/t1440-github-product-readme.md)|参考OpenMausBot，以真实截图、视频和清楚的产品入口重做README，保留开发指引及商业授权边界。|
 |T-1439|官网权益说明与产品演示视频|✅|—|—|[SPEC](docs/features/t1439-website-rights-video.md)|两站讲清分销和源码共创，在官网嵌入真实视频并完善购买引导。|
 |T-1438|释放编译产物与闲置worktree占用|✅|—|—|[SPEC](docs/features/t1438-storage-cleanup.md)|用户授权清理编译与worktree，保留源码、未提交内容及最新双端安装包。|
 |T-1437|飞书模型折扣与折后价更新|✅|—|—|[SPEC](docs/features/t1437-model-discount-price-docs.md)|核实当前型号与计价，按用户确认折扣补齐两篇文档。|

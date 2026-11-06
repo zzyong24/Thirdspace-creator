@@ -1,0 +1,170 @@
+[
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "articleWidth": 838,
+    "images": [
+      {
+        "alt": "CreatorOS 应用图标",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/readme/creatoros-icon.png",
+        "loaded": true
+      },
+      {
+        "alt": "平台：macOS 与 Windows",
+        "src": "https://camo.githubusercontent.com/0f62588ed658eb01f237069e4ce36b9a37877274ad0a75a15b49d76127c6a838/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6d61634f535f2543322542375f57696e646f77732d3644334245463f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "数据：本地优先",
+        "src": "https://camo.githubusercontent.com/6d97b86fe458328d9b484cdf32d54110d07416ffc044e54c7579ac91667ef230/68747470733a2f2f696d672e736869656c64732e696f2f62616467652fe695b0e68dae2de69cace59cb0e4bc98e585882d3644334245463f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "技术：Tauri 与 TypeScript",
+        "src": "https://camo.githubusercontent.com/afffe544778a47b125bfd82f79336ac343a76a769f4dfa88f8396fb07ffd5d87/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f54617572695f2543322542375f547970655363726970742d3331373843363f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "许可：商业授权",
+        "src": "https://camo.githubusercontent.com/a2aca8dbb52b0fbfcacef256dcfb468780cbe1ad178e56a5a0cc4b746b1976d1/68747470733a2f2f696d672e736869656c64732e696f2f62616467652fe8aeb8e58faf2de59586e4b89ae68e88e69d832d3634373438423f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 多平台创作者总览：真实账号、已采集作品与运营数据",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-creator-overview.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 产品视频片段：同一主题延展为口播脚本、公众号文章、小红书图文与视频短片；点击观看完整演示",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/readme/creatoros-demo.gif",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 产品视频片段：同一主题延展为口播脚本、公众号文章、小红书图文与视频短片；点击观看完整演示",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/readme/creatoros-demo.gif",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS AI 账号定位对话真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-positioning.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 内容雷达与对标内容筛选真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-content-radar.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 脚本、文章、图文和视频工作面真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-script-workbench.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 封面与小红书图文创作画布真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-creative-canvas.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 多平台发布日历真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-publishing-calendar.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 内容运营分析与作品复盘真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-operations-analysis.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 每日提交热力图与近 30 天提交趋势",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/commit-activity.svg",
+        "loaded": true
+      }
+    ],
+    "videoHref": "https://creatoros.aitongban.cloud/#demo",
+    "license": true
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "articleWidth": 324,
+    "images": [
+      {
+        "alt": "CreatorOS 应用图标",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/readme/creatoros-icon.png",
+        "loaded": true
+      },
+      {
+        "alt": "平台：macOS 与 Windows",
+        "src": "https://camo.githubusercontent.com/0f62588ed658eb01f237069e4ce36b9a37877274ad0a75a15b49d76127c6a838/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6d61634f535f2543322542375f57696e646f77732d3644334245463f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "数据：本地优先",
+        "src": "https://camo.githubusercontent.com/6d97b86fe458328d9b484cdf32d54110d07416ffc044e54c7579ac91667ef230/68747470733a2f2f696d672e736869656c64732e696f2f62616467652fe695b0e68dae2de69cace59cb0e4bc98e585882d3644334245463f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "技术：Tauri 与 TypeScript",
+        "src": "https://camo.githubusercontent.com/afffe544778a47b125bfd82f79336ac343a76a769f4dfa88f8396fb07ffd5d87/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f54617572695f2543322542375f547970655363726970742d3331373843363f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "许可：商业授权",
+        "src": "https://camo.githubusercontent.com/a2aca8dbb52b0fbfcacef256dcfb468780cbe1ad178e56a5a0cc4b746b1976d1/68747470733a2f2f696d672e736869656c64732e696f2f62616467652fe8aeb8e58faf2de59586e4b89ae68e88e69d832d3634373438423f7374796c653d666c61742d737175617265",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 多平台创作者总览：真实账号、已采集作品与运营数据",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-creator-overview.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 产品视频片段：同一主题延展为口播脚本、公众号文章、小红书图文与视频短片；点击观看完整演示",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/readme/creatoros-demo.gif",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 产品视频片段：同一主题延展为口播脚本、公众号文章、小红书图文与视频短片；点击观看完整演示",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/readme/creatoros-demo.gif",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS AI 账号定位对话真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-positioning.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 内容雷达与对标内容筛选真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-content-radar.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 脚本、文章、图文和视频工作面真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-script-workbench.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 封面与小红书图文创作画布真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-creative-canvas.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 多平台发布日历真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-publishing-calendar.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 内容运营分析与作品复盘真实截图",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/website/shots/real/creatoros-operations-analysis.webp",
+        "loaded": true
+      },
+      {
+        "alt": "CreatorOS 每日提交热力图与近 30 天提交趋势",
+        "src": "https://github.com/zzyong24/Thirdspace-creator/raw/main/docs/assets/commit-activity.svg",
+        "loaded": true
+      }
+    ],
+    "videoHref": "https://creatoros.aitongban.cloud/#demo",
+    "license": true
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "nameWithOwner": "zzyong24/Thirdspace-creator",
+  "description": "面向中文创作者的 AI 内容工作台：账号定位、选题、脚本、图文、文章、视频制作、多平台发布管理与数据复盘。macOS / Windows，本地数据优先。",
+  "homepage": "https://creatoros.aitongban.cloud/",
+  "topics": [
+    "ai",
+    "content-creation",
+    "creator-tools",
+    "desktop-app",
+    "tauri",
+    "typescript",
+    "local-first",
+    "video-production",
+    "xiaohongshu",
+    "wechat"
+  ]
+}

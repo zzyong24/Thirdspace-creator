@@ -1,0 +1,27 @@
+{
+  "localLinks": "pass",
+  "commands": "来自当前package.json",
+  "screenshots": [
+    "website/shots/real/creatoros-content-radar.webp",
+    "website/shots/real/creatoros-creative-canvas.webp",
+    "website/shots/real/creatoros-creator-overview.webp",
+    "website/shots/real/creatoros-operations-analysis.webp",
+    "website/shots/real/creatoros-positioning.webp",
+    "website/shots/real/creatoros-publishing-calendar.webp",
+    "website/shots/real/creatoros-script-workbench.webp"
+  ],
+  "license": "既有专有许可；599元永久版权益",
+  "media": [
+    {
+      "path": "docs/assets/readme/creatoros-icon.png",
+      "bytes": 63557,
+      "sha256": "76617eaab68edb398d192953b2a4f08a60d539bf82c4e9363cff79931a0f79cd"
+    },
+    {
+      "path": "docs/assets/readme/creatoros-demo.gif",
+      "bytes": 3432620,
+      "sha256": "ef54efe5fc5c59c13c7ab78b03e2925a5832e61c3c4824a5befeca33ec410538"
+    }
+  ],
+  "gif": "原视频35–44秒，800×450，10fps，无声；ffmpeg全解码通过"
+}
