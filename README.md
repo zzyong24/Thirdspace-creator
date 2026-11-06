@@ -1,355 +1,179 @@
 <a id="readme-top"></a>
 
-<!--
-*** README 基于 othneildrew/Best-README-Template 结构改写。
-*** 仓库为私有,GitHub 动态徽章(stars/forks/…)取不到 → 用静态徽章。
-*** 徽章用 reference-style 链接,定义集中在文件末尾。
--->
-
-<!-- PROJECT SHIELDS(静态,私有仓也能渲染) -->
-[![Status][status-shield]][status-url]
-[![Platform][platform-shield]][platform-url]
-[![Node][node-shield]][node-url]
-[![pnpm][pnpm-shield]][pnpm-url]
-[![License][license-shield]][license-url]
-
-<!-- PROJECT LOGO / HEADER -->
-<br />
 <div align="center">
-  <h1 align="center">CreatorOS</h1>
 
-  <p align="center">
-    一个<strong>编导式</strong>的自媒体内容生产系统 —— 不是项目管理工具,而是一个<strong>越用越准的「编导智能体」</strong>。
-    <br />
-    它替创作者出选题、起草文案与结构、管素材;发布后采集真实表现回流校准,让下一条内容更准。
-    <br />
-    <br />
-    <a href="docs/产品定位.md"><strong>产品定位(宪法) »</strong></a>
-    &middot;
-    <a href="#功能特性">功能特性</a>
-    &middot;
-    <a href="#快速开始">快速开始</a>
-    &middot;
-    <a href="BACKLOG.md">任务看板</a>
-    &middot;
-    <a href="docs/engineering-notes/pitfalls.md">工程坑册</a>
-  </p>
+<img src="docs/assets/readme/creatoros-icon.png" alt="CreatorOS 应用图标" width="88" height="88">
+
+# CreatorOS
+
+### 把灵感做成作品，把经验留给下一次创作。
+
+**面向中文创作者的 AI 内容工作台 · 从账号定位，到创作、发布管理与数据复盘**
+
+[产品官网](https://creatoros.aitongban.cloud/) · [观看产品演示](https://creatoros.aitongban.cloud/#demo) · [购买与下载](https://buy.aitongban.cloud/creatoros/) · [使用指南](https://my.feishu.cn/wiki/QY1owmFUjit7VgkpmQ1chGPCnTR)
+
+<p>
+<img src="https://img.shields.io/badge/macOS_%C2%B7_Windows-6D3BEF?style=flat-square" alt="平台：macOS 与 Windows">
+<img src="https://img.shields.io/badge/数据-本地优先-6D3BEF?style=flat-square" alt="数据：本地优先">
+<a href="#开发与技术"><img src="https://img.shields.io/badge/Tauri_%C2%B7_TypeScript-3178C6?style=flat-square" alt="技术：Tauri 与 TypeScript"></a>
+<a href="#授权与共创"><img src="https://img.shields.io/badge/许可-商业授权-64748B?style=flat-square" alt="许可：商业授权"></a>
+</p>
+
+<br>
+
+<a href="https://creatoros.aitongban.cloud/#screenshots">
+  <img src="website/shots/real/creatoros-creator-overview.webp" alt="CreatorOS 多平台创作者总览：真实账号、已采集作品与运营数据" width="960">
+</a>
+
+<sub>真实软件界面与账号数据 · macOS / Windows 桌面端</sub>
+
 </div>
 
-<!-- COMMIT ACTIVITY(私有仓第三方嵌入取不到数据,CI 每日自动重生成:.github/workflows/commit-activity.yml) -->
+---
+
+## 先看一段演示
+
+选题、文稿、图片和发布记录，终于能在同一个项目里接着往下做。
+
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/commit-activity-dark.svg">
-    <img alt="提交活动:每日提交热力图 + 近 30 天每日提交柱状图" src="docs/assets/commit-activity.svg" width="900">
-  </picture>
+<a href="https://creatoros.aitongban.cloud/#demo">
+  <img src="docs/assets/readme/creatoros-demo.gif" alt="CreatorOS 产品视频片段：同一主题延展为口播脚本、公众号文章、小红书图文与视频短片；点击观看完整演示" width="800">
+</a>
+
+**[▶ 观看 87 秒完整有声演示](https://creatoros.aitongban.cloud/#demo)** · [直接打开 MP4](https://creatoros.aitongban.cloud/media/creatoros-product-demo-20261105.mp4)
+
+<sub>上方为原产品视频的 9 秒无声片段；点击即可进入完整播放器。</sub>
 </div>
 
-<!-- TABLE OF CONTENTS -->
+## 创作不用每次从零开始
+
+一个想法写在聊天里，一份资料留在文档里，封面在另一个工具里，发布后又换一张表格看数据。下一次创作，还得重新解释自己是谁、要写什么。
+
+CreatorOS 把这些过程收进同一个本机工作台，让定位、资料、稿件、素材与真实作品表现可以持续积累。
+
+| 你想完成的事 | CreatorOS 怎么帮你 |
+| --- | --- |
+| **知道自己该做什么** | 梳理账号定位，结合受众问题、知识资料与热点补充选题。 |
+| **把想法写成内容** | 与 AI 编导讨论目标、依据和结构，在同一项目中继续脚本、文章、图文和视频创作。 |
+| **把资料真正用起来** | 管理知识库与图片、视频等素材，复用项目已有资料，减少重复搬运。 |
+| **让下一条有据可依** | 管理发布安排与记录，查看已采集作品表现，把复盘带回下一轮创作。 |
+
+> **定位 → 内容雷达 → 选题 → 项目创作 → 发布管理 → 运营复盘 → 下一轮创作**
+>
+> AI 提供候选与建议，关键产物由你确认采纳。项目与素材数据本地优先；使用云端模型或连接内容平台时，仍需相应的网络服务。
+
+## 看看真实工作台
+
+<table>
+<tr>
+<td width="50%" valign="top">
+<h3>01 · 定位与选题</h3>
+<p>从你的经验、优势和目标出发，整理账号定位。不用先登录抖音，也能开始讨论创作方向。</p>
+<a href="website/shots/real/creatoros-positioning.webp"><img src="website/shots/real/creatoros-positioning.webp" alt="CreatorOS AI 账号定位对话真实截图" width="460"></a>
+</td>
+<td width="50%" valign="top">
+<h3>02 · 内容雷达</h3>
+<p>管理内容来源，查看真实作品与互动数据，把值得继续研究的内容升级为项目。</p>
+<a href="website/shots/real/creatoros-content-radar.webp"><img src="website/shots/real/creatoros-content-radar.webp" alt="CreatorOS 内容雷达与对标内容筛选真实截图" width="460"></a>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<h3>03 · AI 编导与项目创作</h3>
+<p>围绕同一项目的目标、资料和素材，继续脚本、文章、图文、视频制作与复盘。</p>
+<a href="website/shots/real/creatoros-script-workbench.webp"><img src="website/shots/real/creatoros-script-workbench.webp" alt="CreatorOS 脚本、文章、图文和视频工作面真实截图" width="460"></a>
+</td>
+<td width="50%" valign="top">
+<h3>04 · 封面与图文画布</h3>
+<p>从真实案例和模板出发，准备封面与小红书图文，把表达和视觉放到一起推敲。</p>
+<a href="website/shots/real/creatoros-creative-canvas.webp"><img src="website/shots/real/creatoros-creative-canvas.webp" alt="CreatorOS 封面与小红书图文创作画布真实截图" width="460"></a>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<h3>05 · 多平台发布管理</h3>
+<p>用日历组织创作安排、发布记录和平台表现，减少多账号运营时的遗漏。</p>
+<a href="website/shots/real/creatoros-publishing-calendar.webp"><img src="website/shots/real/creatoros-publishing-calendar.webp" alt="CreatorOS 多平台发布日历真实截图" width="460"></a>
+</td>
+<td width="50%" valign="top">
+<h3>06 · 运营分析与复盘</h3>
+<p>按账号与周期查看作品表现，结合定位与稿件生成分析，找下一条值得验证的方向。</p>
+<a href="website/shots/real/creatoros-operations-analysis.webp"><img src="website/shots/real/creatoros-operations-analysis.webp" alt="CreatorOS 内容运营分析与作品复盘真实截图" width="460"></a>
+</td>
+</tr>
+</table>
+
+[查看全部 14 张真实界面 →](https://creatoros.aitongban.cloud/#screenshots)
+
+## 多种内容，同一条创作链
+
+- **短视频与口播**：选题、脚本、素材和视频制作在项目内衔接。
+- **小红书图文**：组织正文、逐页配图与封面，在画布中继续制作。
+- **公众号文章**：处理长文、配图与排版，复用项目资料。
+- **多账号运营**：面向抖音、小红书、视频号、快手、B站、YouTube 与公众号组织内容和发布管理。
+- **模型按需选择**：按用途配置官方模型、自配模型或本地 Codex；具体可用能力以当前设置为准。
+
+各平台的发布、采集能力以客户端中的账号连接状态为准；项目数据和平台采集数据按各自口径展示。
+
+## 开始使用
+
+| | 入口与说明 |
+| --- | --- |
+| **了解产品** | [官网与产品演示](https://creatoros.aitongban.cloud/) |
+| **购买、下载与激活** | [官方购买页](https://buy.aitongban.cloud/creatoros/) · 选择套餐，付款后按页面指引兑换正式激活码 |
+| **安装与日常使用** | [使用指南](https://my.feishu.cn/wiki/QY1owmFUjit7VgkpmQ1chGPCnTR) · 系统要求和当前安装包以购买页及指南为准 |
+| **查看版本变化** | [更新日志](https://creatoros.aitongban.cloud/#changelog) |
+| **咨询与反馈** | [联系客服](https://buy.aitongban.cloud/creatoros/#support) |
+
+### 第一次打开，可以这样开始
+
+1. **确定方向**：在定位中心描述你的经验、优势和创作目标，确认适合自己的定位。
+2. **推进一条内容**：挑选选题，建立项目，加入资料，与 AI 编导一起完成创作。
+3. **留下真实结果**：管理发布记录，查看作品表现，再把经验用于下一条。
+
+## 授权与共创
+
+CreatorOS 使用[专有软件许可](LICENSE)。**源码可查看，不等于开放任意复制、分发或商业使用授权。**
+
+**以下两项附加权益仅限购买 599 元永久版，月卡不包含：**
+
+| 权益 | 范围与结算 |
+| --- | --- |
+| **分销合作** | 可销售 CreatorOS，双方五五分成。以 599 元产品为例，双方各分 **299.50 元**。 |
+| **核心客户端源码共创** | 共享 GitHub 核心客户端代码仓库，可基于源码二次开发，并自行定价销售二开产品；**不包含授权与签名部分**。当前每售出一份，向原作者按 **599 元 × 50% = 299.50 元**结算，不按二开售价另取 50%。后续基准价调整另行说明。 |
+
+[了解购买权益与交付方式 →](https://buy.aitongban.cloud/creatoros/#rights)
+
+第三方开源组件保留各自许可证赋予的权利，见 [LICENSE](LICENSE) 与[第三方组件说明](docs/licenses/README.md)。
+
+## 开发与技术
+
+产品采用 **Tauri · Next.js · TypeScript · PGlite**，以本地桌面应用承载创作工作流。
+
+| 想了解什么 | 从这里开始 |
+| --- | --- |
+| 本地开发、目录结构与常用命令 | [开发指引](docs/development/README.md) |
+| 项目协作规则 | [AGENTS.md](AGENTS.md) |
+| 当前任务与进度 | [任务看板](BACKLOG.md) |
+| 工程实践与问题记录 | [工程坑册](docs/engineering-notes/pitfalls.md) |
+
 <details>
-  <summary>目录</summary>
-  <ol>
-    <li>
-      <a href="#关于项目">关于项目</a>
-      <ul>
-        <li><a href="#核心价值飞轮复利">核心价值:飞轮复利</a></li>
-        <li><a href="#不可违背的原则">不可违背的原则</a></li>
-        <li><a href="#技术栈">技术栈</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#功能特性">功能特性</a>
-      <ul>
-        <li><a href="#界面导航九大模块">界面导航(九大模块)</a></li>
-        <li><a href="#关键能力">关键能力</a></li>
-      </ul>
-    </li>
-    <li><a href="#核心设计">核心设计</a></li>
-    <li>
-      <a href="#快速开始">快速开始</a>
-      <ul>
-        <li><a href="#前置依赖">前置依赖</a></li>
-        <li><a href="#安装">安装</a></li>
-      </ul>
-    </li>
-    <li><a href="#使用">使用</a></li>
-    <li><a href="#架构">架构</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#贡献">贡献</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#致谢">致谢</a></li>
-  </ol>
+<summary><strong>开发活动</strong> · 查看仓库提交统计</summary>
+<br>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/commit-activity-dark.svg">
+  <img src="docs/assets/commit-activity.svg" alt="CreatorOS 每日提交热力图与近 30 天提交趋势" width="900">
+</picture>
 </details>
 
-## 关于项目
+---
 
-**CreatorOS** 是一款面向中文自媒体创作者(观点视频 / 口播 / 短视频为主)的**本地桌面应用**。它把内容生产从"靠感觉"变成"有方法":用一个上下文感知的**编导智能体**贯穿选题 → 起草 → 素材 → 发布 → 复盘,并在每次发布后用真实数据回流校准。
+<div align="center">
 
-目标用户是持续产出、在意数据、想把创作方法沉淀下来的个人或小团队。核心理念:产品是「编导」不是「表单填写机」——**能 AI 干的让 AI 干,人只审 / 改 / 删**。
+**CreatorOS · 让每一次创作，都成为下一次的起点。**
 
-生产流水线是**两阶段**的:
+[观看演示](https://creatoros.aitongban.cloud/#demo) · [查看套餐与购买](https://buy.aitongban.cloud/creatoros/) · [回到顶部](#readme-top)
 
-> **脚本(稿面:选题 / 脚本 / 素材 / 发布动作一体)→ 复盘(数据对照 / 经验沉淀)。**
+<sub>由月明水清深持续开发 · 图中为真实软件界面，演示素材来自官方产品视频。</sub>
 
-研究 / 策划 / 制作不再是独立阶段(职能由稿面的选题卡、弹药区承载);发布是稿面上的动作(盲预测 / 登记已发布)而非阶段。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-### 核心价值:飞轮复利
-
-护城河是**「越用越准」**:
-
-```
-盲预测 → 发布 → 采集真实表现 → 对照偏差 → 沉淀经验 → 回流让下一条更准
-```
-
-创作者的**真实已发布作品 + 播放 / 评论 + 创作链**被导入为历史项目(`source: imported`),成为飞轮的真实记忆与创作来源库,同时喂:校准复盘、选题(评论需求 / 爆款经验)、定位(数据反推)、知识库(可复用 Hook / 金句)、首页驾驶舱。**数据是别人拿不走的资产。**
-
-### 不可违背的原则
-
-1. **每个项目必须有 Brief。**
-2. **每个阶段必须有明确交付物,前一阶段产物自动流入下一阶段**(SEAM 接缝)。
-3. **AI 只产候选,人确认关键产物**(确认门:AI 不直接写领域实体)。
-4. **每轮 AI 输出被 Zod schema 约束**,防发散、跨模型稳定。
-5. **复盘必须反向沉淀经验**,回流到选题 / 定位 / 校准,而不只看数据。
-6. **多模态模型用户可配**(生图 / 生视频走 model-config,绝不写死某家)。
-
-### 技术栈
-
-[![Tauri][tauri-shield]][tauri-url]
-[![Next.js][next-shield]][next-url]
-[![React][react-shield]][react-url]
-[![TypeScript][ts-shield]][ts-url]
-[![PGlite][pglite-shield]][pglite-url]
-[![Playwright][playwright-shield]][playwright-url]
-[![Vitest][vitest-shield]][vitest-url]
-
-| 层 | 选型 | 说明 |
-|---|---|---|
-| 桌面壳 | **Tauri**(Rust core) | mac WKWebView / Win WebView2;退出即关 sidecar;`server.app`(LSUIElement)后台隐身 |
-| 应用 sidecar | **Next.js** standalone | `frontend` + `backend` + `ai-worker` 打进同一 Node 进程 |
-| 本地数据库 | **PGlite** | 单机、单写、落盘;除 LLM API 外全本地 |
-| 契约 | **ts-rest** + **Zod** | `contract/` 前后端单一真值,resources + operations |
-| AI 运行时 | **Vercel AI SDK** | 模型经 model-config 用户可配;全 `runStructuredNode` 结构化输出 |
-| 视频渲染 | **HyperFrames** + **GSAP** + **ffmpeg** | HTML+GSAP → headless Chromium 帧捕获 → ffmpeg 编码 |
-| 数据采集 | **Playwright** | `launchPersistentContext` 复用扫码登录态,抓抖音 |
-| 授权 / 防盗版 | **Ed25519** 机器绑定在线激活(Rust) | 授权终判在 Rust 壳;去单点化 + 反调试 + 灭靶点;裸 `node server.js` fail-closed |
-| 打包加固 | **javascript-obfuscator** + **bytenode** | L1 字符串加密(rc4 stringArray)→ L3 V8 字节码(`.jsc`);prompt/端点明文归零;X25519+AES-GCM 加密日志 |
-| CI / 发布 | **GitHub Actions** | macOS + Windows 双端 `tauri build` 出包 + updater 签名;verify 门禁(lint / typecheck / 全量单测);README 提交活动图每日重生成 |
-| 包管理 | **pnpm** workspace | `frontend` / `backend` / `contract` / `ai-worker` / `mcp-server` |
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## 功能特性
-
-### 界面导航(九大模块)
-
-| 模块 | 做什么 |
-|---|---|
-| 🏠 **首页** | 驾驶舱:总播放 / 点赞 / 粉丝 / 完播率概览、继续创作、待办、热门选题、数据趋势、创作建议 |
-| 🎯 **定位中心** | 账号定位(宪法级单一真值)+ 用数据反推 / 演进定位 |
-| 💡 **选题** | 选题池(candidate)+ 每日出题 + 黑马雷达 + 收藏夹跟拍;按预测分 / 契合度排序 |
-| 📁 **项目** | 两阶段项目(脚本稿面 / 复盘);历史作品导入为 `imported` 项目 |
-| 📚 **知识库** | 可复用 Hook / 金句 / 方法论沉淀 + 知识图谱可视化 |
-| 🗂️ **素材中心** | 本地素材库:图片 / 视频 / 音频 / 字幕;视频真首帧缩略 + 内联播放 + 真时长(ffprobe) |
-| 🚀 **发布中心** | 多平台发布物料(标题 / 简介 / 标签 / 封面)+ 发布登记 |
-| ⏰ **自动化** | 定时采集 / 每日出题等后台任务 |
-| ⚙️ **设置** | 账户 / 偏好 / 外观(主题) / 模型配置 / 存储 |
-
-### 关键能力
-
-- **编导 ChatBox** — 上下文感知的多轮对话:按当前页面 / 按钮注入对应 skill + 提示词 + 真实数据底座;AI 功能工具化、结果渲进对话、走采纳门。
-- **稿面工作台** — 立论点树、脚本起草(叙事纪律:真实场景开场 / 前因后果链 / 概念首次解释 / 素材不足不编)、素材弹药区、盲预测(immutable 日志)。
-- **视频生产** — HyperFrames 渲染:横版 16:9 / 竖版 9:16 双支持、口播人脸进框(不裁)、富动画(对比条 / 数字递增 / 进度式揭示 / 建立→推翻)、B-roll 素材匹配、双语字幕、成片产出框内联预览。
-- **抖音数据采集** — 复用扫码登录态,抓作品明细 / 评论 / 收藏夹跟拍 / 黑马雷达(搜索热度)。
-- **复盘 / 校准** — rubric 打分 + 盲预测对照偏差 + 经验(learning)沉淀回流。
-- **确认门执行层** — 脑手分离:AI 决策产候选(`awaiting_confirmation`)→ 人过确认门 → 落领域实体 / 入资产库。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## 核心设计
-
-- **确认门(HITL)** — AI 绝不直接写领域实体;所有关键产物走「候选 → 人采纳」。
-- **SEAM 接缝** — 前一阶段交付物自动流入下一阶段,不断线不串台。
-- **脑(决策)手(执行)分离** — 执行层任务在沙箱内跑(超时 + abort 贯通),产物收割后过确认门。
-- **结构化 AI** — 全部节点 `runStructuredNode` + Zod schema 约束输出,弱模型(如 MiniMax)也稳。
-- **飞轮回流** — 复盘经验有真实数据背书才自动晋级进生成,凭空 AI 推断留人工裁决。
-- **模型可配** — 文本 / 生图 / 生视频模型全走 model-config,用户自选,不写死。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## 快速开始
-
-在本机跑起来(开发或打包桌面版)。
-
-### 前置依赖
-
-- **Node.js** `>=25 <26`(见根 `package.json` engines)
-- **pnpm** `10.32.1`(`corepack enable` 即可)
-- **ffmpeg / ffprobe**(视频渲染 + 素材时长探针必需):`brew install ffmpeg`
-- **Rust + Tauri 工具链**(仅打包桌面版需要):见 [tauri.app](https://tauri.app) 环境准备
-- **Chromium**:首次视频渲染 / 采集时按需下载,或随打包内置(见 `desktop:package`)
-
-### 安装
-
-1. 克隆仓库
-   ```sh
-   git clone https://github.com/zzyong24/Thirdspace-creator.git
-   cd Thirdspace-creator
-   ```
-2. 安装依赖(pnpm workspace,一次装全包)
-   ```sh
-   corepack enable
-   pnpm install
-   ```
-3. 起开发服务器(浏览器访问 sidecar)
-   ```sh
-   pnpm -C frontend dev
-   ```
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## 使用
-
-```sh
-# 开发:Web sidecar(热更新)
-pnpm -C frontend dev
-
-# 桌面开发态(Tauri + sidecar,带真实 webview)
-pnpm -C frontend desktop:dev
-
-# 打包桌面版 → CreatorOS.app / .dmg(含混淆 + 内置 Chromium + updater 占位)
-pnpm -C frontend desktop:package
-#   产物:frontend/src-tauri/target/release/bundle/macos/CreatorOS.app
-
-# 测试 / 类型检查(各包)
-pnpm -C frontend test        # vitest
-pnpm -C frontend typecheck   # next typegen && tsc --noEmit
-pnpm -C backend  test
-pnpm -C ai-worker test
-
-# 数据库(开发)
-pnpm db:migrate              # 应用迁移
-pnpm db:reset                # 重置本地库
-```
-
-> ⚠️ **PGlite 单写**:同一时刻**只能有一个** CreatorOS 实例连数据库。别让 `dev server` 与打包 app 同时跑(它们连同一个库,并发会写坏 → 库被改名 `db.corrupt-<ms>`)。详见 [pitfalls.md](docs/engineering-notes/pitfalls.md)。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## 架构
-
-```
-Thirdspace-creator/                 pnpm workspace(monorepo)
-├── frontend/     Next.js 应用 + Tauri 桌面壳(src-tauri/)+ 打包脚本(scripts/desktop/)
-│                 · app/(creator)/  九大模块页面
-│                 · features/       稿面 / 素材 / 复盘 / copilot …
-│                 · server/         persistence-client(装配层,绑各领域 service)
-├── backend/      领域服务:projects / candidate / analytics / assets / execution /
-│                 ai-runtime(26+ AI runner)/ learnings / benchmark …
-├── contract/     ts-rest 契约(resources + operations),前后端单一真值
-├── ai-worker/    AI 提示词模板 / skill(script-draft / video-decisions …)
-├── mcp-server/   MCP 接入
-└── docs/         产品定位(宪法) · SPEC(superpowers/specs) · 工程坑册 · 研究归档
-```
-
-**运行时数据流:**
-
-```
-WebView ──HTTP──► sidecar(Next standalone)──进程内库调──► backend / ai-worker ──► PGlite 落盘
-                                                    └────────────► LLM API(唯一出网)
-```
-
-- **执行层**(脑手分离):`execution.tasks.create` 后 `void runExecutionTask(...)` 后台跑,HTTP 立即返回,UI 轮询;任一失败诚实终态,绝不卡 running。
-- **AI 决策**:四决策 / 多 runner 顺序编排,产候选 → `awaiting_confirmation` → 采纳落库。
-- **检索**:codegraph 本地索引(`.codegraph/`,11k+ nodes),`codegraph query / callers / impact`。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## Roadmap
-
-**已完成**
-
-- [x] 两阶段项目(脚本稿面 / 复盘)+ 确认门 + SEAM 接缝
-- [x] 编导对话化 ChatBox(上下文注入 skill + Zod 约束输出 + 采纳门)
-- [x] 数据底座:真实作品导入(`source: imported`)+ 抖音采集(作品 / 评论 / 收藏夹 / 黑马雷达)
-- [x] 选题:选题池 + 每日出题 + 黑马雷达 + 收藏夹跟拍 + 预测分 / 契合度排序
-- [x] 稿面:立论点树 + 脚本起草(叙事纪律)+ 素材弹药 + 盲预测
-- [x] 视频生产:HyperFrames 渲染 · 横 / 竖版 · 富动画 · 口播进框 · B-roll 匹配 · 成片预览
-- [x] 素材中心:视频真首帧缩略 + 内联播放 + 真时长探针(ffprobe)+ Range 流式
-- [x] 复盘 / 校准:rubric 打分 + 盲预测对照 + 经验沉淀
-- [x] 多模态模型用户可配(model-config)
-- [x] 桌面打包与双端分发:Tauri macOS / Windows CI 出包 + updater 签名 + 打包加固(字符串加密 / V8 字节码)
-- [x] 授权 / 防盗版:Ed25519 机器绑定在线激活 + Rust 授权链(去单点化 / 反调试)+ 加密日志
-- [x] 受控自主运行时:三种循环分治,agentic executor 护栏壳 + 三领域工具适配器(调研 / 抓取决策 / 素材整理)
-- [x] 逐字稿可配 ASR + 真实作品数据管线(导入 / auto-fill / 明细多字段)
-- [x] 定位中心:定位生成 + 数据反推演进
-- [x] 知识库 + 知识图谱可视化
-
-**进行中 / 规划**
-
-- [ ] 上线收口:安全加固余项 · 更新流人话化 · Windows 签名证书 · CDN 藏源站
-- [ ] 飞轮深化:盲预测深结合历史战绩画像 + 复盘偏差回流校准 · 爆款拆解要素回流
-- [ ] 编导智能体 skill 资产化:用户自定义 skill 三层体系 + 对话式 skill / 记忆进化(Pi 引擎)
-- [ ] 封面参考链路:最新发布作品封面 → 生图参考(img2img)
-- [ ] 多平台采集扩展(不止抖音)
-
-> 完整任务与实时进度见 [BACKLOG.md](BACKLOG.md)(单一执行真相);设计决策落 [docs/superpowers/specs/](docs/superpowers/specs/)。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## 贡献
-
-本仓遵循「**SPEC → 拆 Task 进 BACKLOG →(改架构的)过审 → 开工**」的流程铁律(详见 [CLAUDE.md](CLAUDE.md)):
-
-1. 从 `BACKLOG.md` 顶取任务,读它引用的 SPEC
-2. 开工把任务改 🔨,一次从 0 到 1 做完(**禁 P0/P1 分级、禁多阶段减法**)
-3. 改服务端 / skill 后**必须重启 + 真机复测**那条行为(单测过 ≠ live 生效,AI 行为尤甚)
-4. 完成改 ✅ 并提交;任务边界 checkpoint + `codegraph index --force` 重建索引
-5. 调研 / 踩坑归档:研究进 `docs/research/`,坑进 `docs/engineering-notes/pitfalls.md`
-
-检索代码优先 codegraph CLI(`codegraph query <sym> -j`),grep 只兜底字面量、注释、配置值。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## License
-
-暂未指定开源 License(**私有项目**)。如需开放,请在根目录补 `LICENSE` 文件并更新本节徽章。
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-## 致谢
-
-- [Best-README-Template](https://github.com/othneildrew/Best-README-Template) —— 本 README 的结构模板
-- [Tauri](https://tauri.app) · [Next.js](https://nextjs.org) · [PGlite](https://pglite.dev) · [ts-rest](https://ts-rest.com)
-- [HyperFrames](https://www.npmjs.com/package/hyperframes)(Apache-2.0,视频渲染引擎)· [GSAP](https://gsap.com)
-- [Playwright](https://playwright.dev) · [ffmpeg](https://ffmpeg.org) · [Vercel AI SDK](https://sdk.vercel.ai)
-- [javascript-obfuscator](https://github.com/javascript-obfuscator/javascript-obfuscator) · [bytenode](https://github.com/bytenode/bytenode)(打包加固)
-- [Shields.io](https://shields.io) · [Simple Icons](https://simpleicons.org)
-
-<p align="right">(<a href="#readme-top">回到顶部</a>)</p>
-
-<!-- MARKDOWN LINKS & IMAGES(静态徽章,私有仓也能渲染) -->
-[status-shield]: https://img.shields.io/badge/status-active-success.svg?style=for-the-badge
-[status-url]: BACKLOG.md
-[platform-shield]: https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows%20(Tauri)-black.svg?style=for-the-badge
-[platform-url]: https://tauri.app
-[node-shield]: https://img.shields.io/badge/node-%3E%3D25-339933.svg?style=for-the-badge&logo=nodedotjs&logoColor=white
-[node-url]: https://nodejs.org
-[pnpm-shield]: https://img.shields.io/badge/pnpm-10.32-F69220.svg?style=for-the-badge&logo=pnpm&logoColor=white
-[pnpm-url]: https://pnpm.io
-[license-shield]: https://img.shields.io/badge/license-proprietary-lightgrey.svg?style=for-the-badge
-[license-url]: #license
-[tauri-shield]: https://img.shields.io/badge/Tauri-24C8DB?style=for-the-badge&logo=tauri&logoColor=white
-[tauri-url]: https://tauri.app
-[next-shield]: https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[next-url]: https://nextjs.org
-[react-shield]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[react-url]: https://react.dev
-[ts-shield]: https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white
-[ts-url]: https://www.typescriptlang.org
-[pglite-shield]: https://img.shields.io/badge/PGlite-336791?style=for-the-badge&logo=postgresql&logoColor=white
-[pglite-url]: https://pglite.dev
-[playwright-shield]: https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white
-[playwright-url]: https://playwright.dev
-[vitest-shield]: https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white
-[vitest-url]: https://vitest.dev
+</div>

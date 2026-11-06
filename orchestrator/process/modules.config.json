@@ -21751,6 +21751,44 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1440": {
+      "task_id": "T-1440",
+      "archetype": [
+        "reference-config"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "AGENTS.md",
+        "README.md",
+        "docs/features/t1440-github-product-readme.md",
+        "website/buy/products/creatoros.json",
+        "package.json",
+        "frontend/package.json"
+      ],
+      "write_set": [
+        "README.md",
+        "docs/development/README.md",
+        "docs/assets/readme/**",
+        "docs/features/t1440-github-product-readme.md",
+        "docs/research/t1440-github-showcase.md",
+        "docs/verification/t1440/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/context/T-1440.md",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check"
+        ]
+      }
     }
   }
 }
