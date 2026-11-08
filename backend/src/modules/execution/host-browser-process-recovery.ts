@@ -3,14 +3,16 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {randomUUID} from 'node:crypto';
 import path from 'node:path';
-import {realpath} from 'node:fs/promises';
+import {realpath,readlink} from 'node:fs/promises';
 
-export interface HostProcessRecord {pid:number;ppid?:number;started:string;executable:string;command:string|null}
+export interface HostProcessRecord {pid:number;ppid?:number;started:string;executable:string;command:string|null;executablePath?:string}
 export interface HostProcessRecovery {
  createHostInstanceId():Promise<string>;
  isPreviousHostStopped(input:{hostInstanceId:string;authDir:string}):Promise<{stopped:boolean;reason:string}>;
 }
 const run=promisify(execFile);
+// Linux comm可能截断到15字节；截断的Next标题也必须补证，不能直接忽略。
+const nextHostTitle=/^next-server(?:\s+\(v[^)]*\)?)?$/i;
 // 同进程多次装配/HMR仍记得已发出的宿主身份，不能把尚未启动Chrome的活owner当旧租约。
 const identityRegistryKey=Symbol.for('creatoros.browser-host-identities.v1');
 const identityGlobals=globalThis as typeof globalThis & {[identityRegistryKey]?:Set<string>};
@@ -45,7 +47,23 @@ export async function readHostProcessSnapshot(platform:NodeJS.Platform=process.p
   // 两次快照之间消失的进程仍保留为命令行不可读；不能静默漏掉可能的宿主。
   rows.push({pid,ppid:Number(m[2]),started:m[3]!,executable:m[4]!,command:commands.get(pid)??null});
  }
- if(!rows.length)throw Error('process-snapshot-invalid');return rows;
+ if(!rows.length)throw Error('process-snapshot-invalid');
+ // Next覆写comm/args；只有OS核实的可执行文件路径才能排除其它网站。
+ // 无法读取时保留原标题，继续保守判断，不能把查询失败当作已停止。
+ const titled=rows.filter(row=>nextHostTitle.test(row.executable));
+ if(platform==='linux'){
+  await Promise.all(titled.map(async row=>{try{row.executablePath=await readlink(`/proc/${row.pid}/exe`);}catch{}}));
+ }else if(titled.length){
+  try{
+   const {stdout}=await run('/usr/sbin/lsof',['-a','-p',titled.map(row=>row.pid).join(','),'-d','txt','-Fn'],opts);
+   let row:HostProcessRecord|undefined;
+   for(const line of stdout.split('\n')){
+    if(/^p\d+$/.test(line))row=titled.find(candidate=>candidate.pid===Number(line.slice(1)));
+    else if(line.startsWith('n/')&&row&&!row.executablePath)row.executablePath=line.slice(1);
+   }
+  }catch{}
+ }
+ return rows;
 }
 const officialHost=(r:HostProcessRecord)=>/(?:^|[\\/])creatoros-server(?:\.exe)?$/i.test(r.executable);
 /** 随包CLI只经HTTP转发；完整exe、同一sidecar根的入口脚本、完整命令三项同时匹配。
@@ -93,7 +111,10 @@ function referencesScope(value:string,scope:string,platform:NodeJS.Platform):boo
  return false;
 }
 function possibleHost(r:HostProcessRecord,scope:string,platform:NodeJS.Platform):boolean{
- if(officialHost(r)||/^next-server(?:\s+\(v[^)]+\))?$/i.test(r.executable))return true;
+ if(officialHost(r))return true;
+ if(nextHostTitle.test(r.executable)){
+  return !r.executablePath||officialHost({...r,executable:r.executablePath})||referencesScope(r.executablePath,scope,platform);
+ }
  if(!/(?:^|[\\/])(?:node|bun|deno)(?:\.exe)?$/i.test(r.executable))return false;
  // 安装版只从受控runtime启动。Next start-server.js在业务初始化前已将标题设为
  // next-server；不能让其它项目的任意Node工具变成整机全局锁。范围内未知载入选项仍挡。

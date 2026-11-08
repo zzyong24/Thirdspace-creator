@@ -8,7 +8,7 @@ import {projectPreparationGenerationTargetSchema,workerReservationSchema,workerS
 import {createDurableGenerationModel} from "./durable-generation-model";
 import {modelFor} from "../runtime/provider-factory";
 import {runWithEffectiveSkillSnapshot,getEffectiveTemplate} from "../prompt/effective-skill-runtime";
-import {bindPrompt} from "../prompt/template";
+import {bindPrompt,PromptBindError} from "../prompt/template";
 import {runStructuredNode} from "../nodes/structured-node";
 import {runScriptNode} from "../nodes/script-node";
 import {intelligenceTopicDecomposeSchema,normalizeIntelligenceTopicDecomposeOutput} from "../prompt/templates/intelligence-topic-decompose";
@@ -47,7 +47,17 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
  // 本地模型适配器初始化失败尚未预留或启动供应商调用，不能记成结果未知。
  let model:ReturnType<typeof createDurableGenerationModel>;
  try { model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,allowUnconfirmedModelRetry:input.facets.continuousRecovery==="true",ports:{
-  async reserve(request){const receipt=workerReservationSchema.parse(await call("reserveGenerationCall",JSON.parse(JSON.stringify(request)),signal));lastCallId=receipt.callId;return receipt;},
+  async reserve(request){
+   let raw:unknown;
+   try{raw=await call("reserveGenerationCall",JSON.parse(JSON.stringify(request)),signal);}
+   catch(error){
+    signal.throwIfAborted();
+    // 宿主已明确拒绝预留，供应商调用尚未启动；断连/超时仍保留未知状态。
+    if(error instanceof Error&&error.message==='HOST_PORT_REJECTED')throw new GenerationFailure('failed','MODEL_RESERVATION_REJECTED');
+    throw error;
+   }
+   const receipt=workerReservationSchema.parse(raw);lastCallId=receipt.callId;return receipt;
+  },
   async start(callId){const receipt=workerStartReceiptSchema.parse(await call("startCall",{callId},signal));if(receipt.callId!==callId)throw new Error("INTELLIGENCE_CALL_MISMATCH");},
   async settle(callId,settlement){await call("settleGenerationCall",{callId,...settlement});},
  }}); } catch {
@@ -69,15 +79,14 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   if(input.facets.mode!=="topic_preview")throw new Error("INTELLIGENCE_MODE_INVALID");
   const parsed=z.union([projectPreparationGenerationTargetSchema,topicTarget]).parse(target);
   const source='ownerType' in parsed?{...parsed,item:{title:parsed.source.title,authorName:parsed.source.authorName,platform:'',canonicalUrl:parsed.source.url??''},reusableDecomposition:null,reusableCandidate:null}:parsed;
+  // 旧策略任务回放仍用原非空参数，避免已结算请求在同一操作键下改变摘要。
+  const legacyPositioning=source.positioning&&typeof source.positioning==='object'?source.positioning as {oneLiner?:string;keywords?:string[]}:null;
+  const priorPositioning=[legacyPositioning?.oneLiner,legacyPositioning?.keywords?.length?`关键词：${legacyPositioning.keywords.join('、')}`:''].filter(Boolean).join('\n');
+  const author=source.item.authorName??source.item.platform;
+  const facets={positioning:source.generationMode!=='rewrite_only'&&priorPositioning.trim()?priorPositioning:formatPositioning(source.positioning),sourceTitle:source.item.title?.trim()?source.item.title:'未提供来源标题',sourceAuthor:author?.trim()?author:'未提供来源作者',sourceUrl:source.item.canonicalUrl.trim()?source.item.canonicalUrl:'未提供来源链接',transcript:source.transcript.text};
   if(source.generationMode==="rewrite_only"){
    const template=getEffectiveTemplate("intelligence.topic-adapted-draft");
-   const {system,prompt}=bindPrompt(template,{
-    positioning:formatPositioning(source.positioning),
-    sourceTitle:source.item.title??"",
-    sourceAuthor:source.item.authorName??source.item.platform,
-    sourceUrl:source.item.canonicalUrl,
-    transcript:source.transcript.text,
-   });
+   const {system,prompt}=bindPrompt(template,facets);
    // 这条主路径只发起一次普通文本调用；不使用 JSON/schema，也不为缺标题或段落字段重跑。
    const result=await generateText({model,system,prompt,maxOutputTokens:input.maxOutputTokens,maxRetries:0,abortSignal:AbortSignal.any([signal,AbortSignal.timeout(180000)])});
    const adaptedDraft=result.text.trim();
@@ -87,8 +96,6 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   }
   const continuous=input.facets.continuousRecovery==="true";
   const recovery=continuous?{formatRepairLimit:null}:{};
-  const legacyPositioning=source.positioning&&typeof source.positioning==="object"?source.positioning as {oneLiner?:string;keywords?:string[]}:null;
-  const facets={positioning:[legacyPositioning?.oneLiner,legacyPositioning?.keywords?.length?`关键词：${legacyPositioning.keywords.join("、")}`:""].filter(Boolean).join("\n"),sourceTitle:source.item.title??"",sourceAuthor:source.item.authorName??source.item.platform,sourceUrl:source.item.canonicalUrl,transcript:source.transcript.text};
   const decomposition=source.reusableDecomposition??parseGeneratedOutput(intelligenceTopicDecomposeSchema,(await runStructuredNode({model,...recovery,template:getEffectiveTemplate("intelligence.topic-decompose"),normalizeObject:normalizeIntelligenceTopicDecomposeOutput,facets,maxRetries:0,maxOutputTokens:3072,signal})).object);
   // 可复用阶段没有新模型调用，其原 checkpoint 已由业务服务核验，无须伪造回执。
   if(!source.reusableDecomposition)await save({kind:"checkpoint",stage:"decomposition",value:decomposition});
@@ -110,6 +117,7 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   signal.throwIfAborted();
   const knownFailure=findGenerationFailure(error);
   if(knownFailure)throw knownFailure;
+  if(error instanceof PromptBindError)throw new GenerationFailure('failed','INTELLIGENCE_INPUT_INVALID');
   if(findStructuredOutputError(error))throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
   // HTTP明确拒绝保留配置/限流分类；网络和回执丢失不能当作未提交重试。
   throw generationFailure(error,false);

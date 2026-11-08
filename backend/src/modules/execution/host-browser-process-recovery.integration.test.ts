@@ -3,7 +3,22 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createRequire} from 'node:module';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
 import {createDesktopHostProcessRecovery,readHostProcessSnapshot,type HostProcessRecord} from './host-browser-process-recovery';
+
+it.skipIf(!['darwin','linux'].includes(process.platform))('T1444 真实OS核对被Next标题覆盖的其它Node网站，不将其当产品宿主',async()=>{
+ const child=spawn(process.execPath,['-e',"process.title='next-server (v16.2.9)';process.send('ready');setInterval(()=>{},1000)"],{stdio:['ignore','ignore','ignore','ipc']});
+ try{
+  await once(child,'message');
+  const row=(await readHostProcessSnapshot()).find(row=>row.pid===child.pid);
+  expect(row?.executable).toMatch(/^next-server/);
+  expect(row?.executablePath).toBeTruthy();
+  const self:HostProcessRecord={pid:2147480000,started:'isolated',executable:'/isolated/creatoros-server',command:'isolated'};
+  const recovery=createDesktopHostProcessRecovery({pid:self.pid,desktop:true,snapshot:async()=>[self,row!]});
+  expect(await recovery.isPreviousHostStopped({hostInstanceId:'stopped-old-host',authDir:'/tmp/t1444-unused-profile'})).toMatchObject({stopped:true});
+ }finally{const exited=once(child,'exit');child.kill();await exited;}
+},120000);
 
 it.skipIf(process.platform!=='darwin')('真实临时Chromium完整档案参数可识别，正常关闭后该档案不再占用（宿主列表隔离）',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'creatoros-t985-profile-'));

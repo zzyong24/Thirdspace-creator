@@ -14,9 +14,28 @@ async function run(context:unknown=input(),credential:unknown=spec,rejectPort?:s
  try{worker.receive({version:1,type:"run",requestId:"r",execution:{executionTaskId:"e",attempt:1,fenceToken:"f"},deadlineAt:null});await vi.waitFor(()=>expect(messages.some(m=>m.type==="stopped")).toBe(true),observationTimeout?{timeout:observationTimeout}:undefined);return messages;}finally{worker.close();}
 }
 afterEach(()=>{vi.unstubAllGlobals();vi.restoreAllMocks();});
+it('T1445 模板绑定失败发生在模型提交前，必须明确失败而非未知结果',async()=>{
+ const original=input();original.skillSnapshot.skills[0]!.effective.requiredFacets=['missing_fixture_facet'];
+ const messages=await run(original,spec,undefined,120000);
+ expect(messages.filter(m=>m.type==='call').map(m=>m.port)).not.toContain('reserveGenerationCall');
+ expect(messages.find(m=>m.type==='call'&&m.port==='commitResult')).toMatchObject({data:{outcome:'failed',errorCode:'INTELLIGENCE_INPUT_INVALID'}});
+});
+it('T1445 模型预留被宿主明确拒绝，停止并报告失败而不无限核对未知结果',async()=>{
+ const fetch=vi.fn(()=>{throw Error('不得联网');});vi.stubGlobal('fetch',fetch);
+ const messages=await run(input(),spec,'reserveGenerationCall',120000);
+ expect(messages.find(m=>m.type==='call'&&m.port==='commitResult')).toMatchObject({data:{outcome:'failed',errorCode:'MODEL_RESERVATION_REJECTED'}});
+ expect(messages.filter(m=>m.type==='call').map(m=>m.port)).not.toContain('startCall');expect(fetch).not.toHaveBeenCalled();
+});
+it('T1445 已有非空策略定位的原请求参数保持不变，不破坏旧调用摘要',async()=>{
+ const original=input();original.skillSnapshot.skills[0]!.effective.template='{{positioning}}\n{{transcript}}';
+ const target=JSON.parse(original.facets.target!);target.positioning={oneLiner:'  原定位  ',keywords:['业务','流程']};original.facets.target=JSON.stringify(target);
+ const messages=await run(original,spec,undefined,120000),request=messages.find(m=>m.type==='call'&&m.port==='reserveGenerationCall');
+ expect(JSON.stringify(request)).toContain('  原定位  \\n关键词：业务、流程');expect(JSON.stringify(request)).not.toContain('定位陈述');
+});
 it.each(['project_artifact','imported_text'] as const)('T1382 %s无网址真实来源沿worker端口生成，未知回执不新增提交',async kind=>{
  const fetch=vi.fn(()=>{throw Error('不得联网');});vi.stubGlobal('fetch',fetch);
  const original=input(),text='真实项目来源正文',hash=`sha256:${createHash('sha256').update(text).digest('hex')}`;
+ original.skillSnapshot.skills[0]!.effective.requiredFacets=['positioning','sourceTitle','sourceAuthor','sourceUrl','transcript'];
  original.facets.target=JSON.stringify({ownerType:'project',projectId:'project',generationMode:'strategy_backed',source:{kind,projectId:'project',contentHash:hash,title:'来源',authorName:null,url:null,...(kind==='project_artifact'?{artifactId:'source-artifact',artifactVersion:1}:{intakeId:'real-intake',contentText:text})},transcript:{text,hash}});
  const messages=await run(original,spec,undefined,120000);
  expect(messages.filter(m=>m.type==='call').map(m=>m.port)).toContain('reserveGenerationCall');

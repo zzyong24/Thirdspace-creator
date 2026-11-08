@@ -3,6 +3,24 @@ import {createDesktopHostProcessRecovery,type HostProcessRecord} from './host-br
 const self:HostProcessRecord={pid:10,started:'2026-09-14T01:00:00',executable:'/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server',command:'next-server (v16.2.9)'};
 const profile='/test/抖音 数据/account';
 const fixture=(rows:HostProcessRecord[]=[])=>createDesktopHostProcessRecovery({pid:10,platform:'darwin',desktop:true,snapshot:async()=>[self,...rows]});
+it('T1444 已核实真实可执行文件的其它Next网站不阻止旧档案恢复',async()=>{
+ const unrelated={pid:11193,ppid:11165,started:'other-site',executable:'next-server (v16.2.9)',command:'next-server (v16.2.9)',executablePath:'/opt/homebrew/bin/node'};
+ expect(await fixture([unrelated]).isPreviousHostStopped({hostInstanceId:'old-uuid',authDir:profile})).toMatchObject({stopped:true});
+});
+it('T1444 Linux截断Next标题同样需要真实可执行文件证据',async()=>{
+ const next={pid:51,started:'other-site',executable:'next-server (v1',command:'next-server (v16.2.9)'};
+ expect(await fixture([next]).isPreviousHostStopped({hostInstanceId:'old-uuid',authDir:profile})).toMatchObject({stopped:false});
+ expect(await fixture([{...next,executablePath:'/usr/bin/node'}]).isPreviousHostStopped({hostInstanceId:'old-uuid',authDir:profile})).toMatchObject({stopped:true});
+});
+it('T1444 标题隐藏的正式宿主、无法核实的Next、目标浏览器仍阻止恢复',async()=>{
+ const next={pid:50,started:'other',executable:'next-server (v16.2.9)',command:'next-server (v16.2.9)'};
+ for(const row of [next,{...next,executablePath:self.executable}]){
+  expect(await fixture([row]).isPreviousHostStopped({hostInstanceId:'old-uuid',authDir:profile})).toMatchObject({stopped:false});
+ }
+ const unrelated={...next,executablePath:'/opt/homebrew/bin/node'};
+ const chrome={pid:51,started:'other',executable:'/Chrome',command:`Chrome --user-data-dir="${profile}" --headless`};
+ expect(await fixture([unrelated,chrome]).isPreviousHostStopped({hostInstanceId:'old-uuid',authDir:profile})).toMatchObject({stopped:false,reason:'profile-browser-running'});
+});
 it('真实安装宿主且旧UUID宿主/档案进程均不存在才允许恢复',async()=>{
  const p=fixture();expect(await p.isPreviousHostStopped({hostInstanceId:'old-uuid',authDir:profile})).toMatchObject({stopped:true});
  expect(await p.createHostInstanceId()).toMatch(/^host-v1:10:/);
