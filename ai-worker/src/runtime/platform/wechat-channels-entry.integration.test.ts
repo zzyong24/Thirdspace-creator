@@ -33,7 +33,7 @@ const files={
 type MenuMode='collapsed'|'direct'|'lateDirect'|'centre'|'lateCentre'|'both'|'directDuplicateCentre'|'lateDirectDuplicateCentre'|'beforeCentreClick'|'missing'|'hidden'|'duplicateEntry'|'duplicateCentre'|'missingAfterCentre';
 type RecoveryCase='button'|'menuitem'|'link'|'labelledby'|'descendant'|'responsive'|'unknown'|'wide'|'conflict'|'disabled'|'occluded'|'duplicateOwner'|'tooltip'|'unrelated'|'duplicateRelated'|'relatedWithUnrelated'|'controlsChange'|'ownerReplace'|'ownerDetach'|'duplicatePanelId'|'reportOwner'|'reportOwnerChild'|'panelReplace'|'ownerNameChange'|'coverOwner';
 type RouteFault='qrLogin'|'qrHidden'|'qrNear'|'login'|'foreign'|'home'|'forbidden'|'missingFrame'|'duplicateFrame'|'hiddenFrame'|'fakeShadow'|'duplicateTab'|'staleDates'|'wrongTotal'|'wrongResponse'|'badFile'|'changedBeforeDownload';
-type FixtureOptions={fault?:RouteFault;faultKind?:keyof typeof files;cancelRouteAt?:'before'|'after'|'tab'|'window'|'download';expireRouteAt?:'before'|'after'|'tab'|'window'|'download';mode:MenuMode;recoveryCase?:RecoveryCase;cancelRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';expireRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';cancelAt?:'wait'|'centreClick'|'entryClick'|'route'|'hover';expireAt?:'wait'|'centreClick'|'route'|'hover'|'entryClick';unconfirmedClose?:boolean;throwDiagnostic?:boolean;identity?:'wrong'|'login'|'foreign';fastMissingClock?:boolean;worksAlreadyTarget?:boolean};
+type FixtureOptions={worksHttpStatus?:number;fault?:RouteFault;faultKind?:keyof typeof files;cancelRouteAt?:'before'|'after'|'tab'|'window'|'download';expireRouteAt?:'before'|'after'|'tab'|'window'|'download';mode:MenuMode;recoveryCase?:RecoveryCase;cancelRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';expireRecoveryAt?:'recover_owner'|'hover_owner'|'wait_associated_entry';cancelAt?:'wait'|'centreClick'|'entryClick'|'route'|'hover';expireAt?:'wait'|'centreClick'|'route'|'hover'|'entryClick';unconfirmedClose?:boolean;throwDiagnostic?:boolean;identity?:'wrong'|'login'|'foreign';fastMissingClock?:boolean;worksAlreadyTarget?:boolean};
 
 function topHtml(options:FixtureOptions,parentPath=''){
  const entry='<button data-menu="entry">视频数据</button><button data-menu="followers">关注者数据</button>';
@@ -151,7 +151,7 @@ async function fixture(browser:Browser,options:FixtureOptions){
    downloads++;const kind=url.searchParams.get('kind') as keyof typeof files;
    await route.fulfill({headers:{'content-type':'text/csv; charset=utf-8','content-disposition':`attachment; filename="synthetic-${kind}.csv"`},body:options.fault==='badFile'&&kind===(options.faultKind??'channelsDaily')?'invalid synthetic report':files[kind]});return;
   }
-  if(url.pathname.endsWith('/statistic/post_list')){await route.fulfill({json:{errCode:options.fault==='wrongResponse'?1:0,data:{totalCount:1,list:[{}]}}});return;}
+  if(url.pathname.endsWith('/statistic/post_list')){if(options.worksHttpStatus===204){await route.fulfill({status:204,body:''});return;}await route.fulfill({status:options.worksHttpStatus??200,json:{errCode:options.fault==='wrongResponse'?1:0,data:{totalCount:1,list:[{}]}}});return;}
   const reportRoute=['/platform/statistic/post','/platform/statistic/follower'].includes(url.pathname);
   if(reportRoute){
    navigationPaths.push(url.pathname);
@@ -253,6 +253,11 @@ describe('T1363 已有视频号菜单时序的真实DOM公共持久链',()=>{
  let browser:Browser;
  beforeAll(async()=>{browser=await chromium.launch({headless:true,timeout:120000,args:['--disable-background-networking','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost']});},120000);
  afterAll(async()=>{await browser?.close();},120000);
+ it.each([200,201])('T1457 HTTP%s真实Chromium三报表到正式事务与公开回读',{timeout:testBudgetMs,retry:0},async worksHttpStatus=>{
+  const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',worksHttpStatus});
+  try{expect(await f.execute()).toMatchObject({attemptId:f.run.attemptId,status:'complete',committedReports:3});const response=await f.transport.request(ENDPOINTS.listNativeReports,{params:{accountId:f.ctx.accountId!},query:{cursor:null,pageSize:20},body:undefined},f.ctx) as {data:unknown};const read=platformNativeReportsListResponse.parse(response.data);expect(read.items.map(r=>r.kind).sort()).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);expect(read.items.every(r=>r.groupId===f.ctx.groupId)).toBe(true);expect(await f.db.select().from(platformNativeReports)).toHaveLength(3);expect(await f.service.status(f.ctx,f.ctx.accountId!,f.run.attemptId)).toMatchObject({status:'complete',committedPages:4});expect(f.physical()).toMatchObject({opened:1,closed:1,released:1,downloads:3,held:false,physicalConfirmed:1});expect(f.physical().leaseReleasedAt!).toBeGreaterThanOrEqual(f.physical().physicalStoppedAt!);expect((await f.readHostLease())[0]!.releasedAt).not.toBeNull();}finally{await f.cleanup();}
+ });
+ it.each([{worksHttpStatus:201,fault:'wrongResponse' as const,reason:'response_error'},{worksHttpStatus:204,reason:'body_unreadable'}])('T1457 HTTP$worksHttpStatus错误/空体不能假全成功',{timeout:testBudgetMs,retry:0},async option=>{const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown',...option});try{expect(await f.execute()).toMatchObject({status:'partial',committedReports:2});expect((await f.db.select().from(platformNativeReports)).map(row=>row.kind).sort()).toEqual(['channelsDaily','channelsFollowers']);expect(f.failureDiagnostics).toEqual([expect.objectContaining({kind:'channelsWorks',code:'REPORT_RESPONSE_INVALID',responseObservation:expect.objectContaining({reason:option.reason})})]);expect(f.physical()).toMatchObject({physicalConfirmed:1,released:1,held:false});}finally{await f.cleanup();}});
  it('T1424固定路线主族：无role图标侧栏经三报表真实下载解析事务与公开读回',{timeout:testBudgetMs,retry:0},async()=>{
   const f=await fixture(browser,{mode:'collapsed',recoveryCase:'unknown'}),started=performance.now();
   try{

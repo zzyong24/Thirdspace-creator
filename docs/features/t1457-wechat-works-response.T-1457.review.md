@@ -2,9 +2,9 @@
 
 - Task: T-1457
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: 927f0ca83564
-- Review receipt: b3e531a7acae
+- Round: 3/3 (recheck)
+- Spec receipt: dbfb7211caf4
+- Review receipt: 8c07513a56dd
 
 ## 当前有效问题
 
@@ -17,13 +17,13 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1457",
   "cycle": 1,
-  "round": 2,
+  "round": 3,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "同会话homogeneous增量复核（非独立Agent）：R1实际固定reason=endpoint，已排除直接按列表兼容修复；其余shape未读，不能猜数据。只补两个原对象已有的固定HTTP状态/方法元数据，数值范围/枚举/空值及额外字段严格投影，不写原URL/headers/body；原匹配守卫、成功/失败、期限/停止全不变。第二最小实验只一次同账号正常同步，失败立即止住Agent自建验收任务；仍最大2次/120min，不把额外日志当业务修复。",
+  "summary": "同会话homogeneous增量复核（非独立Agent）：两个有界实验已证HTTP201 POST被仅200门误拒，官方同站客户端接受整个2xx。仅改整数2xx成功范围，所有身份/frame/请求窗口/POST/JSON/业务码/总数/CSV/停止/预算守卫不变；非2xx和2xx无数据仍拒绝，不做重定向/跳验证/新增重试。先201真实Chromium至backend事务/公开回读RED，200旧成功及201错误业务码/204空body partial保留两份，标准状态与原拒绝族完整回归；安装后跟随既有deduped手动任务，不取消或重提。HTTP201不等于已保存；真实完整保存后才正式双端交付。",
   "spec_path": "docs/features/t1457-wechat-works-response.md",
-  "spec_sha256": "927f0ca835646a20cffa8adb080038a0d2f34ad601b1cffd9fc1dbcf41ab0546",
+  "spec_sha256": "dbfb7211caf4554ec338cf1c0b1c2eba38c9ca0020f3a569f2adc7fc264713d1",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1457-wechat-works-response.T-1457.review.md",
@@ -31,9 +31,9 @@
   "model": "codex-current-session",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "bf2fdf0e5df801e72594ee44fbeee34f60d12bcd7d7dff3b656cee8f66e2d412",
+  "latest_event_hash": "80d1c697d7a7406a099a29888757a2cb6377895f32f8ad93dbdc90ca06f31f7b",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "b3e531a7acae"
+  "receipt": "8c07513a56dd"
 }
 ```
