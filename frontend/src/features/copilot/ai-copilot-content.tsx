@@ -3522,6 +3522,7 @@ export function AICopilotContent({
                         <ChatLearningsCard
                           key={key}
                           items={o.items ?? []}
+                          autoAdoptKey={part.toolCallId}
                           projectId={o.projectId} observations={o.observations} hypotheses={o.hypotheses} nextExperiment={o.nextExperiment} insufficientReason={o.insufficientReason}
                           error={o.error ?? null}
                         />

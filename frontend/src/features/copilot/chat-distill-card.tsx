@@ -84,6 +84,7 @@ export function ChatDistillCard({ result,source }: { result: ChatDistillResult;s
         atoms={result.atoms}
         suggestedTags={result.suggestedTags}
         originalText={result.originalText}
+        autoAdopt
       />
     </div>
   );

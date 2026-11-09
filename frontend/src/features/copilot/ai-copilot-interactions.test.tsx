@@ -572,8 +572,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(screen.getByText(/综合判断/)).not.toBeNull();
   });
 
-  it("slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create", async () => {
-    const user = userEvent.setup();
+  it("slice 2:渲染 review.analyze 工具结果为经验卡,默认采纳 → learnings.create(批次2-1:不再逐条点确认,可撤销)", async () => {
+    localStorage.removeItem("creatoros:auto-adopt:tc-3");
     mockMessages = [
       {
         id: "a-3",
@@ -597,7 +597,6 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(
       document.querySelector('[data-slot="chat-learnings-card"]'),
     ).not.toBeNull();
-    await user.click(screen.getByText("采纳"));
     await waitFor(() => {
       expect(createLearning).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -605,6 +604,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
         }),
       );
     });
+    expect(await screen.findByRole("button", { name: "撤销「前3秒给结果」" })).toBeTruthy();
   });
 
   it("[T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送", async () => {
