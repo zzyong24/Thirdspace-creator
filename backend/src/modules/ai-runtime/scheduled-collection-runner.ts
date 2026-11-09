@@ -165,9 +165,9 @@ function humanizeCollectError(err: unknown, label: string): string {
   ) {
     return `采集${label}失败:取音频/转写环节出错(原始信息:${raw})。`;
   }
-  // 导出非 xlsx(登录态过期时抖音返 JSON/HTML)——虽多半也是登录问题,但归类为普通失败时给引导。
+  // 导出格式异常不能证明登录失效；重连只由上层结构化未登录判定决定。
   if (lower.includes("export") || lower.includes("xlsx") || lower.includes("pk")) {
-    return `采集${label}失败:导出数据异常,可能是登录态过期,建议去「设置 → 账户」重新扫码登录后重试(原始信息:${raw})。`;
+    return `采集${label}失败:导出数据异常,请查看原任务详情后重试(原始信息:${raw})。`;
   }
   return `采集${label}失败:${raw || "未知错误"}。`;
 }
@@ -180,10 +180,10 @@ function sourceKindOf(taskType: string): string {
 }
 
 const SOURCE_LABEL: Record<string, string> = {
-  "self.metrics": "抖音主页作品",
+  "self.metrics": "账号作品数据",
   "self.traffic": "作品流量来源",
-  comments: "抖音评论",
-  "self.detail": "抖音作品明细数据",
+  comments: "作品评论",
+  "self.detail": "作品明细数据",
   // [T-212a] 对标他号作品（benchmark sourceKind）。
   benchmark: "对标他号作品",
   // [T-235a] 每天自动出题（topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool）。

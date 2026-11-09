@@ -47,12 +47,24 @@ const baseTask: ScheduledCollectionTask = {
 };
 
 describe("runScheduledCollection(确定性采集 runner)", () => {
+  it.each(['EXPORT_FAILED', 'invalid xlsx', 'invalid PK bytes'])("非登录导出错误%s不推断过期或再次引导扫码", async message => {
+    const deps = makeDeps({collectors:{'self.metrics':async()=>{throw new Error(message);}}});
+    await runScheduledCollection(ctx, baseTask, deps);
+    const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock.calls.at(-1)![2];
+    expect(patch.status).toBe('failed');
+    expect(patch.error).toContain('账号作品数据');
+    expect(patch.error).toContain('查看原任务详情');
+    expect(patch.error).not.toMatch(/抖音|扫码|登录态过期/);
+    expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx, baseTask.id, patch.error);
+    expect(deps.ai.markSucceeded).not.toHaveBeenCalled();
+  });
+
   it.each(['navigationStatus','timeout','audio','export'])("incomplete结构化说明含%s也不被异常文案映射误分类",async field=>{
     const message='本批未完整完成:已处理 1/1 个作品，确认完成 0 个\n评论抓取诊断：'+JSON.stringify({reason:'no_matching_response',pageEvidence:{[field]:200,network:{totalResponses:244}}});
     const deps=makeDeps({collectors:{comments:async()=>({itemsNew:0,itemsUpdated:0,incomplete:true,message})}});
     await runScheduledCollection(ctx,{...baseTask,taskType:'scheduled.comments'},deps);
     const patch=(deps.runs.updateRun as ReturnType<typeof vi.fn>).mock.calls.at(-1)![2];
-    expect(patch).toMatchObject({status:'failed',itemsNew:0,itemsUpdated:0,error:`采集抖音评论失败:${message}。`});
+    expect(patch).toMatchObject({status:'failed',itemsNew:0,itemsUpdated:0,error:`采集作品评论失败:${message}。`});
     expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx,baseTask.id,patch.error);
     expect(deps.ai.markSucceeded).not.toHaveBeenCalled();
   });
@@ -109,7 +121,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     const failedArg = (deps.ai.markFailed as ReturnType<typeof vi.fn>).mock
       .calls[0]![2] as string;
     expect(failedArg).toContain("boom");
-    expect(failedArg).toContain("采集抖音主页作品失败");
+    expect(failedArg).toContain("采集账号作品数据失败");
     // 关键:job_run 落终态 failed + finished_at,不悬挂在 running
     expect(deps.runs.updateRun).toHaveBeenCalledTimes(1);
     const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
@@ -212,7 +224,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
       .calls[0]![2];
     expect(patch.status).toBe("failed");
     expect(patch.error).toContain("网络或页面加载超时");
-    expect(patch.error).toContain("抖音评论"); // 源标签
+    expect(patch.error).toContain("作品评论"); // 源标签
   });
 
   it("comments 源:按 taskType 选对 collector", async () => {
@@ -263,7 +275,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     );
     // 合成 step 文案含明细源标签 + 新增条数
     const stepArg = (deps.ai.recordStep as ReturnType<typeof vi.fn>).mock.calls[0]![2];
-    expect(stepArg.text).toContain("抖音作品明细数据");
+    expect(stepArg.text).toContain("作品明细数据");
     expect(stepArg.text).toContain("7");
     // job_run 回填 succeeded + itemsNew=7
     expect(deps.ai.markSucceeded).toHaveBeenCalledWith(ctx, "task1");
