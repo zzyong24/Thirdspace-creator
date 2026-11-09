@@ -15,3 +15,13 @@ readChannelsWorksResponse每个原失败门附固定reason：endpoint、request_
 R1实际226c685fa一次run-c85cc56e-5505-411b-ad53-672c9d7c684f / ai-task-a721d53e-79 / exec_295d205b-b563-40cb-996d-faf5f8c92aa7，在collection-a721d53e-80给出reason=endpoint，其余数据形状尚未读取。原自建任务首次失败后已公开取消，不能据此做空列表/类型兼容。
 
 原responseObservation增补httpStatus（100..599整数/null）及method（POST/OPTIONS/GET/HEAD/OTHER/null），不保留任意方法名、URL、headers或原body。只读取原Response/Request现有方法，不额外请求、不改匹配/失败/成功条件、deadline或用户文字；未知/额外/类型非法元数据仍整项丢弃。第二次最小实验仅同原账号一次正常同步核实endpoint原因，首次失败后停止Agent自建验收任务。研究卡仍最多两次实验，不能继续重复全量同步。根据已证匹配差异再复核并修复，其他约束不变。
+
+## 已证修复：接受官方客户端相同的HTTP成功范围
+
+两个研究实验现已闭合：安装1052226424后，collection-a721d53e-338实际为endpoint / HTTP201 / POST，且已命中当前目标菜单；官方同站816.c7a59812.js内Axios validateStatus为200<=status<300。错误是本机只接受HTTP200。HTTP201后的JSON和保存尚未核实，不能先宣布全成功。研究卡docs/research/t1457-works-response-shape.md已validated并现场两项verify通过，任务已返回📋。
+
+只把原HTTP成功门改为标准整数2xx（200..299）；同官方origin和固定endpoint、同Frame、POST、当前新请求/目标窗口、currentPage1/pageSize10、finished、errCode0、有界整数总数、完整首屏list、DOM/CSV日期与总数、停止及deadline全部保留。非2xx、非法状态、空body/JSON、非零errCode或任何数量/归属不符仍失败，不把成功HTTP当作业务数据成功，不按空列表猜零，不引入重定向跟随或额外重试。
+
+RED必须包含HTTP201真实Chromium → 正式source/witness → 原生CSV → parser/collector/backend事务/公开回读全三报表；同时保留HTTP200成功，HTTP201坏JSON业务码只能partial两份，HTTP204无body只能partial两份且不能当0。单测覆盖标准2xx整数范围及非2xx/非法状态、201下原日期/Frame/POST/响应码/总数/列表拒绝族；全旧业务/导航族、types/timeout/boundary/task-governance/diff检查不减。新增公共链测试明确合成、禁外网，不冒充账号真机。
+
+这次公开runNow复用了已有目标手动任务run-b10927b7-92fe-49df-854e-24836d73a4d6 / ai-task-a721d53e-337 / exec_6f5bf2c3-5927-4d29-89b8-a0ddd03b1831（deduped=true），并非Agent创建；保留该任务，不取消或重提。修复后安装普通无诊断配置包，跟随同一原任务重试并回读真实完整保存结果。若安装时该任务正在执行，等它进入原queued间隔再替换，其他用户原任务记录保留。真实成功后按既有授权双平台正式包、核验并安装；未成功不交付为已修复，不再追加研究实验或截图。

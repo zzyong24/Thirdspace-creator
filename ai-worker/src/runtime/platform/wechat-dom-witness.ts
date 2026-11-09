@@ -304,10 +304,14 @@ export async function readChannelsWorksResponse(response:Response,frame:Frame,co
  };
  try{
   const url=nativeUrl(response.url(),origins.wechatVideo,'wechatVideo'),request=response.request();
-  if(url.pathname!==worksEndpoint||response.status()!==200||request.method()!=='POST'||request.frame()!==frame)return reject('endpoint','单篇视频原生响应未对应当前页面');
+  // 官方同站Axios接受整数2xx；成功HTTP之后仍执行原日期、业务码与完整性核验。
+  const status=response.status();
+  if(url.pathname!==worksEndpoint||!Number.isInteger(status)||status<200||status>=300||request.method()!=='POST'||request.frame()!==frame)return reject('endpoint','单篇视频原生响应未对应当前页面');
   const data=request.postDataJSON() as {startTime?:unknown;endTime?:unknown;pageSize?:unknown;currentPage?:unknown};
   const startDate=dateSeconds(data.startTime),endDate=dateSeconds(data.endTime);shape.currentPageOne=data.currentPage===1;shape.pageSizeTen=data.pageSize===10;
   if(!startDate||!endDate||startDate>endDate||data.currentPage!==1||data.pageSize!==10)return reject('request_window','单篇视频原生日期协议无效');
+  // 204/205按HTTP协议没有内容，不等待不存在的JSON，也不能据此推断为零。
+  if(status===204||status===205)return reject('body_unreadable','单篇视频原生响应无法核对');
   const result=await response.finished();controls.signal.throwIfAborted();if(result)return reject('response_incomplete','单篇视频原生响应未完成');
   body=await response.json();selection={startDate,endDate,timeZone:'Asia/Shanghai',meaning:'publishedDates'};
  }catch(error){if(error instanceof WechatBrowserSourceError||controls.signal.aborted)throw error;return reject('body_unreadable','单篇视频原生响应无法核对');}
