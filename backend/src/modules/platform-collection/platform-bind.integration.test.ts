@@ -37,7 +37,7 @@ describe("platform bind with durable attempts and an atomic account port", () =>
   it('T1447只读返回真实凭据检测事实，明确到期覆盖旧验证，不读取其他用户账号',async()=>{
     const f=await fixture();
     try{
-      const read=(f.service as unknown as {readLoginObservations:(ctx:ReturnType<typeof ctx>,ids:readonly string[])=>Promise<any[]>}).readLoginObservations;
+      const read=(f.service as unknown as {readLoginObservations:(context:ReturnType<typeof ctx>,ids:readonly string[])=>Promise<any[]>}).readLoginObservations;
       expect(read).toBeTypeOf('function');
       const attempt=await f.service.bindBegin(ctx('user-a'),{platform:'xiaohongshu',clientRequestId:'state'});
       await f.service.recordVerifiedIdentity({...f.proof(attempt.bindAttemptId),expiresAt:'2026-09-30T00:01:00.000Z'});
