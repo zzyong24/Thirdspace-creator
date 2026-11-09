@@ -669,3 +669,19 @@ describe('T1406 入口locator.evaluateAll固定首行安全分类',()=>{
   expect(onDiagnostic).toHaveBeenCalledExactlyOnceWith({platform:'wechatOfficial',stage:'readIdentity',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error'});expect(f.close).toHaveBeenCalledOnce();
  });
 });
+
+const t1457Shape={reason:'list_type',errorCodeState:'zero',countType:'number',reportedCount:0,listState:'missing',listLength:null,currentPageOne:true,pageSizeTen:true};
+describe('T1457 固定作品响应观察端口',()=>{
+ it.each([false,true])('只在实际作品prepare原失败附固定形状且observer throws=%s保留错误和实停',async throwing=>{
+  const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_RESPONSE_INVALID','原错误'),{responseObservation:t1457Shape}),onDiagnostic=vi.fn(()=>{if(throwing)throw Error('合成日志失败');});
+  vi.mocked(f.reportWitness.prepare).mockImplementation(async(...args)=>{if(args[2]==='channelsWorks')throw error;return {scope:f.page,download:f.locator,state:{selection,dates:['2026-10-07','2026-10-08']}};});
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic).toHaveBeenCalledWith(expect.objectContaining({kind:'channelsWorks',code:'REPORT_RESPONSE_INVALID',responseObservation:t1457Shape}));expect(f.onStopped).toHaveBeenCalledOnce();expect(f.close).toHaveBeenCalledOnce();
+ });
+ it.each([{...t1457Shape,secret:'private'},{...t1457Shape,reason:'private'},{...t1457Shape,reportedCount:-1},{...t1457Shape,listLength:10001},{...t1457Shape,currentPageOne:'private'},{...t1457Shape,countType:'private'}])('非法/额外字段整项丢弃 %#',async shape=>{
+  const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_RESPONSE_INVALID','原错误'),{responseObservation:shape}),onDiagnostic=vi.fn();
+  vi.mocked(f.reportWitness.prepare).mockImplementation(async(_page,_platform,kind)=>{if(kind==='channelsWorks')throw error;return {scope:f.page,download:f.locator,state:{selection,dates:['2026-10-07','2026-10-08']}};});
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('responseObservation');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private');expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it('前两份prepare不附作品响应形状',async()=>{const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_RESPONSE_INVALID','原错误'),{responseObservation:t1457Shape}),onDiagnostic=vi.fn();vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('responseObservation');expect(f.onStopped).toHaveBeenCalledOnce();});
+});
