@@ -35,3 +35,17 @@ it.skipIf(process.platform!=='darwin')('真实临时Chromium完整档案参数�
   await expect.poll(async()=>recovery.isPreviousHostStopped({hostInstanceId:'isolated-old',authDir:profile}),{timeout:5000}).toMatchObject({stopped:true});
  }finally{await context?.close();await rm(directory,{recursive:true,force:true});}
 },20000);
+
+it.skipIf(process.platform!=='darwin')('T1444 真实Chrome末尾档案加页面：保护含空格目标并排除不同档案',async()=>{
+ const directory=await mkdtemp(join(tmpdir(),'t1444-chrome-args-')),profile=join(directory,'中文 有空格');
+ const child=spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',['--headless=new','--no-sandbox','--disable-gpu',`--user-data-dir=${profile}`,'about:blank'],{stdio:'ignore'});
+ const exited=once(child,'exit');
+ try{
+  let row:HostProcessRecord|undefined;
+  await expect.poll(async()=>{row=(await readHostProcessSnapshot()).find(r=>r.pid===child.pid);return row?.command?.includes(`--user-data-dir=${profile} about:blank`);},{timeout:5000}).toBe(true);
+  const self:HostProcessRecord={pid:2147480000,started:'isolated',executable:'/isolated/creatoros-server',command:'isolated'};
+  const recovery=createDesktopHostProcessRecovery({pid:self.pid,desktop:true,platform:'darwin',snapshot:async()=>[self,row!]});
+  expect(await recovery.isPreviousHostStopped({hostInstanceId:'stopped-old-host',authDir:profile})).toMatchObject({stopped:false});
+  expect(await recovery.isPreviousHostStopped({hostInstanceId:'stopped-old-host',authDir:join(directory,'other-profile')})).toMatchObject({stopped:true});
+ }finally{if(child.exitCode===null)child.kill();await exited;await rm(directory,{recursive:true,force:true});}
+},20000);

@@ -74,8 +74,47 @@ it('当前宿主刚启动的受控worker不是旧宿主，但其目标档案浏�
  expect(await fixture([worker]).isPreviousHostStopped({hostInstanceId:'old',authDir:profile})).toMatchObject({stopped:true});
  expect(await fixture([worker,{pid:31,ppid:30,started:'now',executable:'/Chrome',command:`Chrome --user-data-dir=${profile} --headless`}]).isPreviousHostStopped({hostInstanceId:'old',authDir:profile})).toMatchObject({stopped:false});
 });
-it.each(['Chrome --user-data-dir=/test/?? --headless','Chrome --user-data-dir=/test/account about:blank','Chrome --user-data-dir=/test/a --user-data-dir=/test/b'])('无法还原完整档案参数时保持占用：%s',async command=>{
+it.each(['Chrome --user-data-dir=/test/?? --headless','Chrome --user-data-dir=relative about:blank','Chrome --user-data-dir=/test/a --user-data-dir=/test/b'])('无法还原完整档案参数时保持占用：%s',async command=>{
  expect(await fixture([{pid:13,started:'old',executable:'/Chrome',command}]).isPreviousHostStopped({hostInstanceId:'old',authDir:profile})).toMatchObject({stopped:false,reason:'browser-profile-unverified'});
+});
+it.each(['about:blank','https://example.test/page','about:blank --headless'])('T1444 无关Chrome档案后的页面参数不变成全局锁：%s',async page=>{
+ const row={pid:13,started:'old',executable:'/Google Chrome',command:`Chrome --user-data-dir=/Users/test/muse2api-profiles/generate ${page}`};
+ expect(await fixture([row]).isPreviousHostStopped({hostInstanceId:'old',authDir:profile})).toMatchObject({stopped:true});
+});
+it.each([profile,'/test/account','/test/account --literal','/test/account '])('T1444 扁平参数的任何可能目标路径仍阻止恢复：%s',async target=>{
+ const row={pid:13,started:'old',executable:'/Google Chrome',command:`Chrome --user-data-dir=${target} about:blank --headless`};
+ expect(await fixture([row]).isPreviousHostStopped({hostInstanceId:'old',authDir:target})).toMatchObject({stopped:false});
+});
+it('T1444 空格路径的符号链接别名仍被保护',async()=>{
+ const {mkdtemp,mkdir,symlink,rm}=await import('node:fs/promises');
+ const {tmpdir}=await import('node:os'),{join}=await import('node:path');
+ const root=await mkdtemp(join(tmpdir(),'t1444-profile-alias-'));
+ try{
+  const target=join(root,'真实 档案'),alias=join(root,'alias with space');await mkdir(target);await symlink(target,alias);
+  const row={pid:13,started:'old',executable:'/Chrome',command:`Chrome --user-data-dir=${alias} about:blank`};
+  expect(await fixture([row]).isPreviousHostStopped({hostInstanceId:'old',authDir:target})).toMatchObject({stopped:false});
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+it('T1444 Windows未加引号路径带页面参数时仍识别可能目标',async()=>{
+ const row={pid:20,started:'old',executable:'C:\\Chrome\\chrome.exe',command:'chrome.exe --user-data-dir=C:\\Users\\User\\抖音 数据 about:blank'};
+ const recovery=createDesktopHostProcessRecovery({pid:10,platform:'win32',desktop:true,snapshot:async()=>[{...self,executable:'C:\\CreatorOS\\creatoros-server.exe'},row]});
+ expect(await recovery.isPreviousHostStopped({hostInstanceId:'old',authDir:'c:\\users\\user\\抖音 数据'})).toMatchObject({stopped:false});
+ expect(await recovery.isPreviousHostStopped({hostInstanceId:'old',authDir:'c:\\users\\other\\抖音 数据'})).toMatchObject({stopped:true});
+});
+it('T1444 浏览器长flag不是合法路径，不会让无关Chrome辅助进程变成全局锁',async()=>{
+ const row={pid:13,started:'old',executable:'/Google Chrome Helper',command:`Chrome --user-data-dir=/tmp/other-profile --gpu-preferences=${'x'.repeat(600)}`};
+ expect(await fixture([row]).isPreviousHostStopped({hostInstanceId:'old',authDir:profile})).toMatchObject({stopped:true});
+ expect(await fixture([row]).isPreviousHostStopped({hostInstanceId:'old',authDir:'/tmp/other-profile'})).toMatchObject({stopped:false});
+});
+it('T1444 路径中间是普通文件的候选不可能占用另一个合法档案',async()=>{
+ const {mkdtemp,writeFile,rm}=await import('node:fs/promises');
+ const {tmpdir}=await import('node:os'),{join}=await import('node:path');
+ const root=await mkdtemp(join(tmpdir(),'t1444-profile-file-'));
+ try{
+  await writeFile(join(root,'file'),'not-a-directory');
+  const row={pid:13,started:'old',executable:'/Chrome',command:`Chrome --user-data-dir=${root}/file/child about:blank`};
+  expect(await fixture([row]).isPreviousHostStopped({hostInstanceId:'old',authDir:profile})).toMatchObject({stopped:true});
+ }finally{await rm(root,{recursive:true,force:true});}
 });
 it('Next覆写进程标题时，仅自身真实execPath能证明正式宿主',async()=>{
  const rows=[{...self,executable:'next-server (v16.2.9)',command:'next-server (v16.2.9)'}];

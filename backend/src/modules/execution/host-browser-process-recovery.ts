@@ -121,13 +121,22 @@ function possibleHost(r:HostProcessRecord,scope:string,platform:NodeJS.Platform)
  return referencesScope(r.executable,scope,platform)||!!r.command&&referencesScope(r.command,scope,platform);
 }
 
-function profileArgument(command:string):string|null{
- const match=command.match(/(?:^|\s)--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|(.+?))(?=\s+--[\w-]+(?:=|\s|$)|$)/);
- if(!match||(command.match(/(?:^|\s)--user-data-dir(?:=|\s)/g)?.length??0)!==1)return null;
- const value=(match[1]??match[2]??match[3]??'').trim();
- // ps不会替空格路径加引号：无后继flag的未加引号多词参数边界不确定；编码损失也不能当不同目录。
- if(/[?\uFFFD\x00-\x1f]/.test(value)||(!match[1]&&!match[2]&&/\s/.test(value)&&!command.slice((match.index??0)+match[0].length).trimStart().startsWith('--')))return null;
- return value;
+function profileArguments(command:string,platform:NodeJS.Platform):string[]|null{
+ const flags=[...command.matchAll(/(?:^|\s)--user-data-dir(?:=|\s)/g)];
+ if(flags.length!==1)return null;
+ const flag=flags[0]!,value=command.slice(flag.index!+flag[0].length);
+ if(!value||/[?\uFFFD\x00-\x1f]/.test(value))return null;
+ const paths=platform==='win32'?path.win32:path.posix;
+ if(value[0]==='"'||value[0]==="'"){
+  const end=value.indexOf(value[0],1);
+  if(end<1||(value[end+1]&&!/\s/.test(value[end+1]!)))return null;
+  const profile=value.slice(1,end);return paths.isAbsolute(profile)?[profile]:null;
+ }
+ if(!paths.isAbsolute(value))return null;
+ // ps扁平化后，空白既可能属于路径，也可能分隔尾部页面/flag。
+ // 保留每个边界（包括路径末尾空格），只有全部规范路径都不同才排除该浏览器。
+ // 不按后继flag截断，目标路径本身也可能含有“ --literal”。
+ return [...new Set([...value.matchAll(/\s/g)].map(match=>value.slice(0,match.index)).concat(value))];
 }
 /** 仅正式桌面宿主启用。旧UUID没有PID，因此必须排除所有其他可能的正式宿主与目标档案浏览器。
  * SEMANTIC_BOUNDARY_ALLOW: OS进程/完整路径/启动身份比较只确认资源占用，不作内容或创作选择。
@@ -168,9 +177,22 @@ export function createDesktopHostProcessRecovery(deps:{pid?:number;execPath?:str
      if(possibleHost(row,scope,platform)&&!belongsToCurrentHost(row,rows,pid)&&!knownCliRelay(row,platform))return {stopped:false,reason:'another-host-running'};
      if(!browser(row))continue;
      if(!row.command)return {stopped:false,reason:'browser-command-unavailable'};
-     const profile=profileArgument(row.command);
-     if(row.command.includes('--user-data-dir')&&!profile)return {stopped:false,reason:'browser-profile-unverified'};
-     if(profile&&await canonicalProfile(profile)===await canonicalProfile(authDir))return {stopped:false,reason:'profile-browser-running'};
+     const profiles=profileArguments(row.command,platform);
+     if(row.command.includes('--user-data-dir')&&!profiles)return {stopped:false,reason:'browser-profile-unverified'};
+     if(profiles){
+      const target=await canonicalProfile(authDir);
+      for(const profile of profiles){
+       let candidate:string;
+       try{candidate=await canonicalProfile(profile);}
+       catch(error){
+        // 尾部浏览器flag拼成的候选可能超出文件名上限或穿过普通文件；
+        // OS已证明这不是可用档案路径。权限/IO等真正不可得的证据仍交外层保守保留。
+        if(['ENAMETOOLONG','ENOTDIR'].includes((error as NodeJS.ErrnoException).code??''))continue;
+        throw error;
+       }
+       if(candidate===target)return {stopped:false,reason:'profile-browser-running'};
+      }
+     }
     }
     return {stopped:true,reason:encoded?'previous-host-stopped-profile-unused':'legacy-desktop-host-stopped-profile-unused'};
    }catch{return {stopped:false,reason:'process-evidence-unavailable'};}

@@ -15,14 +15,17 @@ const observe:typeof vi.waitFor=(callback,options)=>vi.waitFor(callback,{timeout
 
 const now=()=>new Date().toISOString(),nextId=(prefix:string)=>`${prefix}-stage-${++seq}`;
 let loginBlocked=false,loginStarted=false,confirmBrowserStopped:(()=>void)|undefined;
+let extraBrowsers:Array<{pid:number;started:string;executable:string;command:string}>=[];
+let processRecovery:ReturnType<typeof createDesktopHostProcessRecovery>;
 const control={signal:new AbortController().signal,shouldStop:()=>false};
 beforeEach(async()=>{
- store=await createDb();base=await realpath(await mkdtemp(path.join(os.tmpdir(),'creator-binding-')));loginBlocked=false;loginStarted=false;confirmBrowserStopped=undefined;
+ store=await createDb();base=await realpath(await mkdtemp(path.join(os.tmpdir(),'creator-binding-')));loginBlocked=false;loginStarted=false;confirmBrowserStopped=undefined;extraBrowsers=[];
  const group=await createAccountGroupService({db:store.db,now,nextId}).create({userId:'stage-user',requestId:'test',source:'user'},{name:'目标组',idempotencyKey:'group'});ctx={userId:'stage-user',requestId:'test',source:'user',accountId:null,groupId:group.id};
- const authority=createBrowserProfileAuthority(store.db,base);lifecycle=createHostBrowserProfileLifecycle(store.db,{resolveProfile:authority.resolveProfile,waitTimeoutMs:1000,pollIntervalMs:10,recovery:createDesktopHostProcessRecovery({pid:2147480000,platform:'darwin',desktop:true,snapshot:async()=>[
+ const authority=createBrowserProfileAuthority(store.db,base);processRecovery=createDesktopHostProcessRecovery({pid:2147480000,platform:'darwin',desktop:true,snapshot:async()=>[
   {pid:2147480000,started:'current',executable:'/isolated/creatoros-server',command:'isolated'},
   {pid:2147480001,started:'other-site',executable:'next-server (v16.2.9)',command:'next-server (v16.2.9)',executablePath:'/opt/homebrew/bin/node'},
- ]})});
+  ...extraBrowsers,
+ ]});lifecycle=createHostBrowserProfileLifecycle(store.db,{resolveProfile:authority.resolveProfile,waitTimeoutMs:1000,pollIntervalMs:10,recovery:processRecovery});
  // 仅替换浏览器驱动；目录授权、宿主租约、持久任务、事务与文件搬移都走生产实现。
  const cdp={loginDouyin:async({authDir,signal}:{authDir:string;signal:AbortSignal})=>{const owner=await lifecycle.acquire(authDir,signal);try{await mkdir(authDir,{recursive:true});await writeFile(path.join(authDir,'profile.txt'),'new-login');loginStarted=true;if(loginBlocked)await new Promise<void>((resolve,reject)=>{signal.addEventListener('abort',()=>{confirmBrowserStopped=()=>reject(signal.reason);},{once:true});});return true;}finally{await owner.onStopped();}},fetchDouyinIdentity:async({authDir,signal}:{authDir:string;signal:AbortSignal})=>{const owner=await lifecycle.acquire(authDir,signal);try{return {secUid:'stable-real-test-id',nickname:'扫码身份',followerCount:42};}finally{await owner.onStopped();}}};
  stage=createDouyinAccountBindingStage({db:store.db,base,authority,lifecycle,now,nextId,loadCdp:async()=>cdp as unknown as typeof import('./douyin-cdp')});
@@ -37,7 +40,8 @@ it('生产公共链在PGlite事务外预留宿主租约，新账号真实登记�
 it('已有真实账号采用新登录态，保留ID并清除旧备份且不重复成员',async()=>{
  expect(stage.prepareCommit).toBeTypeOf('function');const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount(ctx,{platform:'douyin',accountHandle:'旧身份',externalAccountId:'stable-real-test-id'});await mkdir(path.join(base,account.id));await writeFile(path.join(base,account.id,'profile.txt'),'old-login');const run=await start();await service.drainAccountBindingQueue(control,{waitForCompletion:true});expect(await service.status(ctx,run.runId)).toMatchObject({status:'succeeded',accountId:account.id});expect(await readFile(path.join(base,account.id,'profile.txt'),'utf8')).toBe('new-login');expect(await readdir(base)).toEqual([account.id]);expect((await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!)).members).toHaveLength(1);
 });
-it('T1444 无关Next网站运行且原宿主已停时，完整扫码保存链恢复旧档案租约并回读成功',async()=>{
+it.each([false,true])('T1444 无关Next及Chrome=%s运行且原宿主已停，完整扫码保存链恢复旧档案租约并回读成功',async withChrome=>{
+ if(withChrome)extraBrowsers=[{pid:2147480002,started:'unrelated-tool',executable:'/Google Chrome',command:'Chrome --user-data-dir=/Users/test/muse2api-profiles/generate about:blank'}];
  const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount(ctx,{platform:'douyin',accountHandle:'旧身份',externalAccountId:'stable-real-test-id'});
  const target=path.join(base,account.id);await mkdir(target);await writeFile(path.join(target,'profile.txt'),'old-login');
  const authority=createBrowserProfileAuthority(store.db,base),previous=createHostBrowserProfileLifecycle(store.db,{resolveProfile:authority.resolveProfile,hostInstanceId:'stopped-legacy-owner'});
@@ -46,6 +50,26 @@ it('T1444 无关Next网站运行且原宿主已停时，完整扫码保存链恢
  expect(await service.status(ctx,run.runId)).toMatchObject({status:'succeeded',accountId:account.id,error:null});
  expect(await readFile(path.join(target,'profile.txt'),'utf8')).toBe('new-login');
  expect((await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!)).members).toHaveLength(1);
+ const resource=await lifecycle.acquire(target);await resource.onStopped();
+});
+it('T1444 目标档案浏览器带页面参数仍阻止完整保存链，保留旧账号和旧登录态',async()=>{
+ const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount(ctx,{platform:'douyin',accountHandle:'旧身份',externalAccountId:'stable-real-test-id'});
+ const target=path.join(base,account.id);await mkdir(target);await writeFile(path.join(target,'profile.txt'),'old-login');
+ const authority=createBrowserProfileAuthority(store.db,base),previous=createHostBrowserProfileLifecycle(store.db,{resolveProfile:authority.resolveProfile,hostInstanceId:'stopped-legacy-owner'});
+ const held=await previous.acquire(target);
+ extraBrowsers=[{pid:2147480002,started:'target-browser',executable:'/Google Chrome',command:`Chrome --user-data-dir=${target} about:blank`}];
+ const proof=vi.spyOn(processRecovery,'isPreviousHostStopped');
+ try{
+  const run=await start();await service.drainAccountBindingQueue(control);
+  await observe(()=>expect(proof).toHaveBeenCalledWith(expect.objectContaining({authDir:target})));
+  const index=proof.mock.calls.findIndex(([input])=>input.authDir===target);
+  expect(await proof.mock.results[index]!.value).toMatchObject({stopped:false});
+  expect(await service.status(ctx,run.runId)).toMatchObject({status:'finalizing'});
+  expect(await readFile(path.join(target,'profile.txt'),'utf8')).toBe('old-login');
+  expect((await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!)).members).toHaveLength(1);
+  await service.cancel(ctx,run.runId);
+  await observe(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancelled'}));
+ }finally{extraBrowsers=[];await held.onStopped();}
  const resource=await lifecycle.acquire(target);await resource.onStopped();
 });
 it('取消等待真实浏览器停止与宿主租约释放，清理后才确认cancelled',async()=>{
