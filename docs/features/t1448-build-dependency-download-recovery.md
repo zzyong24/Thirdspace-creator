@@ -12,7 +12,7 @@ run42567656694前两次macOS在固定b6.0的ffprobe下载返回504；Windows首�
 
 下载使用有界连接/传输/子进程预算和有限重试；只在暂时性网络或5xx错误后请求同仓库/tag/名称的官方metadata，校验唯一资源、来源URL、长度及有提供时的摘要，再下载其官方asset API。调用方固定SHA1/SHA256必须保持；主/备路线同等校验。拒绝错误页、截断、错误资源或摘要失配，失败清理临时文件，不破坏旧缓存。ffmpeg/ffprobe原BUNDLE_SRC、缓存和尺寸/版本冒烟继续有效，覆盖原四个target映射。
 
-Windows在原package入口、tauri build之前准备当前锁定CLI对应NSIS3.11和nsis_tauri_utils0.5.3；核对Tauri固定摘要后，在原LOCALAPPDATA/tauri/NSIS工具目录原子就绪，原bundler继续校验并打包。不新建app运行时缓存。已有可用工具优先复用；非Windows或未登记CLI版本直接交回原bundler。预备失败保留旧工具并由原bundler继续原流程，不因新增可选预备步骤反杀原可成功构建；绝不把未验证资源写成已就绪。路径通过无shell argv调用系统tar，包含空格/中文/引号的目录按原样传递。
+Windows在原package入口、tauri build之前准备当前锁定CLI对应NSIS3.11和nsis_tauri_utils0.5.3；核对Tauri固定摘要后，在原LOCALAPPDATA/tauri/NSIS工具目录原子就绪，原bundler继续校验并打包。不新建app运行时缓存。已有可用工具优先复用；非Windows或未登记CLI版本直接交回原bundler。预备失败保留旧工具并由原bundler继续原流程，不因新增可选预备步骤反杀原可成功构建；绝不把未验证资源写成已就绪。Windows固定使用SystemRoot/System32/tar.exe，避开Git Bash PATH中的同名GNU tar；缺少系统工具时仍交回原bundler。失败只记录阶段和受控错误码，不打印下载凭据或原始网络错误。路径通过无shell argv调用系统tar，包含空格/中文/引号的目录按原样传递。
 
 ## 验收与交付
 

@@ -1,11 +1,22 @@
 import {afterEach,expect,it,vi} from 'vitest';
 import {mkdtempSync,rmSync,mkdirSync,writeFileSync,readFileSync,existsSync} from 'node:fs';
 import {join,dirname} from 'node:path';import {tmpdir} from 'node:os';
+const {spawnArchive}=vi.hoisted(()=>({spawnArchive:vi.fn()}));
+vi.mock('node:child_process',async importOriginal=>{const actual=await importOriginal();return {...actual,default:{...actual.default,spawnSync:spawnArchive},spawnSync:spawnArchive};});
 const module=await import('./prepare-nsis-tools.mjs').catch(()=>({}));const roots=[];
-afterEach(()=>{for(const p of roots.splice(0))rmSync(p,{recursive:true,force:true});});
+afterEach(()=>{vi.unstubAllGlobals();spawnArchive.mockReset();for(const p of roots.splice(0))rmSync(p,{recursive:true,force:true});});
 const prepare=(opts,deps)=>{expect(module.prepareNsisTools).toBeTypeOf('function');return module.prepareNsisTools(opts,deps);};
 it.each([{platform:'darwin',cliVersion:'2.11.4'},{platform:'win32',cliVersion:'future'}])('非目标/未知CLI保持原bundler路径：%j',opts=>{const download=vi.fn();expect(prepare(opts,{download}).ready).toBe(false);expect(download).not.toHaveBeenCalled();});
 it('下载预备失败保留已有目录，原bundler仍有安全路径',()=>{const root=mkdtempSync(join(tmpdir(),"NSIS 中文 ' 空格-"));roots.push(root);mkdirSync(join(root,'NSIS'));writeFileSync(join(root,'NSIS','old'),'保留');const download=vi.fn(()=>{throw Error('网络故障');});expect(prepare({platform:'win32',cliVersion:'2.11.4',cacheDirectory:root},{download,logger:()=>{}})).toMatchObject({ready:false});expect(readFileSync(join(root,'NSIS','old'),'utf8')).toBe('保留');});
 it('完整准备后落入原工具缓存且调用方固定摘要，下一次复用不下载',()=>{const root=mkdtempSync(join(tmpdir(),"NSIS 中文 ' 空格-"));roots.push(root);const download=vi.fn(opts=>{writeFileSync(opts.outputPath,'已由下载端核验资源');return {source:'api'};});const extract=vi.fn((archive,destination)=>{for(const p of module.NSIS_REQUIRED_FILES.filter(p=>!p.endsWith('nsis_tauri_utils.dll'))){const out=join(destination,'nsis-3.11',p);mkdirSync(dirname(out),{recursive:true});writeFileSync(out,'工具');}});const verifyPlugin=vi.fn(()=>true);
  const opts={platform:'win32',cliVersion:'2.11.4',cacheDirectory:root};expect(prepare(opts,{download,extract,verifyPlugin,logger:()=>{}})).toMatchObject({ready:true});expect(download).toHaveBeenCalledTimes(2);expect(download.mock.calls[0][0].expectedSha1).toBe('ef7ff767e5cbd9edd22add3a32c9b8f4500bb10d');expect(download.mock.calls[1][0].expectedSha1).toBe('75197fee3c6a814fe035788d1c34ead39349b860');expect(existsSync(join(root,'NSIS','Bin','makensis.exe'))).toBe(true);expect(prepare(opts,{download,verifyPlugin,logger:()=>{}}).ready).toBe(true);expect(download).toHaveBeenCalledTimes(2);
+});
+
+it('Windows 默认解压固定调用系统ZIP工具，避开Git Bash PATH中的GNU tar',()=>{
+ const root=mkdtempSync(join(tmpdir(),"NSIS 中文 ' 空格-"));roots.push(root);
+ vi.stubGlobal('process',{...process,platform:'win32',env:{...process.env,SystemRoot:'C:\\Windows'}});
+ spawnArchive.mockReturnValue({status:1,stderr:Buffer.from('unsupported ZIP')});
+ const download=opts=>writeFileSync(opts.outputPath,'由下载端校验后的资源');
+ expect(prepare({platform:'win32',cliVersion:'2.11.4',cacheDirectory:root},{download,logger:()=>{}}).ready).toBe(false);
+ expect(spawnArchive).toHaveBeenCalledWith('C:\\Windows\\System32\\tar.exe',['-xf',expect.stringContaining("中文 ' 空格-"),'-C',expect.stringContaining("中文 ' 空格-")],expect.objectContaining({shell:false,timeout:240000}));
 });
