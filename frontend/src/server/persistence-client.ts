@@ -93,6 +93,7 @@ import { createProjectMaterialsContext } from "@creatoros/backend/application/co
 import { createBriefContext } from "@creatoros/backend/application/context/brief";
 import { createReviewSubjectContext } from "@creatoros/backend/application/context/review-subject";
 import { createChatPerformanceReaders } from "@creatoros/backend/application/chat/performance-readers";
+import { scopeAccountListToGroup } from "@creatoros/backend/application/chat/group-scoped-accounts";
 import { createChatEvidenceReaders } from "@creatoros/backend/application/chat/evidence-readers";
 import { createChatLifecycleReaders } from "@creatoros/backend/application/chat/lifecycle-readers";
 import { createChatProjectsReaders } from "@creatoros/backend/application/chat/projects-readers";
@@ -645,7 +646,8 @@ export async function mergeDouyinPlaceholders(
 
 // [T-277] 可审整稿的最短正文阈值 —— 低于此视作「还没有整稿」(空稿/占位/整稿未落地)。一份
 // 6-10 镜的真实分镜脚本正文恒在数百字级,25 字级的陈旧占位稿会被这道门拦下,不进审核。
-const MIN_REVIEWABLE_SCRIPT_CHARS = 40;
+// 审核只要求当前已保存稿面非空；原 40 字门槛会把用户保存的短文案误判为「无稿」并提示去采纳候选。
+const MIN_REVIEWABLE_SCRIPT_CHARS = 1;
 
 // [T-278] 收藏夹每轮进池上限 —— 收藏夹是用户亲手挑的(非自动信息流),不限速。50 = 单夹抓取
 // 上限 ≤50/夹,一轮就把用户新存的全部转候选,当天即见(治「采 13 条今日只见 3 条」)。
@@ -3789,7 +3791,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 「per-ctx 公开 service 读法」,不造影子 repo。
   const makeProjectMaterialsReader = () => createProjectMaterialsContext({assetsService,materialLinksService});
 
-  const makeGenerationReaders = () => createGenerationContextReaders({candidateService,assetsService,knowledgeService,positioningService,learningsService,platformAccountService,projectIntelligenceReferences,knowledgeSearchRuntime,makeBriefReader,makeReviewSubjectReader,makeProjectMaterialsReader,thesisReader,contractReader,outlineReader,artifactOriginReader});
+  // 编导/生成读到的账号画像只取当前账号组在组账号（不串主号组）。
+  const groupScopedAccounts = scopeAccountListToGroup((c,q:Parameters<typeof platformAccountService.listAccounts>[1])=>platformAccountService.listAccounts(c,q),(c,id)=>accountGroupService.get(c,id));
+  const makeGenerationReaders = () => createGenerationContextReaders({candidateService,assetsService,knowledgeService,positioningService,learningsService,platformAccountService:groupScopedAccounts,projectIntelligenceReferences,knowledgeSearchRuntime,makeBriefReader,makeReviewSubjectReader,makeProjectMaterialsReader,thesisReader,contractReader,outlineReader,artifactOriginReader});
 
   // 创建只负责唤醒对应执行 owner；租约与冻结快照由该 owner 领取一次。
   const ai: Transport = {
@@ -7063,7 +7067,7 @@ FAVORITES_PROMOTE_PER_RUN
       accounts: {
         list: async (c: RequestContext) =>
           (
-            await platformAccountService.listAccounts(c, {
+            await groupScopedAccounts.listAccounts(c, {
               limit: 100,
               offset: 0,
             })
@@ -7106,7 +7110,7 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
 ...createChatProjectsReaders({projectsService,publishingService,artifactsService,listRecentProjects,searchProjects: (c,opts)=>searchProjectsWithPublicationFacts(c,opts,{listProjects: ctx=>projectsService.listProjectsForComposition(ctx),listOutputRefsByProjects: (ctx,ids)=>projectsService.listOutputRefsByProjects(ctx,ids),listPublicationsByOutputIds: (ctx,ids)=>publishingService.listPublicationsByOutputIds(ctx,ids)}),contentRadarDraftSeedOf,extractArtifactText,makeReviewSubjectReader,readProjectRadarDraftSeed,readCurrentArtifactTruth}),
 ...createChatLifecycleReaders({projectsService,publishingService,analyticsService,assetsService,artifactsService,materialLinksService,reviewGateService,extractArtifactText,isLegacyIncompleteReview}),
 ...createChatEvidenceReaders({assetsService,knowledgeService}),
-...createChatPerformanceReaders({projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService,positioningService,calibrationService})
+...createChatPerformanceReaders({projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService:groupScopedAccounts,positioningService,calibrationService})
 },
     // [T-084a] 联网检索端口 —— gatherMaterials 前置检索 + honestyBlock/工具动态描述探测。
     probeSearchConfigured,

@@ -20,6 +20,27 @@ it('图卡修改只落实真实card，保留页图/source/layout；不存在的v
     await expect(service.read(ctx, target, { view: 'field_window', fieldWindow: { target: 'graphic_card', id: 'missing', field: 'visualBrief', offsetUtf16: 0, lengthUtf16: 5 } })).rejects.toThrow('真实文本');
     await expect(service.propose(ctx, target, { base: target.savedBase, baseDigest: target.documentDigest, summary: '不准改来源', candidate: { kind: 'typed_snapshot', owner: 'graphic_post', document: { ...current, imageUses: [] } } })).rejects.toThrow('图片');
 });
+it('0页图文重新组织可用typed_snapshot新增纯文字页；原页保留，新页不能带图或编造来源（月明录屏 2026-11-10）', async () => {
+    const script = { kind: 'project_script' as const, id: 'script', versionId: 'sv' } as any;
+    const current: import('@creatoros/contract').GraphicPostDocument = { schemaVersion: 1, title: '小号演示-说明书腔', body: '这个方法保证30天涨粉一万', summary: '', tags: [], imageUses: [], sourceRefs: [script], ruleSnapshotRef: null };
+    const target: WorkEditorTarget = { schemaVersion: 1, projectId: 'p', outputId: 'g', owner: 'graphic_post', contentType: 'image', savedBase: { kind: 'artifact', artifactId: 'ga', versionId: 'gv' }, documentDigest: workEditorContentDigest(current), selection: { kind: 'graphic_post', cardIds: [] } };
+    const service = createWorkEditorCandidateService({ readArticle: async () => { throw Error('wrong owner'); }, readGraphicPost: async () => ({ projectId: 'p', outputId: 'g', targetPlatform: null, artifactId: 'ga', currentVersionId: 'gv', current, versions: [] }), readProduction: async () => { throw Error('wrong owner'); }, readMedia: async () => { throw Error('not native'); } });
+    const pages = [{ cardId: 'p1', title: '开头', body: '主题', visualBrief: '一人对镜', sourceRefs: [script] }, { cardId: 'p2', title: '收束', body: '结论', sourceRefs: [] }];
+    const propose = (document: any) => service.propose(ctx, target, { base: target.savedBase, baseDigest: target.documentDigest, summary: '重新组织', candidate: { kind: 'typed_snapshot', owner: 'graphic_post', document } });
+    const result = await propose({ ...current, body: '分享语气正文', cardBriefs: pages });
+    expect(result.candidate?.document).toEqual({ ...current, body: '分享语气正文', cardBriefs: pages });
+    expect(result.apply).toMatchObject({ operation: 'createGraphicPostVersion', body: { expectedCurrentVersionId: 'gv' } });
+    await expect(propose({ ...current, cardBriefs: [{ ...pages[0], sourceRefs: [{ kind: 'asset', id: 'made-up', versionId: 'x' }] }] })).rejects.toThrow('来源');
+    await expect(propose({ ...current, cardBriefs: [{ ...pages[0], proposedImage: { assetId: 'a', assetFileId: 'f' } }] })).rejects.toThrow();
+    // 已有页仍不能删除或改来源。
+    const withCard = { ...current, cardBriefs: [{ cardId: 'old', title: '旧', body: '旧页', sourceRefs: [script] }] };
+    const t2: WorkEditorTarget = { ...target, documentDigest: workEditorContentDigest(withCard) };
+    const s2 = createWorkEditorCandidateService({ readArticle: async () => { throw Error('wrong owner'); }, readGraphicPost: async () => ({ projectId: 'p', outputId: 'g', targetPlatform: null, artifactId: 'ga', currentVersionId: 'gv', current: withCard, versions: [] }), readProduction: async () => { throw Error('wrong owner'); }, readMedia: async () => { throw Error('not native'); } });
+    const p2 = (document: any) => s2.propose(ctx, t2, { base: t2.savedBase, baseDigest: t2.documentDigest, summary: '重新组织', candidate: { kind: 'typed_snapshot', owner: 'graphic_post', document } });
+    await expect(p2({ ...withCard, cardBriefs: pages })).rejects.toThrow('图卡身份');
+    const kept = await p2({ ...withCard, cardBriefs: [{ ...withCard.cardBriefs[0], title: '改字' }, pages[1]] });
+    expect(kept.candidate?.document).toMatchObject({ cardBriefs: [{ cardId: 'old', title: '改字' }, { cardId: 'p2' }] });
+});
 it('原生字幕/trim/2倍速、移轨与替换媒体使用真实ticks，丰富扩展和同scene其它元素保真', async () => {
     const tracks: any = { main: { id: 'main', name: '主轨', type: 'video', muted: false, hidden: false, elements: [{ id: 'video', name: '片段', type: 'video', mediaId: 'm', startTime: 0, duration: 1200000, trimStart: 0, trimEnd: 0, sourceDuration: 1200000, params: { legacy: { position: { x: 0, y: 0 } } }, effects: [{ id: 'fx', type: 'rich-old', params: { rich: 1 }, enabled: true }] }] }, overlay: [{ id: 'caption-track', name: '字幕', type: 'text', hidden: false, elements: [{ id: 'caption', name: '字幕', type: 'text', startTime: 0, duration: 120000, trimStart: 0, trimEnd: 0, params: { content: '原字幕', legacy: { nested: '原样' } }, extra: { rich: '不动' } }] }, { id: 'overlay-video', name: '画中画', type: 'video', muted: false, hidden: false, elements: [] }], audio: [] };
     const scene: any = { id: 'scene', name: '当前', isMain: true, tracks, bookmarks: [], createdAt: 'fixed', updatedAt: 'fixed' }, plan: any = { editorVersion: 3, referenceEditor: { editor: 'opencut-classic', revision: 'cf5e79e919144200294fb9fed22a222592a0aeea', nativeDocument: { version: 31, currentSceneId: 'scene', metadata: { custom: '保护' }, settings: { custom: '保护' }, scenes: [scene, { ...scene, id: 'other' }] }, mediaRefs: [{ mediaId: 'm', assetId: 'a', assetFileId: 'f' }, { mediaId: 'm2', assetId: 'a2', assetFileId: 'f2' }] } };

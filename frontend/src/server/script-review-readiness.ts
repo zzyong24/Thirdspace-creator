@@ -7,7 +7,8 @@ export type ScriptReviewBlockReason = "running" | "awaiting_adoption" | "empty";
 export function getScriptReviewBlockReason(
   currentScript: string,
   taskStatuses: readonly string[],
-  minReviewableChars: number,
+  // 用户已保存的稿面哪怕只有一句也可审（合规检查恰恰常针对一句承诺）；只有空稿才解释缺口。
+  minReviewableChars = 1,
 ): ScriptReviewBlockReason | null {
   if (currentScript.trim().length >= minReviewableChars) {
     return null;

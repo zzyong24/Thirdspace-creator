@@ -220,7 +220,19 @@ export function createWorkEditorCandidateService(ports: WorkEditorPorts) {
             else {
                 const d = candidate.document as any;
                 check({ ...d, title: null, body: null, summary: null, tags: null, cardBriefs: null }, { ...original, title: null, body: null, summary: null, tags: null, cardBriefs: null }, '不能改写图文图片、来源、设计或布局');
-                check((d.cardBriefs ?? []).map((s: any) => ({ ...s, title: null, body: null, visualBrief: null })), (original.cardBriefs ?? []).map((s: any) => ({ ...s, title: null, body: null, visualBrief: null })), '不能改变图卡身份或来源');
+                // 原有图卡必须全部保留、相对顺序与来源/图片不变，只能改文字；空稿或页数不够时允许新增
+                // 纯文字页（月明录屏 2026-11-10：0 页图文「重新组织内容」无法分页）。新页不带图、不编来源。
+                const originalCards: any[] = original.cardBriefs ?? [], nextCards: any[] = d.cardBriefs ?? [];
+                const protectedCard = (s: any) => ({ ...s, title: null, body: null, visualBrief: null });
+                const isOriginal = (s: any) => originalCards.some(o => o.cardId === s.cardId);
+                check(nextCards.filter(isOriginal).map(protectedCard), originalCards.map(protectedCard), '不能改变图卡身份或来源');
+                const knownRefs: unknown[] = [...(original.sourceRefs ?? []), ...originalCards.flatMap(c => c.sourceRefs ?? [])];
+                for (const card of nextCards.filter(s => !isOriginal(s))) {
+                    if (card.proposedImage !== undefined)
+                        fail('新增图卡不能声称已有图片');
+                    if ((card.sourceRefs ?? []).some((ref: unknown) => !knownRefs.some(known => eq(known, ref))))
+                        fail('新增图卡只能引用本稿已有来源');
+                }
                 Object.assign(next, d);
             }
         }

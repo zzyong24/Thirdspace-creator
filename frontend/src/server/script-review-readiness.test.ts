@@ -21,8 +21,15 @@ describe("getScriptReviewBlockReason", () => {
   });
 
   it("没有稿件也没有活跃候选时返回 empty", () => {
-    expect(getScriptReviewBlockReason("占位", ["failed", "cancelled"], 40)).toBe(
+    expect(getScriptReviewBlockReason("  \n ", ["failed", "cancelled"])).toBe(
       "empty",
     );
+  });
+
+  it("用户保存的一句话短文案也能审核，不被待采纳候选挡住（月明录屏 2026-11-10）", () => {
+    expect(
+      getScriptReviewBlockReason("这个方法保证30天涨粉一万", ["awaiting_confirmation"]),
+    ).toBeNull();
+    expect(getScriptReviewBlockReason("占位", ["running"])).toBeNull();
   });
 });
