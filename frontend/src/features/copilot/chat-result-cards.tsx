@@ -711,7 +711,7 @@ export function ChatPositioningCard({
   return (
     <div
       data-slot="chat-positioning-card"
-      className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
+      className="@container mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
         {autoAdopt ? "AI 定位提案 · 继续深入当前账号，自动采纳" : "AI 定位提案 · 采纳写入定位母版"}
@@ -722,7 +722,7 @@ export function ChatPositioningCard({
             {suggestion.oneLiner}
           </p>
         ) : null}
-        <dl className="grid grid-cols-1 gap-0.5 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-0.5 @sm:grid-cols-2">
           {facets
             .filter(([, v]) => v.length > 0)
             .map(([label, value]) => (

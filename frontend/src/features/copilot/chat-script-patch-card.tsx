@@ -115,13 +115,13 @@ export function ChatScriptPatchCard({
   return (
     <div
       data-slot="chat-script-patch-card"
-      className="mt-1 flex w-full max-w-[560px] flex-col gap-2 rounded-xl border border-border bg-surface p-3"
+      className="@container mt-1 flex w-full max-w-[560px] flex-col gap-2 rounded-xl border border-border bg-surface p-3"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold text-foreground">局部改稿候选</span>
         <span className="text-[10px] text-muted-foreground">只影响当前选中段落</span>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-2 @md:grid-cols-2">
         <div className="rounded-lg bg-surface-subtle p-2.5">
           <p className="mb-1 text-[10px] font-medium text-muted-foreground">修改前</p>
           <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">

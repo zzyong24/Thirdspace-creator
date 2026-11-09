@@ -55,7 +55,7 @@ function CardShell({
   return (
     <div
       data-slot={slot}
-      className="mt-1 flex w-full max-w-[560px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
+      className="@container mt-1 flex w-full max-w-[560px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
         {heading}
@@ -228,7 +228,7 @@ export function ChatProjectLifecycleCard({
         ) : null
       }
     >
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-1.5 @md:grid-cols-4">
         {Object.entries(lifecycle.completeness).map(([section, state]) => (
           <div
             key={section}
