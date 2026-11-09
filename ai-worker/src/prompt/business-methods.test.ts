@@ -4,7 +4,7 @@ import {
   CONVERSATIONAL_METHOD_SKILLS,
 } from "./business-methods";
 import { getOfficialTemplate, _resetRegistry } from "./registry";
-import { USER_FACING_RESPONSE_POLICY } from "./user-facing-response-policy";
+import { USER_FACING_RESPONSE_POLICY, USER_FACING_RESPONSE_POLICY_VERSION } from "./user-facing-response-policy";
 import { ANTI_FABRICATION_CLAUSE } from "./grounding-facets";
 
 describe("Agent 对用户的共同表达约束", () => {
@@ -35,6 +35,12 @@ describe("Agent 对用户的共同表达约束", () => {
     expect(USER_FACING_RESPONSE_POLICY).toContain("任务已经答完就结束");
     expect(USER_FACING_RESPONSE_POLICY).toContain("工具名称和参数只用于执行");
     expect(USER_FACING_RESPONSE_POLICY).toContain("最终回复不拼接过程播报");
+  });
+
+  it("B5（月明 2026-11-10）：全程简体中文、工具调用前后不说过程旁白，并升级策略版本", () => {
+    expect(USER_FACING_RESPONSE_POLICY).toContain("所有面向用户的文字一律使用简体中文");
+    expect(USER_FACING_RESPONSE_POLICY).toContain("调用工具前后不输出过程旁白");
+    expect(USER_FACING_RESPONSE_POLICY_VERSION).toBe("user-facing-response-2026-11-10.1");
   });
 
   it("对话大纲可以直接作答，可编辑候选仍走真实工具", () => {
