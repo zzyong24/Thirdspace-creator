@@ -297,8 +297,11 @@ export async function readWechatReportDom(scope:Page|Frame,kind:NativeReportKind
 }
 export async function readChannelsWorksResponse(response:Response,frame:Frame,controls:WechatOperationControls):Promise<WorksObservation>{
  controls.signal.throwIfAborted();let body:{errCode?:unknown;data?:{totalCount?:unknown;list?:unknown}},selection:NativeReportPayload['selection'];
- const shape:WechatResponseObservation={reason:'endpoint',errorCodeState:'missing',countType:'missing',reportedCount:null,listState:'missing',listLength:null,currentPageOne:null,pageSizeTen:null};
- const reject=(reason:WechatResponseObservation['reason'],message:string):never=>{const error=new WechatBrowserSourceError('REPORT_RESPONSE_INVALID',message);error.responseObservation={...shape,reason};throw error;};
+ const shape:WechatResponseObservation={httpStatus:null,method:null,reason:'endpoint',errorCodeState:'missing',countType:'missing',reportedCount:null,listState:'missing',listLength:null,currentPageOne:null,pageSizeTen:null};
+ const reject=(reason:WechatResponseObservation['reason'],message:string):never=>{
+  try{const status=response.status();shape.httpStatus=Number.isSafeInteger(status)&&status>=100&&status<=599?status:null;const method=response.request().method();shape.method=['POST','OPTIONS','GET','HEAD'].includes(method)?method as Exclude<WechatResponseObservation['method'],null>:'OTHER';}catch{/* 只补失败形状，读不到不能改变原错误。 */}
+  const error=new WechatBrowserSourceError('REPORT_RESPONSE_INVALID',message);error.responseObservation={...shape,reason};throw error;
+ };
  try{
   const url=nativeUrl(response.url(),origins.wechatVideo,'wechatVideo'),request=response.request();
   if(url.pathname!==worksEndpoint||response.status()!==200||request.method()!=='POST'||request.frame()!==frame)return reject('endpoint','单篇视频原生响应未对应当前页面');

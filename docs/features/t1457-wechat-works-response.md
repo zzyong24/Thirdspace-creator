@@ -9,3 +9,9 @@ readChannelsWorksResponse每个原失败门附固定reason：endpoint、request_
 源码真实RED/GREEN覆盖原全部失败分支、非目标路径不发、无效字段过滤、回调抛错、取消/预算/物理停止；成功旧样例仍成功，全部旧强归属/日期/总数/响应/下载族保留。403业务及导航回归、types、timeout-policy、boundary、task-governance/diff检查；检查后提交、固定入口本地包并验证安装源一致，只运行一次正常同步取得固定字段，不额外截图/导出诊断窗口。若原任务内部重试需停止，限本Agent新建验收任务并保留ID，不能改用户后台任务。
 
 得到实际分支/形状后，依据官方公开固定bundle和本机安全枚举证据修复已证协议差异，生产行为变更前更新本SPEC并复核，先完整公共链路RED/GREEN和旧合法/拒绝输入族，不能只为过门放宽类型或省略校验。源码范围只在ai-worker微信browser-source/DOM witness及其测试与native-entry完整集成测试；不改公共CLI合同/后端写库/账号/数据归属/日期含义/总期限。真实正常同步的保存结果回读成功后才制作最新Mac/Windows正式包并安装本机；失败如实保留原ID，不反复猜测或重扫。
+
+## 第二次最小实验：只核实endpoint分支
+
+R1实际226c685fa一次run-c85cc56e-5505-411b-ad53-672c9d7c684f / ai-task-a721d53e-79 / exec_295d205b-b563-40cb-996d-faf5f8c92aa7，在collection-a721d53e-80给出reason=endpoint，其余数据形状尚未读取。原自建任务首次失败后已公开取消，不能据此做空列表/类型兼容。
+
+原responseObservation增补httpStatus（100..599整数/null）及method（POST/OPTIONS/GET/HEAD/OTHER/null），不保留任意方法名、URL、headers或原body。只读取原Response/Request现有方法，不额外请求、不改匹配/失败/成功条件、deadline或用户文字；未知/额外/类型非法元数据仍整项丢弃。第二次最小实验仅同原账号一次正常同步核实endpoint原因，首次失败后停止Agent自建验收任务。研究卡仍最多两次实验，不能继续重复全量同步。根据已证匹配差异再复核并修复，其他约束不变。

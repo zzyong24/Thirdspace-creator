@@ -744,3 +744,7 @@ describe('T1457 作品响应拒绝分支保持原失败并给出安全形状',()
   expect(JSON.stringify(error.responseObservation)).not.toContain('synthetic-private');
  });
 });
+
+describe('T1457 endpoint状态与方法固定观察',()=>{
+ it.each([[204,'OPTIONS'],[307,'POST'],[403,'POST']] as const)('状态%s方法%s仍原失败且只记录固定协议值',async(status,method)=>{const frame={} as Frame,r=response(1788969600,1791475200,13,{frame,status,method}),error=await readChannelsWorksResponse(r,frame,controls).catch(error=>error);expect(error).toMatchObject({code:'REPORT_RESPONSE_INVALID',responseObservation:{reason:'endpoint',httpStatus:status,method}});});
+});
