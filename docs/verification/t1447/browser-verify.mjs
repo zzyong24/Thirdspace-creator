@@ -42,7 +42,8 @@ for(const viewport of [{width:1440,height:900},{width:390,height:844}]){
  await p.reload();await p.waitForFunction(()=>document.querySelector('table')?.innerText.includes('身份未验证 · 状态验收抖音甲'));
  assert(await p.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'整页水平溢出');
  await capture('刷新后真实状态与原入口仍可用',['refresh','failure-recovery'],viewport);
- await p.hover('table[aria-label="各平台能力"]',{label:'查看平台绑定状态'});
+ await p.hover('#platform-capability-title',{label:'查看平台绑定状态'});
+ if(viewport.width===390)assert(await p.evaluate(()=>{const region=document.querySelector('[aria-label="平台能力与绑定状态，可横向滚动"]');return region.scrollWidth>region.clientWidth&&region.querySelector('table').clientWidth>=640;}),'窄窗口没有保持表格局部横滚');
  await p.screenshot({path:evidence+'/browser-'+viewport.width+'.png'});
  checks.push({viewport,result:'pass'});
 }
