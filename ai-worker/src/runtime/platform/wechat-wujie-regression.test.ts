@@ -116,7 +116,7 @@ function wujieSourceFixture(options:{visibleIframe?:boolean;duplicateHost?:boole
   getByText:(text:string)=>locator(nativeContext,()=>[...nativeQuery('*')].filter(node=>node.textContent?.trim()===text&&![...node.children].some(child=>child.textContent?.trim()===text))),
   locator:(selector:string)=>locator(nativeContext,()=>[...nativeQuery(selector)],selector.includes('.filter-row')?'window':undefined),
   frameElement:async()=>handle(dom,iframe),
-  evaluate:async(fn:Function,arg:unknown)=>{if(arg&&typeof arg==='object'&&'kind' in arg)spend('sdk:report-state-read',120000);const result=(runtimeWindow.eval('('+fn.toString()+')') as (value:unknown)=>unknown)(arg);if(options.unrelatedProxy&&(result===false||result===null)&&!expiredNative){expiredNative=true;vi.setSystemTime(Date.now()+120000);}return result;},
+  evaluate:async(fn:Function,arg:unknown)=>{if(arg&&typeof arg==='object'&&'kind' in arg)spend('sdk:report-state-read',120000);const result=(runtimeWindow.eval('('+fn.toString()+')') as (value:unknown)=>unknown)(arg);if(options.unrelatedProxy&&(result===false||result===null||typeof result==='object'&&'ready' in result&&result.ready===false)&&!expiredNative){expiredNative=true;vi.setSystemTime(Date.now()+120000);}return result;},
  } as unknown as Frame;
  const bytes=Buffer.from('日期,播放量\n2026-10-08,0\n明确合成日报字节');
  const download={failure:async()=>null,suggestedFilename:()=> 'synthetic-native-'+selected+'.csv',createReadStream:async()=>Readable.from([bytes])} as unknown as Download;
@@ -178,6 +178,20 @@ describe('T1110 Wujie分离DOM与当前公众号设置页：正式source回归�
    expect(f.onReport).toHaveBeenCalledWith(expect.objectContaining({kind:'channelsDaily',bytes:f.bytes,sourcePath:'/platform/statistic/post',selection:{startDate:'2026-09-09',endDate:'2026-10-08',timeZone:'Asia/Shanghai',meaning:'statisticsDates'}}));
    expect(f.clicks.filter(action=>['daily','seven','thirty','download'].includes(action))).toEqual(['daily','seven','thirty','download']);
    expect(f.page.waitForEvent).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{f.dispose();}
+ });
+ it.each(['replaced-frame','unrelated-proxy'] as const)('T1453 %s保持原拒绝并给出不同可见根证据',async mode=>{
+  vi.useFakeTimers();vi.setSystemTime(instant);const f=wujieSourceFixture({unrelatedProxy:mode==='unrelated-proxy'}),onDiagnostic=vi.fn();
+  if(mode==='replaced-frame'){
+   const frames=f.page.frames.bind(f.page);let reads=0;
+   f.page.frames=()=>{const current=frames();if(++reads===1)return current;if(reads===2)vi.setSystemTime(Date.now()+120000);return [{...current[0]!} as Frame];};
+  }
+  try{
+   await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-finder-id',{onStopped:f.onStopped,onDiagnostic},f.onReport)).rejects.toMatchObject({code:'REPORT_SECTION_MISSING'});
+   expect(f.onReport).not.toHaveBeenCalled();expect(f.onStopped).toHaveBeenCalledOnce();const root=onDiagnostic.mock.calls[0]?.[0].rootObservation;
+   expect(root).toMatchObject({parentRoute:'target',matchingFrameCount:1,selectedFrameCurrent:mode!=='replaced-frame',visibleHostCount:1});
+   if(mode==='replaced-frame')expect(root).toMatchObject({hostCurrent:null,association:null,runtimeContainsSection:null});
+   else expect(root).toMatchObject({hostCurrent:true,openShadow:true,runtimeParentTarget:true,runtimeHostCount:1,runtimeRootOpen:true,runtimeSectionCount:1,runtimeContainsSection:false,association:false});
   }finally{f.dispose();}
  });
  it('公开login起步实际落在settingpage且存在3个设置href：直接读唯一AppID而不重走入口',async()=>{

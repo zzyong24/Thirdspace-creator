@@ -87,6 +87,18 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
   expect(onDiagnostic).toHaveBeenCalledOnce();expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('entryObservation');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private');expect(f.onStopped).toHaveBeenCalledOnce();
  });
+ it.each([false,true])('T1453可见根诊断只出安全机械字段，观察者抛错=%s不替换原失败/关闭',async throwing=>{
+  const f=fixture(),root={parentRoute:'target',matchingFrameCount:1,selectedFrameCurrent:true,visibleHostCount:1,hostCurrent:true,openShadow:true,runtimeParentTarget:true,runtimeHostCount:1,runtimeRootOpen:true,runtimeSectionCount:0,runtimeContainsSection:null,association:false,frameElementVisible:null};
+  const error=Object.assign(new WechatBrowserSourceError('REPORT_SECTION_MISSING','原失败保留'),{rootObservation:root}),onDiagnostic=vi.fn(()=>{if(throwing)throw Error('合成观察者异常');});
+  vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic).toHaveBeenCalledWith(expect.objectContaining({rootObservation:root,code:'REPORT_SECTION_MISSING'}));expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it.each([{parentRoute:'https://private.invalid/token'},{parentRoute:'target',secret:'Cookie=private'}])('T1453未知/非法root字段不出端口',async root=>{
+  const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_SECTION_MISSING','原失败保留'),{rootObservation:root}),onDiagnostic=vi.fn();vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('rootObservation');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private');expect(f.onStopped).toHaveBeenCalledOnce();
+ });
  it('T1363后续report不会继承前一入口子步骤，下载失败也不附旧prepare诊断',async()=>{
   const f=fixture(),onDiagnostic=vi.fn();
   vi.mocked(f.reportWitness.prepare).mockImplementationOnce(async(_page,_platform,_kind,op)=>{op.onEntryObservation?.({entryPhase:'wait_target_route',entryVisibleCount:1,centreClicked:false});return {scope:f.page,download:f.locator,state:{selection,dates:['2026-10-07','2026-10-08']}};});
