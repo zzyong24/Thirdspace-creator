@@ -204,8 +204,9 @@ export function BlindPredictRow({
           <Button
             type="button"
             size="sm"
+            variant="outline"
             data-testid="blind-predict-button"
-            className="h-7 gap-1 bg-brand px-2.5 text-[11px] text-brand-foreground hover:bg-brand/90"
+            className="h-7 gap-1 px-2.5 text-[11px]"
             disabled={phase === "opening"}
             onClick={openCopilot}
           >
@@ -250,8 +251,9 @@ export function BlindPredictRow({
               <Button
                 type="button"
                 size="sm"
+                variant="outline"
                 data-testid="blind-predict-button"
-                className="h-7 gap-1 bg-brand px-2.5 text-[11px] text-brand-foreground hover:bg-brand/90"
+                className="h-7 gap-1 px-2.5 text-[11px]"
                 disabled={phase === "opening"}
                 onClick={openCopilot}
               >

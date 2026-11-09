@@ -173,7 +173,7 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
           </section>
 
           {/* [T-1070] 脚本保存确认、审阅之后才由脚本一键生成文章和图文，再进入发布。 */}
-          <WorkCreationCta projectId={project.id} />
+          <WorkCreationCta projectId={project.id} primary={!isPublished} />
 
           {/* ── 发布包区 ── */}
           {deferred ? <React.Suspense fallback={<DeferredSectionLoading label="发布信息"/>}>
@@ -485,7 +485,7 @@ function AmmoDrawer({
         </div>
         <Link
           href={`/canvases?projectId=${encodeURIComponent(projectId)}`}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground transition hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <Images className="size-4" aria-hidden="true" />
           打开创作画布
