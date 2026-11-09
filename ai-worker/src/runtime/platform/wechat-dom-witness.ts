@@ -28,7 +28,7 @@ async function observe<T>(controls:WechatOperationControls,read:(end:number)=>Pr
  for(;;){controls.signal.throwIfAborted();const value=await read(end);controls.signal.throwIfAborted();if(value!==null)return value;if(Date.now()>=end)return fail(code,'微信后台数据尚未就绪，请查看原任务');await delay(250,undefined,{signal:controls.signal});}
 }
 /** 2026-11-09官方MpNavigationSub协议；折叠侧栏的文字隐藏不代表其可见菜单不可用。 */
-async function navigateChannelsMenu(page:Page,sourcePath:string,controls:WechatOperationControls):Promise<boolean>{
+async function navigateChannelsMenu(page:Page,sourcePath:string,controls:WechatOperationControls,waitTarget=true):Promise<boolean>{
  // SEMANTIC_BOUNDARY_ALLOW: 固定官方UI组件类、精确菜单标题及原父路由为机械协议，不猜图标或账号权限。
  controls.signal.throwIfAborted();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
  const roots=page.locator('li.weui-desktop-menu__sub__wrp').filter({visible:true});
@@ -59,8 +59,7 @@ async function navigateChannelsMenu(page:Page,sourcePath:string,controls:WechatO
  nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
  notify('click_entry',1);
  await entry.click({timeout:controls.timeoutMs(120000)});controls.signal.throwIfAborted();
- notify('wait_target_route',1);
- await observe(controls,async()=>nativeUrl(page.url(),origins.wechatVideo,'wechatVideo').pathname===sourcePath?true:null,'REPORT_PAGE_MISSING',120000);
+ if(waitTarget){notify('wait_target_route',1);await observe(controls,async()=>nativeUrl(page.url(),origins.wechatVideo,'wechatVideo').pathname===sourcePath?true:null,'REPORT_PAGE_MISSING',120000);}
  return true;
 }
 /** 一次失败后的固定数字快照；不读取/返回正文、链接或身份，不改原报表选择。 */
@@ -83,11 +82,11 @@ async function readMissingSectionObservation(frame:Frame,exact:Locator,visible:L
   controls.signal.throwIfAborted();controls.timeoutMs(120000);return observation;
  }finally{if(timer)clearTimeout(timer);if(onAbort)controls.signal.removeEventListener('abort',onAbort);}
 }
-export async function readWechatIdentityDom(page:Page,platform:WechatCreatorPlatform,onObservation?:(value:WechatIdentityObservation)=>void,observeWrongPath=false,verifyWrongPath=false){
+export async function readWechatIdentityDom(page:Page,platform:WechatCreatorPlatform,onObservation?:(value:WechatIdentityObservation)=>void,observeWrongPath=false,verifyWrongPath=false,allowHomeAliases=false){
  const url=nativeUrl(page.url(),origins[platform],platform);
  const notify=(value:WechatIdentityObservation|undefined)=>{if(value)try{void Promise.resolve(onObservation?.(value)).catch(()=>{});}catch{/* 形状观察不能替换原identity。 */}};
  if(verifyWrongPath&&url.pathname==='/platform')return null;
- const identityPage=!observeWrongPath&&url.pathname===(platform==='wechatOfficial'?'/cgi-bin/settingpage':'/platform');
+ const identityPage=!observeWrongPath&&(url.pathname===(platform==='wechatOfficial'?'/cgi-bin/settingpage':'/platform')||platform==='wechatVideo'&&allowHomeAliases&&['/','/platform/'].includes(url.pathname));
  if(!identityPage&&!(platform==='wechatVideo'&&(observeWrongPath||verifyWrongPath))){
   if(platform==='wechatVideo'&&onObservation)notify({routeClass:({'/':'official_root','/platform/':'identity_slash','/platform/statistic/post':'platform_post','/platform/statistic/follower':'platform_follower','/micro/statistic/post':'micro_post','/micro/statistic/follower':'micro_follower'} as Record<string,WechatIdentityObservation['routeClass']>)[url.pathname]??'official_other',loginPromptVisible:null,qrLoginFrameRaw:null,qrLoginFrameVisible:null,routeUnchanged:true,readyState:'unknown',rootScan:'not_run',frameCount:null,foreignFrameCount:null,unknownShadowCount:null,truncated:false,roots:[]});
   return null;
@@ -330,6 +329,12 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
     return [...document.querySelectorAll('h1,h2,h3,p,span,div')].some(node=>visible(node)&&['扫码登录','微信扫码登录','请使用微信扫描二维码登录'].includes(visibleText(node)));
    });
   },
+  // SEMANTIC_BOUNDARY_ALLOW: 仅受限诊断读取当前固定首页身份；没有goto或业务别名放宽。
+  async readCurrent(page,platform,controls){
+   controls.signal.throwIfAborted();controls.timeoutMs();
+   if(platform!=='wechatVideo'||!['/','/platform','/platform/'].includes(nativeUrl(page.url(),origins[platform],platform).pathname))return null;
+   const value=await readWechatIdentityDom(page,platform,undefined,false,false,true);controls.signal.throwIfAborted();controls.timeoutMs();return value;
+  },
   async read(page,platform,controls){
    if(platform==='wechatVideo')await page.goto(origins[platform]+'/platform',{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
    else if(nativeUrl(page.url(),origins[platform],platform).pathname!=='/cgi-bin/settingpage')await navigateOfficialIdentityEntry(page,controls);
@@ -369,7 +374,12 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    },'IDENTITY_MISSING',480000);
   },
  };
- const reportWitness:WechatReportWitness={async prepare(page,platform,kind,controls){
+ const reportWitness:WechatReportWitness={
+ async navigateForDiagnosis(page,controls){
+  if(!await navigateChannelsMenu(page,paths.channelsDaily,controls,false))await page.goto(origins.wechatVideo+paths.channelsDaily,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs(120000)});
+  controls.signal.throwIfAborted();controls.timeoutMs();
+ },
+ async prepare(page,platform,kind,controls){
   if(!Object.prototype.hasOwnProperty.call(paths,kind)||platform!==(kind.startsWith('official')?'wechatOfficial':'wechatVideo'))return fail('REPORT_PLATFORM_MISMATCH','报表不属于当前平台');
   controls.signal.throwIfAborted();controls.timeoutMs();
   const current=nativeUrl(page.url(),origins[platform],platform),sourcePath=paths[kind];

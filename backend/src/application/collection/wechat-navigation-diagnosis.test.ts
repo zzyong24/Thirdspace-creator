@@ -29,6 +29,12 @@ describe('T1364 backend诊断边界（合成ports，不代签真浏览器）',()
   await expect(f.service.diagnose(ctx,'account',{...f.controls,trustedInvocationId:'second'})).rejects.toThrow('AUTHORIZATION_CONSUMED');
   expect(f.observe).toHaveBeenCalledOnce();
  });
+ it('T1456 report-entry仅可信配置可启用，仍按原一次授权消费',async()=>{
+  const f=await fixture();f.ports.configuration={...(f.ports.configuration as object),targetPage:'report-entry'};
+  const result=await f.service.diagnose(ctx,'account',f.controls);expect(result.status).toBe('completed');expect(f.observe.mock.calls[0]![2]).toMatchObject({targetPage:'report-entry'});
+  await expect(f.service.diagnose(ctx,'account',{...f.controls,trustedInvocationId:'second'})).rejects.toThrow('AUTHORIZATION_CONSUMED');expect(f.observe).toHaveBeenCalledOnce();
+  const directory=(await readdir(f.root)).find(n=>n.startsWith('run-'))!;expect(JSON.parse(await readFile(path.join(f.root,directory,'manifest.json'),'utf8')).targetPage).toBe('report-entry');
+ });
  it('完整总预算冻结，真实停止和释放分时刻，manifest保存真实auditReceipt',async()=>{
   const f=await fixture(),result=await f.service.diagnose(ctx,'account',f.controls);
   expect(Date.parse(result.deadlineAt)-Date.parse(result.startedAt)).toBe(WECHAT_NAVIGATION_BUDGET_MS);
