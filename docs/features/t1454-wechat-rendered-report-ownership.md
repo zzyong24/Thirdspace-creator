@@ -15,3 +15,11 @@ TDD先用真实Chromium复刻父canonical→home但同一runtime绑定可见Shad
 前一版本机仍失败，T1455进一步证实gate=root_mismatch且可见host与当前runtime的DOM标识不同。归属拒绝正确，不得改为按同文字或DOM标识强行放行。第三轮研究已核对官方异步启动/父路由同步源码，仅支持初始化导航竞争的候选；不是已经证明唯一根因。采用最小可逆恢复：每份报表prepare内、任何标签/日期/下载点击之前，仅在父home、Frame/host均当前且唯一/open、runtime根不相等时，最多一次重新点击原固定官方菜单；成功导航后清空旧选择并重新取得当前唯一Frame/host。菜单不可用不另加goto；再次回退仍原失败，不重扫或重复完整任务。
 
 恢复动作及重新取根全部裁剪在本来该次120000根观察stage的剩余时间，复用持久总deadline和取消，不另开预算或增加等待。首个报表标签点击后没有恢复分支。新增真实Chromium公共三报表fixture明确复现“第一次导航后切回其他可见面板、缓存runtime仍在”，先RED，恢复后完整GREEN；永久回退最多两次菜单进入且无下载；接近原stage deadline仍退出。旧合法/拒绝族、types/timeout/boundary均保留。只做一次本机验收；若仍失败停止本研究内继续猜测，不再循环修补/全量运行。
+
+## 官方菜单prefix缺陷的第四轮闭合
+
+前轮一次恢复真机仍失败，已停止猜测。用户新一次明确授权的T1456两帧取证证明身份有效、post首帧灰屏后退回首页；官方公开chunk-common module70072直接提供prefixCls=finder-ui-desktop，原生产菜单只匹配weui-desktop，旧真实浏览器fixture误用了底层库默认prefix。第四轮研究docs/research/t1454-official-menu-prefix-cycle4.md已现场核验并关闭。
+
+只修正固定菜单协议：同时兼容finder-ui-desktop与旧weui-desktop这两个已证类名，在唯一可见li owner内按精确“数据中心”标题，再选择同owner内唯一可见inline或hover popup子项。两个prefix混合重复owner/子项仍回原固定goto，未知prefix不猜；不选择第一个匹配，不改route/归属/身份/日期/数据/导出/停止和任何超时预算。诊断模式复用同helper，默认off与一次授权机制不变；不增加截图。
+
+先新增实际Finder prefix folded/expanded完整三原生报表公共入口RED；实现后GREEN，保留旧weui folded/expanded、无组件固定goto、重复menu固定goto。新增Finder相同覆盖以及混合prefix歧义拒绝，证明未引入质量门阻断旧合法输入。按既有完整业务族、导航诊断族、types/timeout/boundary验收。提交后安装普通无配置本地修复包，只做一次目标账号正常同步；读取保存结果前不得宣称修好。仍失败则暂停本轮继续猜测。真机成功后沿既有授权双平台正式包并安装本机。

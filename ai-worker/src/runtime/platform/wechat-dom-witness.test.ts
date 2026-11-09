@@ -9,7 +9,7 @@ function channelsTestPage(config:Record<string,any>):Page{
  let current=config.url();const originalLocator=config.locator,originalGoto=config.goto;
  for(const frame of config.frames())if(!frame.frameElement)frame.frameElement=async()=>({isVisible:async()=>true,dispose:async()=>{}});
  const page={evaluate:async(_fn:Function,arg:unknown)=>arg===undefined?false:{identity:null},...config,url:()=>current,goto:async(url:string,options:unknown)=>{current=url;await originalGoto?.(url,options);},
-  locator:(selector:string)=>['wujie-app','li.weui-desktop-menu__sub__wrp'].includes(selector)?{filter(){return this;},count:async()=>0}:originalLocator(selector),
+  locator:(selector:string)=>['wujie-app','li.finder-ui-desktop-menu__sub__wrp,li.weui-desktop-menu__sub__wrp'].includes(selector)?{filter(){return this;},count:async()=>0}:originalLocator(selector),
   getByText:(text:string)=>({filter(){return this;},count:async()=>1,click:async()=>{if(text==='视频数据')current=channels+'/platform/statistic/post';if(text==='关注者数据')current=channels+'/platform/statistic/follower';}}),
   waitForURL:async(predicate:(url:URL)=>boolean)=>{expect(predicate(new URL(current))).toBe(true);},
  };return page as unknown as Page;

@@ -29,15 +29,18 @@ function reportPage(follower:boolean){
   }
  });</script></body>`;
 }
-function home(mode:'folded'|'expanded'|'legacy'|'ambiguous',direct=false,follower=false){
- const menu=`<li class="weui-desktop-menu__item weui-desktop-menu__sub__wrp"><a class="weui-desktop-menu__link weui-desktop-menu__sub__link" href="javascript:;">▥<span class="weui-desktop-menu__name"><span>数据中心</span></span></a>
- <ul class="weui-desktop-sub-menu" ${mode==='expanded'?'':'hidden'}><li><a data-path="post">视频数据</a></li><li><a data-path="follower">关注者数据</a></li></ul>
+function home(mode:'folded'|'expanded'|'legacy'|'ambiguous'|'finder-folded'|'finder-expanded'|'mixed-ambiguous',direct=false,follower=false){
+ const expanded=mode==='expanded'||mode==='finder-expanded';
+ const prefix=mode.startsWith('finder-')?'finder-ui-desktop':'weui-desktop';
+ const oldMenu=`<li class="weui-desktop-menu__item weui-desktop-menu__sub__wrp"><a class="weui-desktop-menu__link weui-desktop-menu__sub__link" href="javascript:;">▥<span class="weui-desktop-menu__name"><span>数据中心</span></span></a>
+ <ul class="weui-desktop-sub-menu" ${expanded?'':'hidden'}><li><a data-path="post">视频数据</a></li><li><a data-path="follower">关注者数据</a></li></ul>
  <div class="weui-desktop-menu__popup_sub_menu" hidden><div>数据中心</div><ul><li><a data-path="post">视频数据</a></li><li><a data-path="follower">关注者数据</a></li></ul></div></li>`;
+ const menu=oldMenu.replaceAll('weui-desktop',prefix);
  return `<body><h2 class="finder-nickname">明确合成账号</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-menu-id">synthetic-menu-id</span>
- <style>li{list-style:none}.weui-desktop-menu__sub__wrp{width:150px;padding:12px}.weui-desktop-menu__popup_sub_menu{position:absolute;left:165px;top:10px;background:white}a{display:block;cursor:pointer;padding:4px}${mode==='folded'?'.weui-desktop-menu__name{display:none}':''}</style>
- <ul>${mode==='legacy'?'':menu}${mode==='ambiguous'?menu:''}</ul><main></main><script>
+ <style>li{list-style:none}.weui-desktop-menu__sub__wrp,.finder-ui-desktop-menu__sub__wrp{width:150px;padding:12px}.weui-desktop-menu__popup_sub_menu,.finder-ui-desktop-menu__popup_sub_menu{position:absolute;left:165px;top:10px;background:white}a{display:block;cursor:pointer;padding:4px}${!expanded?'.weui-desktop-menu__name,.finder-ui-desktop-menu__name{display:none}':''}</style>
+ <ul>${mode==='legacy'?'':menu}${mode==='ambiguous'?menu:mode==='mixed-ambiguous'?oldMenu.replaceAll('weui-desktop','finder-ui-desktop'):''}</ul><main></main><script>
  function renderReport(path){document.querySelector('main').innerHTML='<iframe style="width:900px;height:600px" src="/micro/statistic/'+path+'"></iframe>';}
- document.querySelectorAll('.weui-desktop-menu__sub__wrp').forEach(li=>li.onmouseover=()=>{if(${mode!=='expanded'})setTimeout(()=>li.querySelector('.weui-desktop-menu__popup_sub_menu').hidden=false,150);});
+ document.querySelectorAll('.weui-desktop-menu__sub__wrp,.finder-ui-desktop-menu__sub__wrp').forEach(li=>li.onmouseover=()=>{if(${!expanded})setTimeout(()=>li.querySelector('.weui-desktop-menu__popup_sub_menu,.finder-ui-desktop-menu__popup_sub_menu').hidden=false,150);});
  document.querySelectorAll('[data-path]').forEach(a=>a.onclick=()=>{const p=a.dataset.path;console.log('synthetic-menu-click');history.pushState({},'','/platform/statistic/'+p);renderReport(p);});
  ${direct?`renderReport(${JSON.stringify(follower?'follower':'post')});`:''}
  </script></body>`;
@@ -47,7 +50,7 @@ describe('视频号真实菜单 → 原source/DOM witness/原生下载（真实C
  let browser:Browser;
  beforeAll(async()=>{browser=await chromium.launch({headless:true,timeout:120000,args:['--disable-background-networking','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost']});},120000);
  afterAll(async()=>{await browser?.close();},120000);
- async function fixture(mode:'folded'|'expanded'|'legacy'|'ambiguous',diagnosticClock?:()=>number){
+ async function fixture(mode:'folded'|'expanded'|'legacy'|'ambiguous'|'finder-folded'|'finder-expanded'|'mixed-ambiguous',diagnosticClock?:()=>number){
   const context=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block'}),page=await context.newPage();let directReports=0,released=false,menuClicks=0;
   page.on('console',message=>{if(message.text()==='synthetic-menu-click')menuClicks++;});
   await context.route('**/*',async route=>{
@@ -57,14 +60,14 @@ describe('视频号真实菜单 → 原source/DOM witness/原生下载（真实C
    if(u.pathname.startsWith('/micro/statistic/')){await route.fulfill({contentType:'text/html',body:reportPage(u.pathname.endsWith('follower'))});return;}
    const direct=u.pathname.startsWith('/platform/statistic/');if(direct)directReports++;
    // 明确复现整页启动的路由回退；菜单点击使用当前SPA而不会整页重载。
-   const fixedWorks=mode==='legacy'||mode==='ambiguous';
+   const fixedWorks=mode==='legacy'||mode==='ambiguous'||mode==='mixed-ambiguous';
    const html=home(mode,direct&&fixedWorks,u.pathname.endsWith('follower'))+(direct&&!fixedWorks?'<script>history.replaceState({},"","/platform")</script>':'');
    await route.fulfill({contentType:'text/html; charset=utf-8',body:html});
   });
   const source=createWechatBrowserSource({...createVerifiedWechatDomWitnesses({now:()=>instant}),...(diagnosticClock?{now:diagnosticClock}:{}),openProfile:async(_dir,_headless,c)=>guardedLaunch(null,async()=>context,{signal:c.signal,onStopped:c.onStopped,timeoutMs:120000})});
   return {source,page,context,directReports:()=>directReports,menuClicks:()=>menuClicks,released:()=>released,onStopped:async()=>{released=true;}};
  }
- it.each(['folded','expanded','legacy'] as const)('%s完整原生三报表保留日期/响应/下载核验',{timeout:120000,retry:0},async mode=>{
+ it.each(['folded','expanded','legacy','finder-folded','finder-expanded'] as const)('%s完整原生三报表保留日期/响应/下载核验',{timeout:120000,retry:0},async mode=>{
   const f=await fixture(mode),reports:WechatNativeDownload[]=[];
   try{
    const result=await f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-menu-id',{onStopped:f.onStopped},async report=>{reports.push(report);});
@@ -74,8 +77,8 @@ describe('视频号真实菜单 → 原source/DOM witness/原生下载（真实C
    expect(result.every(r=>Buffer.from(r.bytes).includes(Buffer.from('明确合成下载字节')))).toBe(true);expect(f.directReports()).toBe(mode==='legacy'?3:0);expect(f.released()).toBe(true);expect(f.page.isClosed()).toBe(true);
   }finally{await f.context.close();}
  });
- it('两个同标题菜单不选第一项，安全回退固定路径仍完成合法同步',{timeout:120000,retry:0},async()=>{
-  const f=await fixture('ambiguous'),reports:WechatNativeDownload[]=[];
+ it.each(['ambiguous','mixed-ambiguous'] as const)('%s两个同标题菜单不选第一项，安全回退固定路径仍完成合法同步',{timeout:120000,retry:0},async mode=>{
+  const f=await fixture(mode),reports:WechatNativeDownload[]=[];
   try{await f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-menu-id',{onStopped:f.onStopped},async r=>{reports.push(r);});expect(reports.map(r=>r.kind)).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);expect(f.menuClicks()).toBe(0);expect(f.directReports()).toBe(3);expect(f.released()).toBe(true);}
   finally{await f.context.close();}
  });
