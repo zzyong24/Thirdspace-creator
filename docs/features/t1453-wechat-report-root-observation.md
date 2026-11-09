@@ -1,0 +1,11 @@
+# 视频号报表可见根失败取证
+
+600005aee菜单导航修复的实际同步run-f5a9c8fd-14e7-4d06-94ff-31efe1bedde6仍以EXPORT_FAILED结束，安全日志为wechatVideo.prepare.channelsDaily.REPORT_SECTION_MISSING。现有错误在host已识别时不带同Frame五字段观察，因此无法区分最终父路径不符、选中Frame已替换或可见Shadow关联失败。不能把合成成功当真实根因已定位。
+
+仅在既有reportWitness.prepare的rootReady计算中保留本次轮询的机械快照；不新增DOM查询、不额外开浏览器、不截图、不读凭据或任意正文/URL。字段限定为固定父路径类别（target/home/login/micro_post/micro_follower/official_other/foreign/unknown）、匹配Frame数、选中Frame是否仍当前、可见host数、host是否仍当前、openShadow、关联是否匹配、frameElement是否可见，未执行字段null。不混合上轮快照，不猜0。
+
+只在原typed SECTION_MISSING错误上附带rootObservation，通过原WechatBrowserDiagnostic固定白名单出端口；未知字段、任意字符串和非法数字拒绝，不改变原错误、失败/取消/清理、任何报表选择或预算。复用现有onEntryObservation，将原菜单查询结果和阶段写入原trace，无额外观察。现有JSON日志sink自动承接安全字段，无需改frontend根。
+
+验收：源码公共collectNativeReports错误端口先RED→GREEN，合法/恶意元数据与观察者抛错不改变原错误和物理停止；DOM/wujie原合法与拒绝族保留。两根已关联/未关联及路径/Frame前置拒绝输出不同机械证据；unknown为null。跑微信既有338回归及类型/timeout/boundary。提交后安装本机验收包，只用一个新的正常同步意图读取实际失败元数据，原ID观察，不启动第三份一次性截图诊断。该正常同步属于持续修复验收，不重放两份已耗尽授权。不把日志取证成功写成报表成功。
+
+关联阶段补充：runtime父页面是否仍为目标、runtime中可见host数、root是否open、精确标签叶子数以及原native contains结果，也只从原evaluate已经计算的变量投影；提前短路的字段为null。此分解不增加查询或放宽任何boolean准入。

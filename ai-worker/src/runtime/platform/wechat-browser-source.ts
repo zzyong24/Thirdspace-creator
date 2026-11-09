@@ -12,11 +12,12 @@ import {readWechatNavigationObservation,navigationRouteClass,type WechatNavigati
 
 export type WechatCreatorPlatform='wechatOfficial'|'wechatVideo';
 export type WechatSectionObservation={exactTabCount:number;visibleTabCount:number;frameElementVisible:boolean;documentReadyState:'loading'|'interactive'|'complete';bodyTextLength:number};
+export type WechatRootObservation={parentRoute:'target'|'home'|'login'|'micro_post'|'micro_follower'|'official_other'|'foreign'|'unknown';matchingFrameCount:number|null;selectedFrameCurrent:boolean|null;visibleHostCount:number|null;hostCurrent:boolean|null;openShadow:boolean|null;runtimeParentTarget:boolean|null;runtimeHostCount:number|null;runtimeRootOpen:boolean|null;runtimeSectionCount:number|null;runtimeContainsSection:boolean|null;association:boolean|null;frameElementVisible:boolean|null};
 export type WechatEntryObservation={entryPhase:'initial'|'wait_entry_or_centre'|'click_centre'|'wait_entry_after_centre'|'click_entry'|'wait_target_route'|'recover_owner'|'hover_owner'|'wait_associated_entry';entryVisibleCount:number;centreVisibleCount?:number;centreClicked:boolean};
 /** 内部身份观察只含机械形状；未知字段必须保持null，不得猜身份或登录状态。 */
 export type WechatIdentityRootObservation={kind:'top'|'frame'|'openShadow';parent:number|null;visible:boolean;uidRaw:number;uidVisible:number;nameRaw:number;nameVisible:number;uidIdRaw:number;uidIdVisible:number;nameClassRaw:number;nameClassVisible:number;idTextPresent:boolean|null;copyPresent:boolean|null;copyMatches:boolean|null;namePresent:boolean|null;uidInRoot:boolean|null;nameInRoot:boolean|null};
 export type WechatIdentityObservation={routeClass:'identity'|'identity_slash'|'official_root'|'platform_post'|'platform_follower'|'micro_post'|'micro_follower'|'official_other'|'foreign'|'unavailable';loginPromptVisible:boolean|null;qrLoginFrameRaw:number|null;qrLoginFrameVisible:number|null;routeUnchanged:boolean;readyState:'loading'|'interactive'|'complete'|'unknown';rootScan:'complete'|'limited'|'not_run'|'unavailable';frameCount:number|null;foreignFrameCount:number|null;unknownShadowCount:number|null;truncated:boolean;roots:WechatIdentityRootObservation[]};
-export type WechatBrowserDiagnostic={platform:WechatCreatorPlatform;stage:'openProfile'|'navigate'|'readIdentity'|'prepare'|'download'|'submit';kind?:NativeReportKind;code:string;exceptionName:string;failureKind?:'NAVIGATION_ABORTED'|'CONNECTION_RESET'|'TUNNEL_CONNECTION_FAILED'|'TARGET_CLOSED'|'EXECUTION_CONTEXT_DESTROYED'|'NAVIGATION_INTERRUPTED';observation?:WechatSectionObservation;entryObservation?:WechatEntryObservation;identityObservation?:WechatIdentityObservation};
+export type WechatBrowserDiagnostic={platform:WechatCreatorPlatform;stage:'openProfile'|'navigate'|'readIdentity'|'prepare'|'download'|'submit';kind?:NativeReportKind;code:string;exceptionName:string;failureKind?:'NAVIGATION_ABORTED'|'CONNECTION_RESET'|'TUNNEL_CONNECTION_FAILED'|'TARGET_CLOSED'|'EXECUTION_CONTEXT_DESTROYED'|'NAVIGATION_INTERRUPTED';observation?:WechatSectionObservation;rootObservation?:WechatRootObservation;entryObservation?:WechatEntryObservation;identityObservation?:WechatIdentityObservation};
 export type WechatBrowserControls={signal?:AbortSignal;deadlineAt?:string|null;timeoutMs?:number;onStopped?:()=>Promise<void>;onStopUnconfirmed?:(retry:()=>Promise<void>)=>void;onDiagnostic?:(event:WechatBrowserDiagnostic)=>void;assertScopeFresh?:()=>Promise<void>;onBrowserOpened?:(occurredAt:string)=>void;onContextCloseStarted?:(occurredAt:string)=>void;onPhysicalStopped?:(occurredAt:string)=>void};
 export type WechatNavigationScreenshot={status:'captured';artifactId:string;sha256:string}|{status:'missing'};
 export type WechatNavigationSnapshot=WechatNavigationObservation&{phase:'identity_verified'|'observation_end';observedAt:string;screenshot:WechatNavigationScreenshot};
@@ -28,6 +29,7 @@ export type WechatNativeDownload={kind:NativeReportKind;bytes:Uint8Array;filenam
 export type WechatCreatorIdentity={platformIdentity:string;displayName:string;source:string};
 export class WechatBrowserSourceError extends Error{
  observation?:WechatSectionObservation;
+ rootObservation?:WechatRootObservation;
  constructor(readonly code:string,message:string){super(message);this.name='WechatBrowserSourceError';}
 }
 const origins:Record<WechatCreatorPlatform,string>={wechatOfficial:'https://mp.weixin.qq.com',wechatVideo:'https://channels.weixin.qq.com'};
@@ -78,6 +80,15 @@ function sectionObservation(value:unknown):WechatSectionObservation|undefined{
  if(documentReadyState!=='loading'&&documentReadyState!=='interactive'&&documentReadyState!=='complete')return undefined;
  return {exactTabCount,visibleTabCount,frameElementVisible,documentReadyState,bodyTextLength};
 }
+/** SEMANTIC_BOUNDARY_ALLOW: 固定路径类别、布尔和计数投影，不接正文、URL或未知键。 */
+function rootObservation(value:unknown):WechatRootObservation|undefined{
+ if(!value||typeof value!=='object')return undefined;
+ const record=value as Record<string,unknown>,counts=['matchingFrameCount','visibleHostCount','runtimeHostCount','runtimeSectionCount'],flags=['selectedFrameCurrent','hostCurrent','openShadow','runtimeParentTarget','runtimeRootOpen','runtimeContainsSection','association','frameElementVisible'],keys=['parentRoute',...counts,...flags];
+ if(Object.keys(record).length!==keys.length||Object.keys(record).some(key=>!keys.includes(key)))return undefined;
+ if(!['target','home','login','micro_post','micro_follower','official_other','foreign','unknown'].includes(record.parentRoute as string))return undefined;
+ if(counts.some(key=>record[key]!==null&&!(typeof record[key]==='number'&&Number.isSafeInteger(record[key])&&Number(record[key])>=0&&Number(record[key])<=10000))||flags.some(key=>record[key]!==null&&typeof record[key]!=='boolean'))return undefined;
+ return Object.fromEntries(keys.map(key=>[key,record[key]])) as WechatRootObservation;
+}
 function entryObservation(value:unknown):WechatEntryObservation|undefined{
  if(!value||typeof value!=='object')return undefined;
  const {entryPhase,entryVisibleCount,centreVisibleCount,centreClicked}=value as Record<string,unknown>;
@@ -110,7 +121,7 @@ function identityObservation(value:unknown):WechatIdentityObservation|undefined{
  return {routeClass:routeClass as WechatIdentityObservation['routeClass'],loginPromptVisible:loginPromptVisible as boolean|null,qrLoginFrameRaw:qrLoginFrameRaw as number|null,qrLoginFrameVisible:qrLoginFrameVisible as number|null,routeUnchanged,readyState:readyState as WechatIdentityObservation['readyState'],rootScan:rootScan as WechatIdentityObservation['rootScan'],frameCount:frameCount as number|null,foreignFrameCount:foreignFrameCount as number|null,unknownShadowCount:unknownShadowCount as number|null,truncated,roots};
 }
 function emitDiagnostic(controls:WechatBrowserControls,platform:WechatCreatorPlatform,trace:Trace,error:unknown){
- try{const failureKind=protocolFailure(error),observation=platform==='wechatVideo'&&trace.stage==='prepare'&&trace.kind&&kinds.wechatVideo.includes(trace.kind)&&error instanceof WechatBrowserSourceError&&error.code==='REPORT_SECTION_MISSING'?sectionObservation(error.observation):undefined,entry=platform==='wechatVideo'&&trace.stage==='prepare'?entryObservation(trace.entryObservation):undefined;controls.onDiagnostic?.({platform,stage:trace.stage,...(trace.kind?{kind:trace.kind}:{}),code:error instanceof WechatBrowserSourceError&&diagnosticCodes.has(error.code)?error.code:'BROWSER_OPERATION_FAILED',exceptionName:error instanceof Error&&diagnosticNames.has(error.name)?error.name:'UnknownError',...(failureKind?{failureKind}:{}),...(observation?{observation}:{}),...(entry?{entryObservation:entry}:{})});}catch{/* 诊断端口不能影响原错误、关闭或宿主停止确认。 */}
+ try{const failureKind=protocolFailure(error),observation=platform==='wechatVideo'&&trace.stage==='prepare'&&trace.kind&&kinds.wechatVideo.includes(trace.kind)&&error instanceof WechatBrowserSourceError&&error.code==='REPORT_SECTION_MISSING'?sectionObservation(error.observation):undefined,entry=platform==='wechatVideo'&&trace.stage==='prepare'?entryObservation(trace.entryObservation):undefined,root=platform==='wechatVideo'&&trace.stage==='prepare'&&error instanceof WechatBrowserSourceError&&error.code==='REPORT_SECTION_MISSING'?rootObservation(error.rootObservation):undefined;controls.onDiagnostic?.({platform,stage:trace.stage,...(trace.kind?{kind:trace.kind}:{}),code:error instanceof WechatBrowserSourceError&&diagnosticCodes.has(error.code)?error.code:'BROWSER_OPERATION_FAILED',exceptionName:error instanceof Error&&diagnosticNames.has(error.name)?error.name:'UnknownError',...(failureKind?{failureKind}:{}),...(observation?{observation}:{}),...(entry?{entryObservation:entry}:{}),...(root?{rootObservation:root}:{})});}catch{/* 诊断端口不能影响原错误、关闭或宿主停止确认。 */}
 }
 
 export interface WechatOperationControls{/** 受信内部意图；交互登录不能由二维码提前结束。 */identityVerification?:'boundIdentity'|'interactiveLogin';signal:AbortSignal;timeoutMs(requested?:number):number;/** 内部固定数字进度；不能增加页面观察或改变原错误。 */onEntryObservation?:(value:WechatEntryObservation|undefined)=>void;onIdentityObservation?:(value:WechatIdentityObservation)=>void}
