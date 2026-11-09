@@ -34,6 +34,23 @@ async function fixture() {
 }
 
 describe("platform bind with durable attempts and an atomic account port", () => {
+  it('T1447只读返回真实凭据检测事实，明确到期覆盖旧验证，不读取其他用户账号',async()=>{
+    const f=await fixture();
+    try{
+      const read=(f.service as unknown as {readLoginObservations:(ctx:ReturnType<typeof ctx>,ids:readonly string[])=>Promise<any[]>}).readLoginObservations;
+      expect(read).toBeTypeOf('function');
+      const attempt=await f.service.bindBegin(ctx('user-a'),{platform:'xiaohongshu',clientRequestId:'state'});
+      await f.service.recordVerifiedIdentity({...f.proof(attempt.bindAttemptId),expiresAt:'2026-09-30T00:01:00.000Z'});
+      const bound=await f.service.bindConfirm(ctx('user-a'),{bindAttemptId:attempt.bindAttemptId});
+      expect(await read(ctx('user-a'),[bound.accountId!])).toEqual(expect.arrayContaining([expect.objectContaining({accountId:bound.accountId,loginState:'verified',checkedAt:time,reasonCode:null})]));
+      f.clock.value='2026-09-30T00:02:00.000Z';
+      expect(await read(ctx('user-a'),[bound.accountId!])).toEqual(expect.arrayContaining([expect.objectContaining({loginState:'needs_login',checkedAt:'2026-09-30T00:01:00.000Z',reasonCode:'expired'})]));
+      await expect(read(ctx('user-b'),[bound.accountId!])).rejects.toMatchObject({code:'FORBIDDEN_ACCOUNT'});
+      expect((await f.db.select().from(platformCollectionBindings))[0]?.verifiedAt).toBe(time);
+      await f.db.update(platformCollectionBindings).set({expiresAt:'invalid-time'}).where(eq(platformCollectionBindings.accountId,bound.accountId!));
+      expect(await read(ctx('user-a'),[bound.accountId!])).toEqual([]);
+    }finally{await f.client.close();}
+  });
   it("binds only a trusted recorded identity, and replays begin/confirm without duplicate accounts", async () => {
     const f = await fixture();
     try {

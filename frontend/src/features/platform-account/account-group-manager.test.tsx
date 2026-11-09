@@ -4,7 +4,7 @@ import type {AccountGroupResource} from "@creatoros/contract";
 import { act, cleanup, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const router={refresh:vi.fn()};
-const api=vi.hoisted(()=>({listAccountGroups:vi.fn(),listAccounts:vi.fn(),createAccountGroup:vi.fn(),getAccountGroup:vi.fn(),updateAccountGroup:vi.fn(),archiveAccountGroup:vi.fn(),restoreAccountGroup:vi.fn(),previewAccountGroupTransfer:vi.fn(),transferAccountGroupMember:vi.fn(),createAccount:vi.fn(),getAccount:vi.fn(),archiveAccount:vi.fn(),updateAccount:vi.fn(),loginDouyin:vi.fn(),listProjects:vi.fn(),listKnowledge:vi.fn(),listConversations:vi.fn(),getPlatformAccountCapabilities:vi.fn(),startAccountBinding:vi.fn(),getAccountBinding:vi.fn(),cancelAccountBinding:vi.fn()}));
+const api=vi.hoisted(()=>({listAccountGroups:vi.fn(),listAccounts:vi.fn(),createAccountGroup:vi.fn(),getAccountGroup:vi.fn(),updateAccountGroup:vi.fn(),archiveAccountGroup:vi.fn(),restoreAccountGroup:vi.fn(),previewAccountGroupTransfer:vi.fn(),transferAccountGroupMember:vi.fn(),createAccount:vi.fn(),getAccount:vi.fn(),archiveAccount:vi.fn(),updateAccount:vi.fn(),loginDouyin:vi.fn(),listProjects:vi.fn(),listKnowledge:vi.fn(),listConversations:vi.fn(),getAccountGroupBindingStatus:vi.fn(),getPlatformAccountCapabilities:vi.fn(),startAccountBinding:vi.fn(),getAccountBinding:vi.fn(),cancelAccountBinding:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>router}));
 vi.mock("@/lib/contract-client",()=>({client:api}));
 const pagination=vi.hoisted(()=>({total:null as number|null,accountTotal:null as number|null}));
@@ -32,8 +32,23 @@ const renderManager=()=>render(<AccountManagerView viewModel={{accounts:[],group
 const openManagement=async(name="真实账号")=>{const trigger=screen.getByRole("button",{name:`管理${name}`});await userEvent.click(trigger);return trigger;};
 const openTransfer=async()=>{const trigger=await openManagement();await userEvent.click(screen.getByRole("menuitem",{name:"转组"}));return trigger;};
 const openRename=async()=>{await openManagement("创作者");await userEvent.click(screen.getByRole("menuitem",{name:"重命名"}));};
-beforeEach(()=>{sessionStorage.clear();pagination.total=null;pagination.accountTotal=null;vi.clearAllMocks();localStorage.clear();localStorage.setItem(CURRENT_GROUP_KEY,"g");window.history.replaceState(null,"","/accounts");api.getPlatformAccountCapabilities.mockResolvedValue([{platform:"douyin",bind:{available:true,reason:"已接入真实扫码",method:"qr"},collect:{available:true,reason:"已接入作品采集"},publish:{available:false,reason:"自动发布端口未装配"},draft:{available:false,reason:"草稿端口未装配"},manual:{available:true,reason:"可登记真实账号"}},{platform:"kuaishou",bind:{available:false,reason:"快手扫码端口未装配",method:"none"},collect:{available:false,reason:"快手采集端口未装配"},publish:{available:false,reason:"自动发布端口未装配"},draft:{available:false,reason:"草稿端口未装配"},manual:{available:true,reason:"可登记真实账号"}}]);api.listProjects.mockResolvedValue([{id:"p",title:"原组真实项目"}]);api.listKnowledge.mockResolvedValue([]);api.listConversations.mockResolvedValue([]);api.listAccountGroups.mockResolvedValue([group(),group("h","另一组")]);api.listAccounts.mockResolvedValue([]);api.getAccountGroup.mockResolvedValue(group());api.getAccount.mockResolvedValue({id:"manual"});api.startAccountBinding.mockImplementation(async({body})=>({runId:`run-${body.platform}`,groupId:body.groupId,platform:body.platform,status:"waiting_verification",accountId:null,error:null,createdAt:"2026-10-18T00:00:00Z",updatedAt:"2026-10-18T00:00:00Z"}));api.getAccountBinding.mockImplementation(async({params})=>({runId:params.runId,groupId:"g",platform:params.runId.slice(4),status:"waiting_verification",accountId:null,error:null,createdAt:"2026-10-18T00:00:00Z",updatedAt:"2026-10-18T00:00:00Z"}));});afterEach(cleanup);
+beforeEach(()=>{api.getAccountGroupBindingStatus.mockImplementation(async({params})=>({groupId:params.groupId,accounts:[]}));sessionStorage.clear();pagination.total=null;pagination.accountTotal=null;vi.clearAllMocks();localStorage.clear();localStorage.setItem(CURRENT_GROUP_KEY,"g");window.history.replaceState(null,"","/accounts");api.getPlatformAccountCapabilities.mockResolvedValue([{platform:"douyin",bind:{available:true,reason:"已接入真实扫码",method:"qr"},collect:{available:true,reason:"已接入作品采集"},publish:{available:false,reason:"自动发布端口未装配"},draft:{available:false,reason:"草稿端口未装配"},manual:{available:true,reason:"可登记真实账号"}},{platform:"kuaishou",bind:{available:false,reason:"快手扫码端口未装配",method:"none"},collect:{available:false,reason:"快手采集端口未装配"},publish:{available:false,reason:"自动发布端口未装配"},draft:{available:false,reason:"草稿端口未装配"},manual:{available:true,reason:"可登记真实账号"}}]);api.listProjects.mockResolvedValue([{id:"p",title:"原组真实项目"}]);api.listKnowledge.mockResolvedValue([]);api.listConversations.mockResolvedValue([]);api.listAccountGroups.mockResolvedValue([group(),group("h","另一组")]);api.listAccounts.mockResolvedValue([]);api.getAccountGroup.mockResolvedValue(group());api.getAccount.mockResolvedValue({id:"manual"});api.startAccountBinding.mockImplementation(async({body})=>({runId:`run-${body.platform}`,groupId:body.groupId,platform:body.platform,status:"waiting_verification",accountId:null,error:null,createdAt:"2026-10-18T00:00:00Z",updatedAt:"2026-10-18T00:00:00Z"}));api.getAccountBinding.mockImplementation(async({params})=>({runId:params.runId,groupId:"g",platform:params.runId.slice(4),status:"waiting_verification",accountId:null,error:null,createdAt:"2026-10-18T00:00:00Z",updatedAt:"2026-10-18T00:00:00Z"}));});afterEach(cleanup);
 describe("账号组管理真实操作",()=>{
+ it("T1447 平台扫码旁显示实际绑定状态，刷新只读且失败可重试",async()=>{
+  api.getAccountGroupBindingStatus.mockResolvedValue({groupId:'g',accounts:[{accountId:'a',platform:'douyin',accountHandle:'真实账号',bindingState:'bound',loginState:'verified',checkedAt:'2026-11-09T04:22:22.419Z',reasonCode:null}]});
+  renderManager();const table=await screen.findByRole('table',{name:'各平台能力'});
+  expect(within(table).getByRole('columnheader',{name:'绑定状态'})).toBeVisible();
+  expect(await within(table).findByText('最近验证有效')).toBeVisible();
+  expect(within(table).getByText('已绑定 · 真实账号')).toBeVisible();
+  api.getAccountGroupBindingStatus.mockRejectedValueOnce(Error('private db failure'));
+  fireEvent.click(screen.getByRole('button',{name:'刷新绑定状态'}));
+  expect(await within(table).findByText('登录状态未确认')).toBeVisible();
+  expect(screen.queryByText('private db failure')).toBeNull();
+  fireEvent.click(screen.getByRole('button',{name:'刷新绑定状态'}));
+  expect(await within(table).findByText('最近验证有效')).toBeVisible();
+  expect(api.startAccountBinding).not.toHaveBeenCalled();
+ });
+
  it("显示组与真实成员，允许创建空组而不强制先绑定",async()=>{renderManager();expect(await screen.findByRole("heading",{name:"账号组与绑定账号"})).toBeVisible();expect(screen.getByText("真实账号")).toBeVisible();expect(screen.getByRole("button",{name:"创建账号组"})).toBeVisible();});
  it("建组调用真实接口并读回，不制造本地成功",async()=>{api.createAccountGroup.mockResolvedValue(group("new","品牌组",[]));api.getAccountGroup.mockResolvedValue(group("new","品牌组",[]));api.listAccountGroups.mockResolvedValueOnce([group(),group("h","另一组")]).mockResolvedValue([group(),group("h","另一组"),group("new","品牌组",[])]);renderManager();fireEvent.change(screen.getByLabelText("新账号组名称"),{target:{value:"品牌组"}});fireEvent.click(screen.getByRole("button",{name:"创建账号组"}));await waitFor(()=>expect(api.createAccountGroup).toHaveBeenCalled());expect(api.createAccountGroup.mock.calls[0][0].body).toMatchObject({name:"品牌组"});await waitFor(()=>expect(api.getAccountGroup).toHaveBeenCalledWith(expect.objectContaining({params:{groupId:"new"}})));});
  it("修改名称携带版本，失败保留输入且不显示内部操作编号",async()=>{api.updateAccountGroup.mockRejectedValue(new Error("HttpTransport: 409 for accountGroups.update: 名称未保存：版本冲突"));renderManager();await openRename();fireEvent.change(screen.getByLabelText("账号组名称"),{target:{value:"新名称"}});fireEvent.click(screen.getByRole("button",{name:"保存名称"}));await screen.findByText("名称未保存：版本冲突");expect(screen.getByLabelText("账号组名称")).toHaveValue("新名称");expect(screen.getByText('名称未保存：版本冲突').closest('[role="alert"]')).not.toHaveTextContent('HttpTransport');expect(api.updateAccountGroup.mock.calls[0][0].body).toEqual({name:"新名称",expectedVersion:1});});
@@ -184,6 +199,13 @@ function prepareCompletedBinding(){
  api.getAccountBinding.mockResolvedValue({runId:'verified-current-run',groupId:'g',platform:'douyin',status:'succeeded',accountId:bound.id,error:null,createdAt:'2026-10-19T00:00:00Z',updatedAt:'2026-10-19T00:00:00Z'});
  return {get currentGroup(){return persisted;}};
 }
+it('T1447 可选状态读取失败仍完成真实绑定核验、关闭弹窗并保留成功提示',async()=>{
+ prepareCompletedBinding();api.getAccountGroupBindingStatus.mockRejectedValue(Error('metadata unavailable'));
+ renderManager();const trigger=await screen.findByRole('button',{name:'扫码绑定抖音账号'});await waitFor(()=>expect(trigger).toBeEnabled());await userEvent.click(trigger);
+ await waitFor(()=>expect(api.getAccount).toHaveBeenCalled());await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+ expect(screen.getByText('本次已核验账号',{exact:true})).toBeVisible();expect(screen.getByRole('status')).toHaveTextContent('已绑定');expect(api.startAccountBinding).toHaveBeenCalledOnce();
+ expect(await screen.findByText('登录状态未确认')).toBeVisible();
+});
 it('T1355当前扫码账号和成员列表核验完成后自动关窗并回到平台按钮',async()=>{
  prepareCompletedBinding();renderManager();const trigger=await screen.findByRole('button',{name:'扫码绑定抖音账号'});await waitFor(()=>expect(trigger).toBeEnabled());await userEvent.click(trigger);
  await waitFor(()=>expect(api.getAccount).toHaveBeenCalled());await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
@@ -253,7 +275,7 @@ it('T1370能力未读完保loading，不先报不支持或空集合',async()=>{
 });
 it('T1370一平台只采集一平台只扫码时，不支持的单元格不造按钮或原因项',async()=>{
  const no={available:false,reason:'合成未装配'};api.getPlatformAccountCapabilities.mockResolvedValue([{platform:'douyin',bind:{...no,method:'none'},collect:{available:true,reason:'合成已装配采集'},publish:no,draft:no,manual:no},{platform:'xiaohongshu',bind:{available:true,reason:'合成已装配扫码',method:'qr'},collect:no,publish:no,draft:no,manual:no}]);renderManager();
- const table=await screen.findByRole('table',{name:'各平台能力'});expect(within(table).getAllByRole('columnheader')).toHaveLength(3);expect(within(table).getByRole('button',{name:'扫码绑定小红书账号'})).toBeEnabled();expect(within(table).queryByRole('button',{name:'扫码绑定抖音账号'})).toBeNull();expect(within(table).queryByText('合成未装配')).toBeNull();
+ const table=await screen.findByRole('table',{name:'各平台能力'});expect(within(table).getAllByRole('columnheader').map(cell=>cell.textContent)).toEqual(['平台','绑定状态','扫码绑定','自动采集']);expect(within(table).getByRole('button',{name:'扫码绑定小红书账号'})).toBeEnabled();expect(within(table).queryByRole('button',{name:'扫码绑定抖音账号'})).toBeNull();expect(within(table).queryByText('合成未装配')).toBeNull();
 });
 it('T1370归档和binding busy不冒无能力，仍禁止启动另一个run',async()=>{
  const archived={...group('old','原归档组'),status:'archived' as const};api.listAccountGroups.mockResolvedValue([group(),archived]);

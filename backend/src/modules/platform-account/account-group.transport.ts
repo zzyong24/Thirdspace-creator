@@ -1,10 +1,11 @@
+import type {AccountBindingStatusService} from "./account-binding-status.service";
 import {ENDPOINTS,type Endpoint,type Transport} from "@creatoros/contract";
 import type {GroupResourceAccessService} from "./group-resource-access.service";
 import type {AccountGroupService} from "./account-group.service";
 import type {GroupMigrationService} from "./group-migration.service";
-import {AuthenticationError,UnsupportedOperationError} from "./platform-account.errors";
-export const ACCOUNT_GROUP_OP_IDS=["groupResourceGrants.list","groupResourceGrants.previewRevoke","groupResourceGrants.revoke","assets.previewDelete","accountGroups.list","accountGroups.get","accountGroups.create","accountGroups.update","accountGroups.archive","accountGroups.restore","accountGroups.members.previewTransfer","accountGroups.members.transfer","accountGroups.migration.preview","accountGroups.migration.apply","accountGroups.migration.status","accountGroups.migration.undo"] as const;
-export function createAccountGroupTransport(factory:()=>AccountGroupService,migrations?:()=>GroupMigrationService,resources?:()=>GroupResourceAccessService):Transport{
+import {AuthenticationError,UnsupportedOperationError,ValidationError} from "./platform-account.errors";
+export const ACCOUNT_GROUP_OP_IDS=["groupResourceGrants.list","groupResourceGrants.previewRevoke","groupResourceGrants.revoke","assets.previewDelete","accountGroups.list","accountGroups.get","accountGroups.bindingStatus","accountGroups.create","accountGroups.update","accountGroups.archive","accountGroups.restore","accountGroups.members.previewTransfer","accountGroups.members.transfer","accountGroups.migration.preview","accountGroups.migration.apply","accountGroups.migration.status","accountGroups.migration.undo"] as const;
+export function createAccountGroupTransport(factory:()=>AccountGroupService,migrations?:()=>GroupMigrationService,resources?:()=>GroupResourceAccessService,bindingStatus?:()=>AccountBindingStatusService):Transport{
  return {async request(endpoint:Endpoint,input,ctx){
   if(!ctx)throw new AuthenticationError();const service=factory();const request=input??{};let data:unknown;
   switch(endpoint.id){
@@ -13,6 +14,7 @@ export function createAccountGroupTransport(factory:()=>AccountGroupService,migr
    case 'groupResourceGrants.revoke':data=await resources!().revoke(ctx,ENDPOINTS.revokeGroupResourceGrant.params.parse(request.params).grantId,ENDPOINTS.revokeGroupResourceGrant.body.parse(request.body));break;
    case 'assets.previewDelete':data=await resources!().previewDelete(ctx,ENDPOINTS.previewAssetDelete.params.parse(request.params).assetId);break;
    case "accountGroups.list":{const q=ENDPOINTS.listAccountGroups.query.parse(request.query??{});const result=await service.list(ctx,{includeArchived:q.includeArchived,limit:q.pageSize,offset:(q.page-1)*q.pageSize});return {data:result.rows,meta:{requestId:ctx.requestId,page:q.page,pageSize:q.pageSize,total:result.total}};}
+   case "accountGroups.bindingStatus":{if(request.query!==undefined||request.body!==undefined)throw new ValidationError("绑定状态读取不接受额外参数");if(!bindingStatus)throw new UnsupportedOperationError(endpoint.id);data=await bindingStatus().read(ctx,ENDPOINTS.getAccountGroupBindingStatus.params.parse(request.params).groupId);break;}
    case "accountGroups.get":data=await service.get(ctx,ENDPOINTS.getAccountGroup.params.parse(request.params).groupId);break;
    case "accountGroups.create":data=await service.create(ctx,ENDPOINTS.createAccountGroup.body.parse(request.body));break;
    case "accountGroups.update":data=await service.update(ctx,ENDPOINTS.updateAccountGroup.params.parse(request.params).groupId,ENDPOINTS.updateAccountGroup.body.parse(request.body));break;

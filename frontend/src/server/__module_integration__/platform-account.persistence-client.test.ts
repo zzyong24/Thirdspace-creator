@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { Endpoint, RequestContext } from "@creatoros/contract";
+import { ENDPOINTS, type Endpoint, type RequestContext } from "@creatoros/contract";
 import {
   compositeTransport,
   __resetPersistenceForTests,
@@ -123,4 +123,17 @@ describe("platform-account ops registered in the composite transport", () => {
       ),
     ).rejects.toThrow();
   });
+});
+
+it('T1447 组合根公开只读状态有真实归属守卫，不将登记账号伪报有效',async()=>{
+ const owner=ctx(canonicalDataset.user.id);
+ const group=(await compositeTransport.request(ENDPOINTS.createAccountGroup,{params:undefined,query:undefined,body:{name:'状态验收组',idempotencyKey:'t1447-status-group'}},owner)).data;
+ const account=(await compositeTransport.request(ENDPOINTS.createAccount,{params:undefined,query:undefined,body:{platform:'douyin',accountHandle:'状态验收账号',followerBaseline:0}},{...owner,groupId:group.id,groupVersion:group.version})).data;
+ const input={params:{groupId:group.id},query:undefined,body:undefined};
+ const read=()=>compositeTransport.request(ENDPOINTS.getAccountGroupBindingStatus,input,owner);
+ expect((await read()).data).toEqual({groupId:group.id,accounts:[expect.objectContaining({accountId:account.id,bindingState:'unverified',loginState:'unknown',checkedAt:null})]});
+ expect((await read()).data).toEqual((await read()).data);
+ await expect(compositeTransport.request(ENDPOINTS.getAccountGroupBindingStatus,input,ctx('another-owner'))).rejects.toThrow();
+ await expect(compositeTransport.request(ENDPOINTS.getAccountGroupBindingStatus,input)).rejects.toThrow();
+ await expect(compositeTransport.request(ENDPOINTS.getAccountGroupBindingStatus,{...input,query:{accountId:account.id}} as never,owner)).rejects.toThrow();
 });

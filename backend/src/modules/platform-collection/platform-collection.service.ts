@@ -2,9 +2,9 @@ import { createHash, randomUUID } from "node:crypto";
 import { and, or, asc, desc, eq, lt, inArray, count, isNotNull, sql } from "drizzle-orm";
 import type {AccountGroupService} from '../platform-account';
 import type { Db } from "../../db";
-import type { RequestContext, CollectionPageCommit, CollectionRunResource, PlatformCapabilityState } from "@creatoros/contract";
+import type { AccountBindingStatusItem, RequestContext, CollectionPageCommit, CollectionRunResource, PlatformCapabilityState } from "@creatoros/contract";
 import { collectionPageCommit, collectionStartRequest, platformWorksListQuery, platformMetricsReadQuery,
-  platformNativeReportsListQuery, platformBindBeginRequest, platformBindConfirmRequest, platformId, platformCapability } from "@creatoros/contract";
+  iso8601, platformNativeReportsListQuery, platformBindBeginRequest, platformBindConfirmRequest, platformId, platformCapability } from "@creatoros/contract";
 import { platformAccounts } from "../../schema/platform-account";
 import { publications } from "../../schema/publishing";
 import { projects, contentOutputs } from "../../schema/projects";
@@ -265,6 +265,34 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     const [account] = await db.select().from(platformAccounts).where(and(eq(platformAccounts.id, accountId), eq(platformAccounts.userId, ctx.userId)));
     if (!account || account.status !== "active") deny("FORBIDDEN_ACCOUNT", "账号不存在或不可用");
     return account;
+  }
+
+  // SEMANTIC_BOUNDARY_ALLOW: 只投影匹配账号身份的现有授权与采集事实，按时间和协议状态归并，不执行探测。
+  async function readLoginObservations(ctx:RequestContext,accountIds:readonly string[]) {
+    const ids=[...new Set(accountIds)];
+    if(!ids.length)return [];
+    const accounts=await db.select().from(platformAccounts).where(and(eq(platformAccounts.userId,ctx.userId),inArray(platformAccounts.id,ids)));
+    if(accounts.length!==ids.length||accounts.some(a=>a.status!=='active'||(ctx.accountId&&ctx.accountId!==a.id)))deny('FORBIDDEN_ACCOUNT','账号不存在或不可用');
+    const [bindings,runs]=await Promise.all([
+      db.select().from(platformCollectionBindings).where(and(eq(platformCollectionBindings.userId,ctx.userId),inArray(platformCollectionBindings.accountId,ids))),
+      db.selectDistinctOn([platformCollectionRuns.accountId]).from(platformCollectionRuns).where(and(eq(platformCollectionRuns.userId,ctx.userId),inArray(platformCollectionRuns.accountId,ids),inArray(platformCollectionRuns.status,['complete','needsAuth']))).orderBy(platformCollectionRuns.accountId,desc(platformCollectionRuns.updatedAt),desc(platformCollectionRuns.id)),
+    ]);
+    type Observation=Pick<AccountBindingStatusItem,'accountId'|'loginState'|'checkedAt'|'reasonCode'>;
+    const result:Observation[]=[],current=Date.parse(now());
+    const valid=(value:string|null)=>value!==null&&Number.isFinite(Date.parse(value))&&Date.parse(value)<=current;
+    for(const account of accounts){
+      const binding=bindings.find(b=>b.accountId===account.id&&b.platform===account.platform&&b.platformIdentity===account.externalAccountId);
+      if(binding&&valid(binding.verifiedAt)&&[binding.verifiedAt,binding.expiresAt,binding.revokedAt].every(value=>value===null||iso8601.safeParse(value).success)){
+        result.push({accountId:account.id,loginState:'verified',checkedAt:binding.verifiedAt,reasonCode:null});
+        if(valid(binding.expiresAt))result.push({accountId:account.id,loginState:'needs_login',checkedAt:binding.expiresAt,reasonCode:'expired'});
+        if(valid(binding.revokedAt))result.push({accountId:account.id,loginState:'needs_login',checkedAt:binding.revokedAt,reasonCode:'revoked'});
+      }
+      const run=runs.find(r=>r.accountId===account.id&&r.platform===account.platform&&r.platformIdentity===account.externalAccountId);
+      if(run&&valid(run.updatedAt)&&(run.status==='needsAuth'||(run.status==='complete'&&run.committedPages>0&&run.sourceSnapshotKey))){
+        result.push({accountId:account.id,loginState:run.status==='needsAuth'?'needs_login':'verified',checkedAt:run.updatedAt,reasonCode:run.status==='needsAuth'?'needs_auth':null});
+      }
+    }
+    return result;
   }
 
   async function freezeNativeOwner(tx:BindingTx,ctx:RequestContext,accountId:string){
@@ -1059,7 +1087,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     });
   }
 
-  return { commitVerifiedBinding, listCapabilities, bindBegin, recordVerifiedIdentity, bindConfirm, bindCancel, retryBindCleanup,
+  return { readLoginObservations, commitVerifiedBinding, listCapabilities, bindBegin, recordVerifiedIdentity, bindConfirm, bindCancel, retryBindCleanup,
     start, claim, renewLease, sweepExpiredLeases, status, latestRun, scheduledOwnerTaskId, releaseTerminatedScheduledRuns, hasCredentialEvidence, resumeScheduledAuthorization, cancel, failRun, commitPage, listWorks, readMetrics, listNativeReports,
     recordConfirmedLegacyImport, readDashboardSummary };
 }

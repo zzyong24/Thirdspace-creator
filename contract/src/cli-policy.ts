@@ -27,6 +27,7 @@ const READ_OPERATIONS = [
   "groupResourceGrants.previewRevoke",
   "assets.previewDelete",
   "accountGroups.get",
+  "accountGroups.bindingStatus",
   "group.calendar.list",
   "group.cadence.get",
   "group.cadence.attainment",

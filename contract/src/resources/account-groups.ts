@@ -6,6 +6,21 @@ export const groupTransferPreview=z.object({accountId:id,fromGroupId:id,toGroupI
 export type AccountGroupResource=z.infer<typeof accountGroupResource>;
 export type GroupMemberResource=z.infer<typeof groupMemberResource>;
 export type GroupTransferPreview=z.infer<typeof groupTransferPreview>;
+/** 当前组账号的最近真实登录检测投影；不包含凭据或浏览器资料。 */
+export const accountBindingStatusItem=z.strictObject({
+ accountId:id,platform:platformId,accountHandle:z.string(),
+ bindingState:z.enum(['bound','unverified','hidden','unavailable']),
+ loginState:z.enum(['verified','needs_login','unknown']),
+ checkedAt:iso8601.nullable(),reasonCode:z.enum(['expired','revoked','needs_auth']).nullable(),
+}).superRefine((value,ctx)=>{
+ if(value.loginState!=='unknown'&&(!value.checkedAt||value.bindingState!=='bound'))ctx.addIssue({code:'custom',message:'Known login state requires a bound identity and observation time'});
+ if(value.loginState==='needs_login'&&!value.reasonCode)ctx.addIssue({code:'custom',message:'Login required needs a recorded reason'});
+ if(value.loginState!=='needs_login'&&value.reasonCode!==null)ctx.addIssue({code:'custom',message:'Login reason does not match state'});
+ if(value.loginState==='unknown'&&value.checkedAt!==null)ctx.addIssue({code:'custom',message:'Unknown login has no verified observation time'});
+});
+export const accountGroupBindingStatusResource=z.strictObject({groupId:id,accounts:z.array(accountBindingStatusItem)});
+export type AccountBindingStatusItem=z.infer<typeof accountBindingStatusItem>;
+export type AccountGroupBindingStatusResource=z.infer<typeof accountGroupBindingStatusResource>;
 export const groupMigrationSelection=z.object({fromGroupId:id,toGroupId:id,projectIds:z.array(id).default([]),knowledgeIds:z.array(id).default([]),conversationIds:z.array(id).default([])});
 export const groupMigrationPreview=z.object({fromGroupId:id,toGroupId:id,digest:z.string(),sourceVersion:z.number().int(),targetVersion:z.number().int(),projects:z.array(z.object({id,title:z.string()})),counts:z.record(z.string(),z.number().int()),grants:z.array(z.object({resourceType:z.enum(['asset','knowledge']),resourceId:id,originGroupId:id})),requiredKnowledgeIds:z.array(id).optional(),requiredProjectIds:z.array(id)});
 export const groupMigrationResource=z.object({id,fromGroupId:id,toGroupId:id,status:z.enum(['applied','undone']),createdAt:iso8601,undoneAt:iso8601.nullable()});

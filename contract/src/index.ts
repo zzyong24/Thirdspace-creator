@@ -398,3 +398,5 @@ export * from './resources/work-candidate-adoption';
 export {predictionLockSource,predictionLockState,type PredictionLockSource,type PredictionLockState} from "./resources/prediction-lock";
 
 export * from "./internal/wechat-navigation-diagnosis";
+
+export {accountBindingStatusItem,accountGroupBindingStatusResource,type AccountBindingStatusItem,type AccountGroupBindingStatusResource} from "./resources/account-groups";

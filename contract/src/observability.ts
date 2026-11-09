@@ -4,6 +4,7 @@ export const REQUEST_OPERATION_IDS = [
   "accountGroups.archive",
   "accountGroups.create",
   "accountGroups.get",
+  "accountGroups.bindingStatus",
   "accountGroups.list",
   "accountGroups.members.previewTransfer",
   "accountGroups.members.transfer",

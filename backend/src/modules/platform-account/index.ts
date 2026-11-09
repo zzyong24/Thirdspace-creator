@@ -66,3 +66,4 @@ export { createVerifiedAccountBindingPort, VerifiedAccountBindingError,
   type VerifiedAccountBindingPortDeps } from "./verified-account-binding.port";
 
 export {createLocalPlatformAccountBindingStage,type LocalPlatformBindingStagePorts,type BindingProfileFilesPort,type LocalLoginControls} from './local-platform-binding-stage';
+export {createAccountBindingStatusService,type AccountBindingStatusService,type AccountLoginObservation} from './account-binding-status.service';

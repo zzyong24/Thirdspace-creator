@@ -20,6 +20,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "groupResourceGrants.revoke": "group",
   "accountGroups.list": "user",
   "accountGroups.get": "user",
+  "accountGroups.bindingStatus": "user",
   "accountGroups.create": "user",
   "accountGroups.update": "user",
   "accountGroups.archive": "user",

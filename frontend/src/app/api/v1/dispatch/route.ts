@@ -384,7 +384,7 @@ export async function POST(req: Request): Promise<Response> {
   // 不再静默降级 null(降级会把失效号伪装成「未选号引导态」,不诚实;SPEC §4.3)。
   const rawToken = readSessionCookie(req);
   // 用户域管理读不依赖当前选择；失效选择也要能从真实账号组列表恢复。
-  const selectionIndependentRead=new Set(["accountGroups.list","accountGroups.get","accounts.list","accounts.get","accounts.bindingCapabilities"]).has(endpoint.id);
+  const selectionIndependentRead=new Set(["accountGroups.list","accountGroups.get","accountGroups.bindingStatus","accounts.list","accounts.get","accounts.bindingCapabilities"]).has(endpoint.id);
   const accountId = selectionIndependentRead?null:req.headers.get("x-account-id");
   // [RT-H01] 状态变更类 op 要求「明确身份或拒绝」:present-but-invalid cookie 不静默降级
   //   主用户 → 上抛 → 401(缺失 cookie 仍走单机免登录直通,读 op 保持宽松)。契约 HttpMethod

@@ -1,7 +1,7 @@
 import {z} from "zod";
 import {defineEndpoint} from "../endpoint-definition";
 import {id,paginationQuery} from "../primitives";
-import {accountGroupResource,groupMemberResource,groupTransferPreview,groupMigrationSelection,groupMigrationPreview,groupMigrationResource,groupResourceGrantResource,groupResourceRevokePreview} from "../resources/account-groups";
+import {accountGroupResource,accountGroupBindingStatusResource,groupMemberResource,groupTransferPreview,groupMigrationSelection,groupMigrationPreview,groupMigrationResource,groupResourceGrantResource,groupResourceRevokePreview} from "../resources/account-groups";
 const params=z.object({groupId:id});const version=z.number().int().positive();const key=z.string().min(1).max(160);
 export const accountGroupOperations={
  listGroupResourceGrants:defineEndpoint({id:'groupResourceGrants.list',method:'GET',path:'/group-resource-grants',response:groupResourceGrantResource,isList:true,fr:['FR-GROUP-RESOURCE-ACCESS']}),
@@ -9,6 +9,7 @@ export const accountGroupOperations={
  revokeGroupResourceGrant:defineEndpoint({id:'groupResourceGrants.revoke',method:'POST',path:'/group-resource-grants/:grantId/revoke',params:z.object({grantId:id}),body:z.object({digest:z.string().min(1),expectedOriginVersion:version,expectedTargetVersion:version}),response:groupResourceGrantResource,fr:['FR-GROUP-RESOURCE-ACCESS']}),
  listAccountGroups:defineEndpoint({id:"accountGroups.list",method:"GET",path:"/account-groups",query:paginationQuery.extend({includeArchived:z.boolean().optional()}),response:accountGroupResource,isList:true,fr:["FR-GROUP-LIST"]}),
  getAccountGroup:defineEndpoint({id:"accountGroups.get",method:"GET",path:"/account-groups/:groupId",params,response:accountGroupResource,fr:["FR-GROUP-GET"]}),
+ getAccountGroupBindingStatus:defineEndpoint({id:"accountGroups.bindingStatus",method:"GET",path:"/account-groups/:groupId/binding-status",params,response:accountGroupBindingStatusResource,fr:["FR-ACCOUNT-BINDING-STATUS"]}),
  createAccountGroup:defineEndpoint({id:"accountGroups.create",method:"POST",path:"/account-groups",body:z.object({name:z.string().trim().min(1).max(120),idempotencyKey:key}),response:accountGroupResource,fr:["FR-GROUP-CREATE"]}),
  updateAccountGroup:defineEndpoint({id:"accountGroups.update",method:"PATCH",path:"/account-groups/:groupId",params,body:z.object({name:z.string().trim().min(1).max(120),expectedVersion:version}),response:accountGroupResource,fr:["FR-GROUP-UPDATE"]}),
  archiveAccountGroup:defineEndpoint({id:"accountGroups.archive",method:"POST",path:"/account-groups/:groupId/archive",params,body:z.object({expectedVersion:version}),response:accountGroupResource,fr:["FR-GROUP-ARCHIVE"]}),

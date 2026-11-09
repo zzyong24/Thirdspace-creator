@@ -1,3 +1,4 @@
+import {createAccountBindingStatusService} from "@creatoros/backend/modules/platform-account";
 import {modelTestRoute,ModelProbeNotApplicable} from './settings-model-routing';
 import {createProjectPreparationApplication} from "@creatoros/backend/application/projects/project-preparation";
 import {createProjectPreparationChat} from "@creatoros/backend/application/projects/project-preparation-chat";
@@ -4625,7 +4626,7 @@ dispatchIntelligenceRun});
   // repo import). Clock/ids share the deterministic `deps` (createSeq keeps acct ids
   // collision-free across requests).
   const accountGroupService = createAccountGroupService({db, now: deps.now, nextId: deps.nextId});
-  const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}));
+  const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}),()=>accountBindingStatusService);
   const localBindingStages:NonNullable<Parameters<typeof createAccountBindingService>[0]["localStages"]>={};
   const wechatWitnesses=(await import('@creatoros/ai-worker/platform/wechat-dom-witness')).createVerifiedWechatDomWitnesses();
   // 本机开发排障可选配置；图像仅由worker保存在受信私有/tmp目录，默认关闭。
@@ -4725,6 +4726,7 @@ dispatchIntelligenceRun});
       }
     },
   });
+  const accountBindingStatusService=createAccountBindingStatusService({db,now:deps.now,readGroup:accountGroupService.get,readCollectionObservations:(ctx,ids)=>platformCollectionService.readLoginObservations(ctx,ids)});
   const pendingWechatStops=new Map<string,()=>Promise<void>>();
   const executeWechatNative=createWechatNativeCollector({
     workerId:deps.nextId('wechat-native-worker'),now:()=>Date.parse(deps.now()),
