@@ -35,6 +35,7 @@ import { AmmoCardList } from "./ammo-card-list";
 import { DraftPrimaryAction } from "./draft-primary-action";
 // [T-374] 顶条「立即抓取逐字稿」:自己作品(有抖音锚)单条立抓,不等每日自动任务。
 import { ProjectPipelinePanel } from "./project-pipeline-panel";
+import { AutoFirstDraft } from "./auto-first-draft";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
 import { PublishPackageCta } from "./publish-package-cta";
@@ -131,6 +132,10 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
                 </span>
               ) : null}
             </div>
+            {/* 批次2-3：空稿面（无版本、无正文、非导入、无项目准备流水线）进入即自动起草初稿。 */}
+            {script.versionCount === 0 && !initialHtml.trim() && !project.imported && vm.preparation?.registration !== "registered" ? (
+              <AutoFirstDraft enabled projectId={project.id} projectTitle={project.title} outputId={outputId} />
+            ) : null}
             {/* [T-070→T-072] 编辑|结构 双视图:结构 = **可编辑**分段卡(段型徽章内联,
                 保存产新 ArtifactVersion);有分段时默认进结构编辑(用户目标形态)。 */}
             <ScriptStructureToggle
