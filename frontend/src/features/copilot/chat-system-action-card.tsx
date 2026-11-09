@@ -1,6 +1,7 @@
 "use client";
 import * as React from 'react';
 import Link from 'next/link';
+import {AppRouterContext} from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import {CheckCircle2,ChevronDown,ImageIcon,LayoutTemplate,Loader2,RefreshCw,Sparkles,TriangleAlert} from 'lucide-react';
 import {ENDPOINTS,assistantActionCandidateSchema,canvasCreateCandidateSchema,canvasGenerateCandidateSchema,assistantAdoptionReceiptSchema,canvasMaterialSelectionResource,type AssistantActionInput,type CanvasDocument} from '@creatoros/contract';
 import {Button} from '@/components/ui/button';
@@ -18,9 +19,12 @@ const scopePrefix='creatoros:assistant-source-scope:';
 export function rememberAssistantSourceScope(taskId:string,headers:HeadersInit){
  const h=new Headers(headers),scope={groupId:h.get('x-group-id'),accountId:h.get('x-account-id')};
  try{localStorage.setItem(`${scopePrefix}${taskId}`,JSON.stringify(scope));}catch{/* 无存储时保留当前窗口的来源。 */}
- scopes.set(taskId,Object.freeze(scope));
+ scopes.set(taskId,Object.freeze(scope));liveTasks.add(taskId);
 }
 const scopes=new Map<string,CreationScope>();
+/** 只记本窗口里刚发出的对话任务（不读历史存储）：用来判断候选是不是「这一轮」提出的。 */
+const liveTasks=new Set<string>();
+export function isLiveAssistantTask(taskId:string|null|undefined){return !!taskId&&liveTasks.has(taskId);}
 export function readAssistantSourceScope(taskId:string):CreationScope|null{
  const known=scopes.get(taskId);if(known)return known;
  try{const value=JSON.parse(localStorage.getItem(`${scopePrefix}${taskId}`)??'null');if(value&&Object.keys(value).length===2&&(value.groupId===null||typeof value.groupId==='string')&&(value.accountId===null||typeof value.accountId==='string')&&(value.groupId||value.accountId)){const scope=Object.freeze({groupId:value.groupId,accountId:value.accountId});scopes.set(taskId,scope);return scope;}}catch{/* 历史缺来源范围时不能猜当前筛选。 */}
@@ -145,14 +149,19 @@ async function freshResult(client:CreationClient,candidate:Candidate,receipt:Rec
   case 'radar.collection.create':return client.getIntelligenceWorkspace({...empty,params:undefined,query:{}});
  }
 }
-export function ChatSystemActionCard({result,scope,operations,onReviewCandidate}:{result:unknown;scope?:CreationScope|null;operations?:CreationWorkspace;onReviewCandidate?:(request:string)=>void}){
+/** autoEnter（批次2-2）：本轮对话刚提出的建项目/选题立项候选，直接建成并进入项目；历史候选仍需手动采用。 */
+export function ChatSystemActionCard({result,scope,operations,onReviewCandidate,autoEnter=false}:{result:unknown;scope?:CreationScope|null;operations?:CreationWorkspace;onReviewCandidate?:(request:string)=>void;autoEnter?:boolean}){
  const candidate=React.useMemo(()=>parseCandidate(result),[result]),identity=candidate?JSON.stringify(candidate.source):'invalid';
  const workspace=React.useMemo(()=>operations??(scope?createCreationWorkspace(scope):null),[operations,scope?.groupId,scope?.accountId]);
  React.useEffect(()=>{if(operations||!workspace)return;workspace.activate();return()=>workspace.dispose();},[workspace,operations]);
  if(!candidate)return <p role="alert" className="mt-2 text-sm text-destructive">候选来源或内容不完整，请让助手重新读取当前对象。</p>;
- return <ActionCard key={`${identity}:${scope?.groupId}:${scope?.accountId}`} candidate={candidate} workspace={workspace} onReviewCandidate={onReviewCandidate}/>;
+ return <ActionCard key={`${identity}:${scope?.groupId}:${scope?.accountId}`} candidate={candidate} workspace={workspace} onReviewCandidate={onReviewCandidate} autoEnter={autoEnter}/>;
 }
-function ActionCard({candidate,workspace,onReviewCandidate}:{candidate:Candidate;workspace:CreationWorkspace|null;onReviewCandidate?:(request:string)=>void}){
+const autoEnterKinds=new Set(['project.create','topic.promote']);
+const autoEnterKey=(source:unknown)=>`creatoros:auto-enter:${JSON.stringify(source)}`;
+function ActionCard({candidate,workspace,onReviewCandidate,autoEnter=false}:{candidate:Candidate;workspace:CreationWorkspace|null;onReviewCandidate?:(request:string)=>void;autoEnter?:boolean}){
+ // 卡片也会在没有应用路由的环境里渲染（单测、预览），拿不到路由时只是不自动跳转。
+ const router=React.useContext(AppRouterContext);
  const editor=useDraftChatRequest(),currentScope=useCreationScope(),[editorNotice,setEditorNotice]=React.useState('');
  const view=caption(candidate),generation=candidate.kind==='canvas.generate.proposal',canvas=candidate.kind==='canvas.create.proposal',Icon=generation?ImageIcon:canvas?LayoutTemplate:Sparkles;
  const [receipt,setReceipt]=React.useState<Receipt|null>(null),[phase,setPhase]=React.useState<'checking'|'ready'|'saving'|'unknown'|'conflict'|'adopted'>('checking'),[error,setError]=React.useState(''),[expanded,setExpanded]=React.useState(false),[readback,setReadback]=React.useState<unknown>(null),[resultError,setResultError]=React.useState(''),[taskStatus,setTaskStatus]=React.useState(''),[mediaUrl,setMediaUrl]=React.useState(''),[observing,setObserving]=React.useState(false);
@@ -178,6 +187,20 @@ function ActionCard({candidate,workspace,onReviewCandidate}:{candidate:Candidate
   }catch(reason){if(live.current){setPhase('unknown');setError(message(reason));}}finally{flight.current=false;}
  }
  React.useEffect(()=>{void readSaved();},[workspace]);
+ // 批次2-2：「就做这条」→ 本轮的建项目候选在确认没有原回执后自动采用一次，建成即进入项目。
+ const autoEntering=React.useRef(false);
+ const wantsAutoEnter=autoEnter&&candidate.kind==='system.action.proposal'&&autoEnterKinds.has(candidate.request.action.kind);
+ React.useEffect(()=>{
+  if(!wantsAutoEnter||phase!=='ready'||autoEntering.current)return;
+  try{if(localStorage.getItem(autoEnterKey(source)))return;localStorage.setItem(autoEnterKey(source),'1');}catch{/* 无存储时仍只在本次挂载里跑一次 */}
+  autoEntering.current=true;void adopt();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 每个候选只自动采用一次
+ },[wantsAutoEnter,phase]);
+ React.useEffect(()=>{
+  if(!autoEntering.current||phase!=='adopted'||!receipt)return;
+  const target=destination(candidate,receipt);autoEntering.current=false;
+  if(target)router?.push(target.href);
+ },[phase,receipt,candidate,router]);
  async function adopt(){
   if(!workspace||flight.current||phase!=='ready')return;focusAfterOperation.current=document.activeElement;flight.current=true;setPhase('saving');setError('');
   try{const op=workspace.capture(),args={params:undefined,query:undefined,body:source};
