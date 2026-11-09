@@ -9,3 +9,9 @@ prepare和readWechatReportDom必须使用相同归属标准，下载前继续核
 TDD先用真实Chromium复刻父canonical→home但同一runtime绑定可见Shadow的输入，沿原collectNativeReports完整三报表/真实下载/原日期与作品响应链RED。GREEN后保留旧338族和新元数据6族；新增home无sandbox、错误sandbox/root/iframe/path/origin、重复host、被替换Frame/host、数据窗口漂移拒绝，canonical旧成功仍通过。不以孤立helper通过发包。类型、timeout-policy、boundary和治理守卫通过后提交并安装；沿原组/原账号发起一次正常同步回读真实保存结果，失败保留同ID。真实成功前不宣布修复或启动最终正式交付；如仍失败按研究门止损。
 
 范围：ai-worker/src/runtime/platform/wechat-dom-witness.ts及其DOM/Wujie/menu真实浏览器测试，新增wechat-rendered-ownership.integration.test.ts；控制面与docs/verification/t1454。无UI/契约/数据归属变更，既有安全不变量用官方精确对象关系实现，不是删除安全守卫。
+
+## 现场取证后的导航恢复
+
+前一版本机仍失败，T1455进一步证实gate=root_mismatch且可见host与当前runtime的DOM标识不同。归属拒绝正确，不得改为按同文字或DOM标识强行放行。第三轮研究已核对官方异步启动/父路由同步源码，仅支持初始化导航竞争的候选；不是已经证明唯一根因。采用最小可逆恢复：每份报表prepare内、任何标签/日期/下载点击之前，仅在父home、Frame/host均当前且唯一/open、runtime根不相等时，最多一次重新点击原固定官方菜单；成功导航后清空旧选择并重新取得当前唯一Frame/host。菜单不可用不另加goto；再次回退仍原失败，不重扫或重复完整任务。
+
+恢复动作及重新取根全部裁剪在本来该次120000根观察stage的剩余时间，复用持久总deadline和取消，不另开预算或增加等待。首个报表标签点击后没有恢复分支。新增真实Chromium公共三报表fixture明确复现“第一次导航后切回其他可见面板、缓存runtime仍在”，先RED，恢复后完整GREEN；永久回退最多两次菜单进入且无下载；接近原stage deadline仍退出。旧合法/拒绝族、types/timeout/boundary均保留。只做一次本机验收；若仍失败停止本研究内继续猜测，不再循环修补/全量运行。

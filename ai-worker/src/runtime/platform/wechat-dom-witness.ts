@@ -456,9 +456,9 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    scope=await observe(controls,async()=>{const frames=page.frames().filter(frame=>{try{const u=nativeUrl(frame.url(),origins[platform],platform);return u.pathname===framePath;}catch{return false;}});if(frames.length>1)return fail('REPORT_PAGE_MISSING','原生报表页面不唯一');return frames.length===1?frames[0]!:null;},'REPORT_PAGE_MISSING');
    uiRoot=scope;
    const section=kind==='channelsDaily'?'全部视频':kind==='channelsWorks'?'单篇视频':'关注者增长';
-   let exactTab=scope.getByText(section,{exact:true}),tab=exactTab.filter({visible:true});
+   let exactTab=scope.getByText(section,{exact:true}),tab=exactTab.filter({visible:true}),recoveredHome=false;
    try{
-    await observe(controls,async()=>{
+    await observe(controls,async end=>{
      lastRoot=emptyRoot();lastOwnership=emptyOwnership();
      const hosts=page.locator('wujie-app').filter({visible:true}),hostCount=await hosts.count();
      lastRoot.visibleHostCount=hostCount;
@@ -471,7 +471,29 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
      const count=await tab.count();controls.signal.throwIfAborted();
      if(count>1)return fail('REPORT_SECTION_AMBIGUOUS','原生报表标签不唯一');
      if(count!==1)return null;
-     if(host)return await rootReady()?true:null;
+     if(host){
+      if(await rootReady())return true;
+      // SEMANTIC_BOUNDARY_ALLOW: 仅当前home/唯一当前根/不同runtime根，数据点击前恢复一次；不放宽归属。
+      if(!recoveredHome&&lastRoot.parentRoute==='home'&&lastRoot.selectedFrameCurrent===true&&lastRoot.hostCurrent===true&&lastRoot.openShadow===true&&lastOwnership.gate==='root_mismatch'){
+       recoveredHome=true;
+       const recovery:WechatOperationControls={...controls,timeoutMs(requested){
+        const outer=controls.timeoutMs(requested),remaining=end-Date.now();
+        if(remaining<=0)return fail('REPORT_SECTION_MISSING','原生数据面板观察期限已结束');
+        return Math.min(outer,remaining);
+       }};
+       // 导航后旧观察不再代表当前页面；失败保持unknown，不能附上上一个根的事实。
+       lastRoot=emptyRoot();lastOwnership=emptyOwnership();host=null;shadow=undefined;frameElement=undefined;
+       if(await navigateChannelsMenu(page,sourcePath,recovery)){
+        scope=await observe(recovery,async()=>{
+         const frames=page.frames().filter(frame=>{try{return nativeUrl(frame.url(),origins[platform],platform).pathname===framePath;}catch{return false;}});
+         if(frames.length>1)return fail('REPORT_PAGE_MISSING','原生报表页面不唯一');
+         return frames.length===1?frames[0]!:null;
+        },'REPORT_PAGE_MISSING');
+        uiRoot=scope;exactTab=scope.getByText(section,{exact:true});tab=exactTab.filter({visible:true});
+       }
+      }
+      return null;
+     }
      frameElement??=await (scope as Frame).frameElement();return await rootReady()?true:null;
     },'REPORT_SECTION_MISSING');
    }catch(error){
