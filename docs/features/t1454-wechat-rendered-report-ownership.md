@@ -1,0 +1,11 @@
+# 修复视频号父路由回退后的原生报表归属核验
+
+用户持续要求修复视频号反复扫码和同步失败，双平台正式交付及安装授权沿用。T1453实际安装版证明父页面回到home时仍有可见报表host，原rootReady在Frame/Shadow核验之前提前拒绝。T1451第二轮研究已通过真实元数据和官方源码依据关闭，见docs/research/t1451-report-root-cycle2.md；这不是站点同步成功。
+
+修复只属于原原生报表witness的机械归属实现：canonical父路径保留原成功的原生contains见证；父路径为官方固定首页（/、/platform、/platform/）时，必须先核实同一个当前、唯一、路径正确的runtime Frame，以及同一个当前、唯一、可见且open的host。再以官方Wujie sandbox.iframe.contentWindow与当前window精确相等、sandbox.shadowRoot与该host根精确相等，且sandbox.proxyLocation同官方origin/正确micro报表路径，证明runtime与可见根关联；精确标签叶子仍唯一且须原生contains。canonical路径下若原生document未包含渲染节点，也可使用同一严格Wujie见证。禁止仅放宽父路由或按相同文本接受无归属Shadow。
+
+prepare和readWechatReportDom必须使用相同归属标准，下载前继续核验当前Frame/host、日期与总数。隐藏runtime Frame是官方Wujie机制，不以其可见性拒绝已精确关联的可见Shadow；旧直接可见iframe路径保持原严格canonical守卫。不改数据契约/sourcePath固定逻辑报表路径、不改身份/账号/服务/日期/响应/完整性/停止/预算；不增加截图诊断和重扫循环。
+
+TDD先用真实Chromium复刻父canonical→home但同一runtime绑定可见Shadow的输入，沿原collectNativeReports完整三报表/真实下载/原日期与作品响应链RED。GREEN后保留旧338族和新元数据6族；新增home无sandbox、错误sandbox/root/iframe/path/origin、重复host、被替换Frame/host、数据窗口漂移拒绝，canonical旧成功仍通过。不以孤立helper通过发包。类型、timeout-policy、boundary和治理守卫通过后提交并安装；沿原组/原账号发起一次正常同步回读真实保存结果，失败保留同ID。真实成功前不宣布修复或启动最终正式交付；如仍失败按研究门止损。
+
+范围：ai-worker/src/runtime/platform/wechat-dom-witness.ts及其DOM/Wujie/menu真实浏览器测试，新增wechat-rendered-ownership.integration.test.ts；控制面与docs/verification/t1454。无UI/契约/数据归属变更，既有安全不变量用官方精确对象关系实现，不是删除安全守卫。
