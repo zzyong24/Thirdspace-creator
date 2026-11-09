@@ -981,8 +981,10 @@ describe("T-032b — 采集反馈结果文案分档", () => {
     render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
     // T-410:失败摘要改为友好可操作文案,不再把 run.error 原样拼进「❌ 失败:{error}」甩用户脸上。
     await waitFor(() =>
-      expect(screen.getByText(/采集失败,请稍后重试/)).toBeInTheDocument(),
+      expect(screen.getByText(/采集失败 · 点开查看原因/)).toBeInTheDocument(),
     );
+    // 普通失败不再一律引导重新扫码（扫码只属于 needs_reconnect）。
+    expect(screen.queryByText(/重新扫码/)).not.toBeInTheDocument();
     // 反证:旧的「❌ 失败:{原始error}」格式已不再出现。
     expect(screen.queryByText(/❌ 失败:采集抖音评论失败/)).not.toBeInTheDocument();
   });

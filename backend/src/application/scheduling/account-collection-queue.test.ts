@@ -37,3 +37,16 @@ it('已开始采集收到取消时，必须等其真实退出才释放返回值�
  }finally{release();await Promise.all([running,next]);}
  expect(settled).toBe(true);expect(nextStarted).toBe(true);
 });
+
+it('账号组级作业（内容雷达同步无单一账号）按账号组串行，不再因缺账号整单失败（月明 2026-11-10 内容雷达每次 AccountRequiredError）',async()=>{
+ const queue=createAccountCollectionQueue(),seen:string[]=[];
+ const group={userId:'u',accountId:null,groupId:'g1',requestId:'queue-test',source:'ingestion' as const};
+ let release!:()=>void;const gate=new Promise<void>(r=>{release=r;});
+ const first=queue(group,async()=>{seen.push('g1-first');await gate;});
+ const second=queue(group,async()=>{seen.push('g1-second');});
+ // 同 id 的账号队列与账号组队列互不阻塞。
+ await queue({...group,accountId:'g1',groupId:null},async()=>{seen.push('account-g1');});
+ expect(seen).toEqual(['g1-first','account-g1']);
+ release();await Promise.all([first,second]);
+ expect(seen).toEqual(['g1-first','account-g1','g1-second']);
+});

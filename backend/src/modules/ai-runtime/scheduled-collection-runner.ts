@@ -167,7 +167,7 @@ function humanizeCollectError(err: unknown, label: string): string {
   }
   // 导出格式异常不能证明登录失效；重连只由上层结构化未登录判定决定。
   if (lower.includes("export") || lower.includes("xlsx") || lower.includes("pk")) {
-    return `采集${label}失败:导出数据异常,请查看原任务详情后重试(原始信息:${raw})。`;
+    return `采集${label}失败:平台数据导出没有成功,下次定时同步会自动重试(错误代码:${raw})。`;
   }
   return `采集${label}失败:${raw || "未知错误"}。`;
 }

@@ -15,16 +15,16 @@ export function createPlatformMetricsCollector(ports:{
   if(!ctx.accountId)throw Error('平台采集缺少真实账号');
   const account=await ports.account(ctx,ctx.accountId);
   if(!['kuaishou','xiaohongshu','wechatVideo','wechatOfficial'].includes(account.platform))throw Error('该平台尚未接入作品数据同步');
-  const pending:CollectResult={itemsNew:0,itemsUpdated:0,continueCollection:true,retryAfterMs:60_000,message:'原平台采集尚未完成，将沿原任务继续'};
+  const pending:CollectResult={itemsNew:0,itemsUpdated:0,continueCollection:true,retryAfterMs:60_000,message:'上一次采集还没结束，结束后会接着处理'};
   const collect=async(capability:Capability,key:string)=>{
    signal?.throwIfAborted();
    let run:CollectionRunResource;try{run=await ports.start(ctx,{accountId:ctx.accountId!,capability,clientRequestId:key});
    if(run.status==='needsAuth')await ports.resumeAuthorization?.(ctx,ctx.accountId!,run.attemptId,taskId);
    if(run.status==='needsAuth')run=await ports.status(ctx,ctx.accountId!,run.attemptId);
-   if(run.capability==='nativeReports'&&run.status==='partial'&&run.reasonCode==='TASK_TIMEOUT')throw Error('本次数据同步等待结束，已取得数据保留');
+   if(run.capability==='nativeReports'&&run.status==='partial'&&run.reasonCode==='TASK_TIMEOUT')throw Error('这次同步等太久已停止，已拿到的数据都保存了，下次会继续');
    await ports.schedule(ctx,run,signal);signal?.throwIfAborted();
    const state=await ports.status(ctx,ctx.accountId!,run.attemptId);
-   if(state.capability==='nativeReports'&&state.status==='partial'&&state.reasonCode==='TASK_TIMEOUT')throw Error('本次数据同步等待结束，已取得数据保留');
+   if(state.capability==='nativeReports'&&state.status==='partial'&&state.reasonCode==='TASK_TIMEOUT')throw Error('这次同步等太久已停止，已拿到的数据都保存了，下次会继续');
    if(state.status==='needsAuth')throw new PlatformCollectionNeedsAuthError('请到账号管理重新扫码绑定该平台账号');
    if(state.status==='failed'||state.status==='cancelled')throw Error(`平台采集未完成：${state.reasonCode??state.status}`);
    return state;

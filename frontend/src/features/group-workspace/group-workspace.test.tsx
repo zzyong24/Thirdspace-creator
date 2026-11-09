@@ -23,11 +23,11 @@ describe("账号组筛选真实行为",()=>{
 
 it.each([0,123])('T1362 typed浏览%s独立可见，不用legacy样本0宣称未采集',value=>{
  const data:GroupWorkspace={...workspace,platform:'xiaohongshu',accountId:null,browseViews:value,videoViews:null,articleReads:null,publicationCount:0,accounts:[{id:'x',name:'真实小红书',platform:'xiaohongshu',historical:false,archived:false}],platforms:[{platform:'xiaohongshu',publicationCount:0,sampleCount:0,views:null,browses:value,reads:null,likes:0,shares:null,capturedAt:'2026-10-01T01:00:00Z'}],collected:{state:'ready',catalogWorkCount:1,unattributableWorkCount:0,deduplicatedWorkCount:0,metrics:[{platform:'xiaohongshu',metricKey:'view_count',scope:'work',unit:'count',window:'lifetime',value,knownCount:1,eligibleCount:1,capturedAt:null,observedAt:null,sources:['fixture']}]}};
- render(<GroupOverview workspace={data}/>);expect(screen.getByText('累计浏览（次）')).toBeVisible();expect(screen.getByRole('columnheader',{name:'浏览（次）'})).toBeVisible();expect(screen.queryByText('尚未采集指标')).toBeNull();expect(screen.getByText('已有采集指标')).toBeVisible();expect(screen.getByRole('columnheader',{name:'发布指标样本（条）'})).toBeVisible();
+ render(<GroupOverview workspace={data}/>);expect(screen.getByText('累计浏览（次）')).toBeVisible();expect(screen.getByRole('columnheader',{name:'浏览（次）'})).toBeVisible();expect(screen.queryByText('尚未采集指标')).toBeNull();expect(screen.getByText('已有采集指标')).toBeVisible();expect(screen.getByRole('columnheader',{name:'有数据的发布（条）'})).toBeVisible();
 });
 it('T1362旧DTO缺浏览仍显示未知，摘要失败不称未采集',()=>{
  render(<GroupOverview workspace={{...workspace,platform:'xiaohongshu',accountId:null,collected:{state:'unavailable',catalogWorkCount:null,unattributableWorkCount:null,deduplicatedWorkCount:null,metrics:[]}}}/>);
- expect(screen.getByText('累计浏览（次）').parentElement).toHaveTextContent('—');expect(screen.getByText('平台采集摘要暂不可读，保留已知发布指标。')).toBeVisible();
+ expect(screen.getByText('累计浏览（次）').parentElement).toHaveTextContent('—');expect(screen.getByText('平台数据暂时读不到，先显示已有的发布数据。')).toBeVisible();
 });
 
 
@@ -46,6 +46,6 @@ it("总览嵌入已有标题的页面时不重复标题，指标与管理入口�
 it('T1424总览同屏区分已纳入汇总的作品与系统发布记录，提供精确账号入口',()=>{
  const data:GroupWorkspace={...workspace,platform:'xiaohongshu',accountId:null,publicationCount:0,accounts:[{id:'xhs-id',name:'小红书账号',platform:'xiaohongshu',historical:false,archived:false}],collected:{state:'ready',catalogWorkCount:11,unattributableWorkCount:0,deduplicatedWorkCount:0,metrics:[]}};
  render(<GroupOverview workspace={data}/>);
- expect(screen.getByRole('heading',{name:'平台采集数据'})).toBeVisible();expect(screen.getByText('所选日期内已纳入汇总 11 条平台作品')).toBeVisible();
+ expect(screen.getByRole('heading',{name:'平台采集数据'})).toBeVisible();expect(screen.getByText('所选日期内有 11 条作品已拿到数据')).toBeVisible();
  expect(screen.getByRole('link',{name:'查看已采集作品'})).toHaveAttribute('href','/accounts/works?accountId=xhs-id');
 });

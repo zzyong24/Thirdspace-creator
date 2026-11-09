@@ -31,10 +31,10 @@ it.each(['wechatVideo','wechatOfficial'])('T1110 %s 原run期限已真实耗尽�
  const expired={...nativeRun('partial'),capability:'nativeReports' as const,reasonCode:'TASK_TIMEOUT'};
  const schedule=vi.fn(),start=vi.fn(async(_c:RequestContext,_input:{accountId:string;capability:CollectionRunResource['capability'];clientRequestId:string})=>expired),status=vi.fn(async()=>expired);
  const collect=createPlatformMetricsCollector({account:async()=>({platform}),start,status,schedule});
- await expect(collect(ctx,'owner')).rejects.toThrow('等待结束');expect(schedule).not.toHaveBeenCalled();expect(start.mock.calls[0]![1]).toMatchObject({clientRequestId:'scheduled-owner-reports'});
+ await expect(collect(ctx,'owner')).rejects.toThrow('同步等太久已停止');expect(schedule).not.toHaveBeenCalled();expect(start.mock.calls[0]![1]).toMatchObject({clientRequestId:'scheduled-owner-reports'});
 });
 it('T1110微信本次执行读回TASK_TIMEOUT后如实结束owner，不把已耗尽run当下一轮continue',async()=>{
  const ctx:RequestContext={userId:'u',accountId:'a',source:'ingestion',requestId:'r'},schedule=vi.fn();
  const collect=createPlatformMetricsCollector({account:async()=>({platform:'wechatVideo'}),start:async()=>({...nativeRun('queued'),capability:'nativeReports'}),status:async()=>({...nativeRun('partial'),capability:'nativeReports',reasonCode:'TASK_TIMEOUT'}),schedule});
- await expect(collect(ctx,'owner')).rejects.toThrow('等待结束');expect(schedule).toHaveBeenCalledOnce();
+ await expect(collect(ctx,'owner')).rejects.toThrow('同步等太久已停止');expect(schedule).toHaveBeenCalledOnce();
 });

@@ -169,21 +169,21 @@ it("快手不显示无关公众号阅读，作品覆盖计数不冒账号指标"
  render(<GroupOverview workspace={{...workspace,platform:"kuaishou",followers:1,collectedAccounts:0,publicationCount:0,platforms:[]}}/>);
  expect(screen.queryByText("文章累计阅读（次）")).toBeNull();
  expect(screen.queryByText("当前筛选不含公众号阅读指标")).toBeNull();
- expect(screen.getByText(/0 \/ 1 个账号有作品指标/)).toBeVisible();
+ expect(screen.getByText(/0 \/ 1 个账号已拿到作品数据/)).toBeVisible();
 });
 
 it("全部平台未绑公众号与已绑定无阅读样本分别解释，不推断从未采集",()=>{
  const view=render(<GroupOverview workspace={{...workspace,platform:null}}/>);
  expect(screen.getByText("文章累计阅读（次）").closest("div")).toHaveTextContent("当前账号组尚未绑定公众号");
  view.rerender(<GroupOverview workspace={{...workspace,platform:"wechatOfficial",accounts:[{id:"w",platform:"wechatOfficial",name:"公众号",historical:false,archived:false}],platforms:[]}}/>);
- expect(screen.getByText("文章累计阅读（次）").closest("div")).toHaveTextContent("所选日期内暂无文章阅读样本");
+ expect(screen.getByText("文章累计阅读（次）").closest("div")).toHaveTextContent("所选日期内还没有文章阅读数据");
  expect(screen.queryByText("尚未采集指标")).toBeNull();
 });
 
 it("账号粉丝样本与日期内作品样本分开说明，不把快手已采集粉丝说成未采集",()=>{
  render(<GroupOverview workspace={{...workspace,platform:"kuaishou",followers:1,collectedAccounts:0,videoViews:null,platforms:[],collected:{state:"ready",catalogWorkCount:0,unattributableWorkCount:0,deduplicatedWorkCount:0,metrics:[{platform:"kuaishou",metricKey:"follower_count",scope:"account",unit:"count",window:"lifetime",value:1,knownCount:1,eligibleCount:1,capturedAt:null,observedAt:null,sources:["actual-schema-fixture"]}]}}}/>);
  expect(screen.getByText("已有账号指标；当前日期内暂无作品指标")).toBeVisible();
- expect(screen.getByText(/0 \/ 1 个账号有作品指标/)).toBeVisible();
+ expect(screen.getByText(/0 \/ 1 个账号已拿到作品数据/)).toBeVisible();
  expect(within(screen.getByLabelText("账号组指标")).getByText("账号粉丝合计（人，未去重）：")).toHaveTextContent("1");
 });
 
@@ -192,7 +192,7 @@ it("已绑定的文章样本未知、摘要不可读、真实零阅读各自保�
  const view=render(<GroupOverview workspace={article}/>);
  expect(screen.getByText("文章累计阅读（次）").closest("div")).toHaveTextContent("所选日期内的文章阅读指标暂缺");
  view.rerender(<GroupOverview workspace={{...article,collected:{state:"unavailable",catalogWorkCount:null,unattributableWorkCount:null,deduplicatedWorkCount:null,metrics:[]}}}/>);
- expect(screen.getByText("文章累计阅读（次）").closest("div")).toHaveTextContent("采集摘要暂不可读，文章阅读指标未知");
+ expect(screen.getByText("文章累计阅读（次）").closest("div")).toHaveTextContent("暂时读不到数据，文章阅读数未知");
  view.rerender(<GroupOverview workspace={{...article,articleReads:0}}/>);
  const card=screen.getByText("文章累计阅读（次）").closest("div")!;
  expect(within(card).getByText("0")).toBeVisible();expect(card).not.toHaveTextContent("暂缺");expect(card).not.toHaveTextContent("暂无");
