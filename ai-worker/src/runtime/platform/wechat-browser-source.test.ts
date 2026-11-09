@@ -670,7 +670,7 @@ describe('T1406 入口locator.evaluateAll固定首行安全分类',()=>{
  });
 });
 
-const t1457Shape={reason:'list_type',errorCodeState:'zero',countType:'number',reportedCount:0,listState:'missing',listLength:null,currentPageOne:true,pageSizeTen:true};
+const t1457Shape={httpStatus:200,method:'POST',reason:'list_type',errorCodeState:'zero',countType:'number',reportedCount:0,listState:'missing',listLength:null,currentPageOne:true,pageSizeTen:true};
 describe('T1457 固定作品响应观察端口',()=>{
  it.each([false,true])('只在实际作品prepare原失败附固定形状且observer throws=%s保留错误和实停',async throwing=>{
   const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_RESPONSE_INVALID','原错误'),{responseObservation:t1457Shape}),onDiagnostic=vi.fn(()=>{if(throwing)throw Error('合成日志失败');});
