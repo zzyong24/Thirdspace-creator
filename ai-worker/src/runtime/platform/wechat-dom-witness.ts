@@ -239,12 +239,22 @@ export async function readWechatReportDom(scope:Page|Frame,kind:NativeReportKind
   let root:Document|ShadowRoot=document;
   if(shadow){
    const parent=window.parent as Window & typeof globalThis;
-   if(parent.location.origin!=='https://channels.weixin.qq.com'||parent.location.pathname!==shadow.pagePath)return null;
+   const parentTarget=parent.location.pathname===shadow.pagePath;
+   if(parent.location.origin!=='https://channels.weixin.qq.com'||!parentTarget&&!['/','/platform','/platform/'].includes(parent.location.pathname))return null;
    const hosts=[...parent.document.querySelectorAll('wujie-app')].filter(node=>node.getClientRects().length>0&&!node.closest('[hidden]')&&parent.getComputedStyle(node).display!=='none'&&parent.getComputedStyle(node).visibility!=='hidden');
    const rendered=hosts.length===1?hosts[0]!.shadowRoot:null;if(!rendered||rendered.mode!=='open')return null;
    const nodes=[...document.querySelectorAll('*')].filter(node=>visible(node)&&node.textContent?.trim()===shadow.section&&![...node.children].some(child=>child.textContent?.trim()===shadow.section));
-   // Wujie会改写getRootNode/ownerDocument；原生contains才核实际可见根。
-   if(nodes.length!==1||!parent.Node.prototype.contains.call(rendered,nodes[0]!))return null;
+   // SEMANTIC_BOUNDARY_ALLOW: 仅核同源runtime/iframe/Shadow对象归属，不以标签含义推断归属。
+   // Wujie脚本使用proxyDocument；Playwright主realm的原生document可以不含渲染节点。
+   const sandbox=(window as Window&{__WUJIE?:{iframe?:HTMLIFrameElement;shadowRoot?:ShadowRoot;proxyLocation?:{origin?:string;pathname?:string}}}).__WUJIE;
+   const framePath=kind==='channelsFollowers'?'/micro/statistic/follower':'/micro/statistic/post';
+   const owned=sandbox?.iframe?.contentWindow===window&&sandbox.iframe===window.frameElement&&sandbox.shadowRoot===rendered&&sandbox.proxyLocation?.origin==='https://channels.weixin.qq.com'&&sandbox.proxyLocation.pathname===framePath;
+   const legacy=parentTarget&&nodes.length===1&&parent.Node.prototype.contains.call(rendered,nodes[0]!);
+   if(!legacy){
+    if(!owned)return null;
+    const renderedNodes=[...rendered.querySelectorAll('*')].filter(node=>visible(node)&&node.textContent?.trim()===shadow.section&&![...node.children].some(child=>child.textContent?.trim()===shadow.section));
+    if(renderedNodes.length!==1||!parent.Node.prototype.contains.call(rendered,renderedNodes[0]!))return null;
+   }
    root=rendered;
   }
   if([...root.querySelectorAll('.ant-spin-spinning,.weui-desktop-loading')].some(visible))return null;
@@ -394,7 +404,7 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    if(platform!=='wechatVideo')return true;
    const parentPath=nativeUrl(page.url(),origins[platform],platform).pathname;
    lastRoot.parentRoute=parentPath===sourcePath?'target':['/','/platform','/platform/'].includes(parentPath)?'home':parentPath==='/platform/login'?'login':parentPath==='/micro/statistic/post'?'micro_post':parentPath==='/micro/statistic/follower'?'micro_follower':'official_other';
-   if(parentPath!==sourcePath)return false;
+   if(parentPath!==sourcePath&&(!host||!['/','/platform','/platform/'].includes(parentPath)))return false;
    const framePath=kind==='channelsFollowers'?'/micro/statistic/follower':'/micro/statistic/post';
    const frames=page.frames().filter(frame=>{try{return nativeUrl(frame.url(),origins[platform],platform).pathname===framePath;}catch{return false;}});
    lastRoot.matchingFrameCount=frames.length;lastRoot.selectedFrameCurrent=frames.includes(scope as Frame);
@@ -408,13 +418,22 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
     });controls.signal.throwIfAborted();lastRoot.visibleHostCount=same.count;lastRoot.hostCurrent=same.current;lastRoot.openShadow=same.open;if(!same.ready)return false;
     const associated=await scope.evaluate(({pagePath,section})=>{
      const parent=window.parent as Window & typeof globalThis;
-     if(parent.location.origin!=='https://channels.weixin.qq.com'||parent.location.pathname!==pagePath)return {parentTarget:false,hostCount:null,rootOpen:null,sectionCount:null,contains:null,ready:false};
+     const parentTarget=parent.location.pathname===pagePath;
+     if(parent.location.origin!=='https://channels.weixin.qq.com'||!parentTarget&&!['/','/platform','/platform/'].includes(parent.location.pathname))return {parentTarget:false,hostCount:null,rootOpen:null,sectionCount:null,contains:null,ready:false};
      const visible=(node:Element)=>!node.closest('[hidden]')&&node.getClientRects().length>0&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden';
      const hosts=[...parent.document.querySelectorAll('wujie-app')].filter(node=>node.getClientRects().length>0&&!node.closest('[hidden]')&&parent.getComputedStyle(node).display!=='none'&&parent.getComputedStyle(node).visibility!=='hidden');
      const root=hosts.length===1?hosts[0]!.shadowRoot:null;
      const nodes=[...document.querySelectorAll('*')].filter(node=>visible(node)&&node.textContent?.trim()===section&&![...node.children].some(child=>child.textContent?.trim()===section));
      const rootOpen=!!root&&root.mode==='open',contains=rootOpen&&nodes.length===1?parent.Node.prototype.contains.call(root,nodes[0]!):null;
-     return {parentTarget:true,hostCount:hosts.length,rootOpen,sectionCount:nodes.length,contains,ready:rootOpen&&nodes.length===1&&contains===true};
+     if(parentTarget&&rootOpen&&nodes.length===1&&contains===true)return {parentTarget,hostCount:hosts.length,rootOpen,sectionCount:nodes.length,contains,ready:true};
+     // SEMANTIC_BOUNDARY_ALLOW: 官方Wujie实例的精确对象关联；首页路径本身不构成报表见证。
+     const sandbox=(window as Window&{__WUJIE?:{iframe?:HTMLIFrameElement;shadowRoot?:ShadowRoot;proxyLocation?:{origin?:string;pathname?:string}}}).__WUJIE;
+     const expectedFrame=pagePath.endsWith('/follower')?'/micro/statistic/follower':'/micro/statistic/post';
+     const owned=rootOpen&&sandbox?.iframe?.contentWindow===window&&sandbox.iframe===window.frameElement&&sandbox.shadowRoot===root&&sandbox.proxyLocation?.origin==='https://channels.weixin.qq.com'&&sandbox.proxyLocation.pathname===expectedFrame;
+     if(!owned)return {parentTarget,hostCount:hosts.length,rootOpen,sectionCount:nodes.length,contains,ready:false};
+     const renderedNodes=[...root!.querySelectorAll('*')].filter(node=>visible(node)&&node.textContent?.trim()===section&&![...node.children].some(child=>child.textContent?.trim()===section));
+     const renderedContains=renderedNodes.length===1?parent.Node.prototype.contains.call(root,renderedNodes[0]!):null;
+     return {parentTarget,hostCount:hosts.length,rootOpen,sectionCount:renderedNodes.length,contains:renderedContains,ready:renderedNodes.length===1&&renderedContains===true};
     },shadow!);controls.signal.throwIfAborted();lastRoot.runtimeParentTarget=associated.parentTarget;lastRoot.runtimeHostCount=associated.hostCount;lastRoot.runtimeRootOpen=associated.rootOpen;lastRoot.runtimeSectionCount=associated.sectionCount;lastRoot.runtimeContainsSection=associated.contains;lastRoot.association=associated.ready;return associated.ready;
    }
    const visible=await frameElement?.isVisible();controls.signal.throwIfAborted();lastRoot.frameElementVisible=visible??null;return visible===true;
