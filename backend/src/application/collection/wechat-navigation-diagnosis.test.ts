@@ -21,13 +21,21 @@ async function fixture(){
  return {root,account,group,member,ports,release,observe,controller,controls,service:createWechatNavigationDiagnosis(ports)};
 }
 describe('T1364 backend诊断边界（合成ports，不代签真浏览器）',()=>{
+ it('受信report配置经原诊断入口传给worker并保存来源，仍只消耗一次',async()=>{
+  const f=await fixture();f.ports.configuration={...(f.ports.configuration as object),targetPage:'report'};
+  const result=await f.service.diagnose(ctx,'account',f.controls);
+  expect(result.status).toBe('completed');expect(f.observe.mock.calls[0]![2]).toMatchObject({targetPage:'report'});
+  const directory=(await readdir(f.root)).find(name=>name.startsWith('run-'))!;expect(JSON.parse(await readFile(path.join(f.root,directory,'manifest.json'),'utf8')).targetPage).toBe('report');
+  await expect(f.service.diagnose(ctx,'account',{...f.controls,trustedInvocationId:'second'})).rejects.toThrow('AUTHORIZATION_CONSUMED');
+  expect(f.observe).toHaveBeenCalledOnce();
+ });
  it('完整总预算冻结，真实停止和释放分时刻，manifest保存真实auditReceipt',async()=>{
   const f=await fixture(),result=await f.service.diagnose(ctx,'account',f.controls);
   expect(Date.parse(result.deadlineAt)-Date.parse(result.startedAt)).toBe(WECHAT_NAVIGATION_BUDGET_MS);
   expect(result).toMatchObject({status:'completed',stop:{physicalStoppedAt:'2026-10-19T00:00:00.300Z',hostLeaseReleaseConfirmed:true,stopPending:false}});
   const directory=(await readdir(f.root)).find(name=>name.startsWith('run-'))!;
   const manifest=JSON.parse(await readFile(path.join(f.root,directory,'manifest.json'),'utf8'));
-  expect(manifest.auditReceipt).toEqual({leaseId:'real-lease',hostOperationId:'real-operation'});expect(f.release).toHaveBeenCalledOnce();
+  expect(manifest.targetPage).toBe('home');expect(f.observe.mock.calls[0]![2].targetPage).toBe('home');expect(manifest.auditReceipt).toEqual({leaseId:'real-lease',hostOperationId:'real-operation'});expect(f.release).toHaveBeenCalledOnce();
   expect(JSON.stringify(result)).not.toContain('stable');expect(JSON.stringify(result)).not.toContain('/synthetic');
  });
  it('无可信invocation、已取消和缺group均不launch/不消耗授权',async()=>{

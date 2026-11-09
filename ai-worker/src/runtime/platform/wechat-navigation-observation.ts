@@ -2,7 +2,7 @@
 import type {Frame,Page} from '@playwright/test';
 
 export type NavigationRouteClass='platform_home'|'platform_post'|'platform_follower'|'micro_post'|'micro_follower'|'official_other'|'cross_origin'|'unavailable';
-export type NavigationRoot={rootId:string;parentRootId:string|null;kind:'top'|'frame'|'cross_origin_frame'|'open_shadow'|'unavailable_shadow';routeClass:NavigationRouteClass;visible:boolean;documentReadyState:'loading'|'interactive'|'complete'|'unknown';navigationContainerState:'present'|'unknown';entryExactCount:number;entryVisibleCount:number;centreExactCount:number;centreVisibleCount:number;overlayCount:number;truncated:boolean};
+export type NavigationRoot={reportSections?:Array<{label:string;exactCount:number;visibleCount:number}>;rootId:string;parentRootId:string|null;kind:'top'|'frame'|'cross_origin_frame'|'open_shadow'|'unavailable_shadow';routeClass:NavigationRouteClass;visible:boolean;documentReadyState:'loading'|'interactive'|'complete'|'unknown';navigationContainerState:'present'|'unknown';entryExactCount:number;entryVisibleCount:number;centreExactCount:number;centreVisibleCount:number;overlayCount:number;truncated:boolean};
 export type NavigationCandidate={rootId:string;tag:string;role:string|null;expanded:string|null;hidden:boolean;text:string;bbox:{x:number;y:number;width:number;height:number};visible:boolean;occluded:boolean};
 export type WechatNavigationObservation={routeClass:NavigationRouteClass;roots:NavigationRoot[];menuCandidates:NavigationCandidate[];closedShadowUnknownCount:number;truncated:boolean};
 export type NavigationObservationControls={signal:AbortSignal;timeoutMs(requested?:number):number;assertScopeFresh():Promise<void>};
@@ -50,10 +50,10 @@ export async function readWechatNavigationObservation(page:Page,original:Navigat
      if(roots.length>=32||nodesRemaining<=0){truncated=true;return;}
      const all=[...root.querySelectorAll('*')];const nodes=all.slice(0,nodesRemaining);nodesRemaining-=nodes.length;if(nodes.length!==all.length)truncated=true;
      const exact=(label:string)=>nodes.filter(node=>text(node)===label&&![...node.children].some(child=>text(child)===label));
-     const entry=exact('视频数据'),centre=exact('数据中心');
+     const entry=exact('视频数据'),centre=exact('数据中心'),reportSections=['全部视频','单篇视频','关注者增长'].map(label=>{const nodes=exact(label);return {label,exactCount:nodes.length,visibleCount:nodes.filter(visible).length};});
      const overlays=nodes.filter(node=>visible(node)&&(node.getAttribute('role')==='dialog'||node.getAttribute('aria-modal')==='true'));
      const containers=nodes.filter(node=>node.matches('nav,aside,[role="navigation"],[role="menu"],[role="menubar"]'));
-     roots.push({rootId:id,parentRootId:parentId,kind,routeClass:route,visible:root instanceof ShadowRoot?visible(root.host):frameVisible,documentReadyState:document.readyState,navigationContainerState:containers.length?'present':'unknown',entryExactCount:entry.length,entryVisibleCount:entry.filter(visible).length,centreExactCount:centre.length,centreVisibleCount:centre.filter(visible).length,overlayCount:overlays.length,truncated:nodes.length!==all.length});
+     roots.push({reportSections,rootId:id,parentRootId:parentId,kind,routeClass:route,visible:root instanceof ShadowRoot?visible(root.host):frameVisible,documentReadyState:document.readyState,navigationContainerState:containers.length?'present':'unknown',entryExactCount:entry.length,entryVisibleCount:entry.filter(visible).length,centreExactCount:centre.length,centreVisibleCount:centre.filter(visible).length,overlayCount:overlays.length,truncated:nodes.length!==all.length});
      const navigationNodes=new Set<Element>();for(const container of containers)for(const node of container.querySelectorAll('a,button,[role="menuitem"],[role="button"],li,span'))navigationNodes.add(node);
      for(const node of navigationNodes){
       if(candidates.length>=128){truncated=true;break;}const label=text(node);if(!label||[...node.children].some(child=>text(child)===label))continue;if(label.length>80)truncated=true;

@@ -43,6 +43,30 @@ describe('T1364 仅合成官方origin的真实Chromium导航结构',()=>{
    if(mode==='closed')expect(result.closedShadowUnknownCount).toBeGreaterThan(0);
   }finally{await f.close();}
  });
+ it('受信report模式先核身份再只导航固定报表页，最终PNG和root来自该页且不导出',{timeout:120000,retry:0},async()=>{
+  const f=await page('<h2 class="finder-nickname">明确合成账号</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-report-id">synthetic-report-id</span><nav><button>全部视频</button></nav>');
+  const directory=await mkdtemp('/tmp/t1451-report-');let clock=Date.now(),shots=0,prepared=0,identityRead=false;const routes:string[]=[];
+  const screenshot=f.page.screenshot.bind(f.page);f.page.screenshot=async options=>{shots++;if(shots===1)setTimeout(()=>{clock+=120000;},1000);return screenshot(options);};
+  f.page.on('framenavigated',frame=>{if(frame===f.page.mainFrame()&&new URL(frame.url()).pathname==='/platform/statistic/post'){expect(identityRead).toBe(true);routes.push(frame.url());}});
+  const witness=createVerifiedWechatDomWitnesses(),read=witness.identityWitness.read.bind(witness.identityWitness);
+  const source=createWechatBrowserSource({...witness,now:()=>clock,identityWitness:{...witness.identityWitness,read:async(...args)=>{const value=await read(...args);identityRead=true;return value;}},reportWitness:{prepare:async()=>{prepared++;throw Error('不得导出');}},openProfile:async(_dir,_headless,c)=>guardedLaunch(null,async()=>f.page.context(),{signal:c.signal,onStopped:c.onStopped})});
+  try{
+   const result=await source.observeNavigation('/synthetic-only-profile','synthetic-report-id',{diagnosticRunId:'report-page-once',privateEvidenceDir:directory,deadlineAt:new Date(clock+2450000).toISOString(),assertScopeFresh:async()=>{},targetPage:'report'} as Parameters<typeof source.observeNavigation>[2]);
+   expect(routes).toEqual([origin+'/platform/statistic/post']);expect(prepared).toBe(0);expect(shots).toBe(2);
+   expect(result.snapshots[0]!.routeClass).toBe('platform_home');expect(result.snapshots[1]!.routeClass).toBe('platform_post');
+   expect(result.snapshots[1]!.screenshot.status).toBe('captured');expect(result.snapshots[1]!.roots[0]).toMatchObject({reportSections:[{label:'全部视频',exactCount:1,visibleCount:1},{label:'单篇视频',exactCount:0,visibleCount:0},{label:'关注者增长',exactCount:0,visibleCount:0}]});
+   expect(f.page.isClosed()).toBe(true);
+  }finally{await f.close();await rm(directory,{recursive:true,force:true});}
+ });
+ it.each(['wrong-route','logged-out','scope-changed'] as const)('report导航后%s不发布图片并实际关闭',{timeout:120000,retry:0},async mode=>{
+  const f=await page('<nav>明确合成页面</nav>'),directory=await mkdtemp('/tmp/t1451-reject-');let entered=false,released=false;
+  const navigate=f.page.goto.bind(f.page);f.page.goto=async(url,options)=>{if(String(url).endsWith('/platform/statistic/post')){entered=true;return navigate(origin+(mode==='wrong-route'?'/unexpected':'/platform/statistic/post'),options);}return navigate(url,options);};
+  const source=createWechatBrowserSource({identityWitness:{read:async()=>({platform:'wechatVideo',platformIdentity:'synthetic-reject',displayName:'明确合成账号',sourcePath:'/platform'}),isLoggedOut:async()=>entered&&mode==='logged-out'},openProfile:async(_dir,_headless,c)=>guardedLaunch(null,async()=>f.page.context(),{signal:c.signal,onStopped:c.onStopped})});
+  try{
+   await expect(source.observeNavigation('/synthetic-only-profile','synthetic-reject',{diagnosticRunId:'report-reject',targetPage:'report',privateEvidenceDir:directory,deadlineAt:new Date(Date.now()+2450000).toISOString(),assertScopeFresh:async()=>{if(entered&&mode==='scope-changed')throw Error('SCOPE_CHANGED');},onStopped:async()=>{released=true;}})).rejects.toBeDefined();
+   expect(entered).toBe(true);expect(await readdir(directory)).toEqual([]);expect(f.page.isClosed()).toBe(true);expect(released).toBe(true);
+  }finally{await f.close();await rm(directory,{recursive:true,force:true});}
+ });
  it('source真实120秒两张viewport PNG与实停先于释放，未调用报表能力',{timeout:2700000,retry:0},async()=>{
   const f=await page('<h2 class="finder-nickname">明确合成账号</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-t1364-id">synthetic-t1364-id</span><nav><button>经营分析</button></nav>');
   const directory=await mkdtemp('/tmp/t1364-worker-'),events:string[]=[],witnesses=createVerifiedWechatDomWitnesses();let prepared=0,downloads=0;

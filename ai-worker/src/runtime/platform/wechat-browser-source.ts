@@ -21,7 +21,7 @@ export type WechatBrowserControls={signal?:AbortSignal;deadlineAt?:string|null;t
 export type WechatNavigationScreenshot={status:'captured';artifactId:string;sha256:string}|{status:'missing'};
 export type WechatNavigationSnapshot=WechatNavigationObservation&{phase:'identity_verified'|'observation_end';observedAt:string;screenshot:WechatNavigationScreenshot};
 export type WechatNavigationSample=Pick<WechatNavigationObservation,'routeClass'|'roots'|'closedShadowUnknownCount'|'truncated'>&{sampleIndex:number;observedAt:string;candidateVisibility:Array<{rootId:string;visibleCount:number;occludedCount:number}>};
-export type WechatNavigationControls=WechatBrowserControls&{diagnosticRunId:string;privateEvidenceDir:string;deadlineAt:string;assertScopeFresh:()=>Promise<void>};
+export type WechatNavigationControls=WechatBrowserControls&{targetPage?:'home'|'report';diagnosticRunId:string;privateEvidenceDir:string;deadlineAt:string;assertScopeFresh:()=>Promise<void>};
 export type WechatNavigationResult={diagnosticRunId:string;identityMatched:true;observationStartedAt:string;observationEndedAt:string;sampleCount:number;samples:WechatNavigationSample[];snapshots:WechatNavigationSnapshot[]};
 function notifyLifecycle(callback:((at:string)=>void)|undefined){try{callback?.(new Date().toISOString());}catch{/* 观察者异常不能跳过真实关闭/释放。 */}}
 export type WechatNativeDownload={kind:NativeReportKind;bytes:Uint8Array;filename:string;sourcePath:NativeReportPayload['sourcePath'];selection:NativeReportPayload['selection'];expectedRows?:number};
@@ -405,7 +405,7 @@ export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityW
   readIdentity(platform:WechatCreatorPlatform,directory:string,expectedIdentity:string,controls:WechatBrowserControls={}):Promise<WechatCreatorIdentity>{if(!expectedIdentity.trim())return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_MISSING','原绑定缺少稳定身份'));return withProfile(platform,directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],120000],(_context,page,op,trace)=>{trace.stage='readIdentity';return identity(page,platform,op,expectedIdentity);});},
   async observeNavigation(directory:string,expectedIdentity:string,controls:WechatNavigationControls):Promise<WechatNavigationResult>{
    if(!expectedIdentity.trim())return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_MISSING','原绑定缺少稳定身份'));
-   if(!/^[A-Za-z0-9._:-]{1,200}$/.test(controls.diagnosticRunId)||!controls.privateEvidenceDir||!controls.deadlineAt||typeof controls.assertScopeFresh!=='function')return rejectBeforeOpen(controls,new WechatBrowserSourceError('NAVIGATION_INPUT_INVALID','导航诊断缺少可信执行上下文'));
+   if(controls.targetPage!==undefined&&!['home','report'].includes(controls.targetPage)||!/^[A-Za-z0-9._:-]{1,200}$/.test(controls.diagnosticRunId)||!controls.privateEvidenceDir||!controls.deadlineAt||typeof controls.assertScopeFresh!=='function')return rejectBeforeOpen(controls,new WechatBrowserSourceError('NAVIGATION_INPUT_INVALID','导航诊断缺少可信执行上下文'));
    const artifacts:string[]=[];
    try{return await withProfile('wechatVideo',directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS.wechatVideo,120000,120000,120000,120000],async(_context,page,op,trace)=>{
     const check=async(active:WechatOperationControls=op)=>{active.signal.throwIfAborted();active.timeoutMs(120000);await controls.assertScopeFresh();active.signal.throwIfAborted();};
@@ -425,7 +425,7 @@ export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityW
      try{return await bounded(async()=>{
      const observation=await read(active);await check(active);let screenshot:WechatNavigationScreenshot={status:'missing'};
      try{
-      const route=navigationRouteClass(page.url());if(route!=='platform_home')throw new WechatBrowserSourceError('SOURCE_URL_INVALID','导航诊断页面不在固定首页');
+      const route=navigationRouteClass(page.url()),expected=phase==='observation_end'&&controls.targetPage==='report'?'platform_post':'platform_home';if(route!==expected)throw new WechatBrowserSourceError('SOURCE_URL_INVALID','导航诊断页面不在授权的固定页面');
       if(await deps.identityWitness!.isLoggedOut(page,'wechatVideo',active))throw new WechatBrowserSourceError('LOGIN_REQUIRED','微信后台需要本人重新登录');
       await check(active);const bytes=await page.screenshot({type:'png',fullPage:false,timeout:active.timeoutMs(120000)});await check(active);
       if(navigationRouteClass(page.url())!==route)throw new WechatBrowserSourceError('SOURCE_URL_INVALID','导航诊断页面已变化');
@@ -435,7 +435,14 @@ export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityW
      const snapshot={...observation,phase,observedAt:new Date(now()).toISOString(),screenshot};snapshots.push(snapshot);return snapshot;
      },signal);}finally{clearTimeout(timer);controller.abort();}
     };
-    await capture('identity_verified');const started=now(),observationStartedAt=new Date(started).toISOString();
+    await capture('identity_verified');
+    if(controls.targetPage==='report'){
+     // SEMANTIC_BOUNDARY_ALLOW: 只沿已用于生产报表的固定官方父路由取证，不推断菜单/权限或调用导出。
+     await check();await page.goto(origins.wechatVideo+'/platform/statistic/post',{waitUntil:'domcontentloaded',timeout:op.timeoutMs(120000)});await check();
+     if(navigationRouteClass(page.url())!=='platform_post')throw new WechatBrowserSourceError('SOURCE_URL_INVALID','报表诊断未到达授权的固定页面');
+     if(await deps.identityWitness!.isLoggedOut(page,'wechatVideo',op))throw new WechatBrowserSourceError('LOGIN_REQUIRED','微信后台需要本人重新登录');await check();
+    }
+    const started=now(),observationStartedAt=new Date(started).toISOString();
     // 120秒为一次有限观察；31个中间样本封顶后仍等原结束时刻，不能用样本数提前结束。
     const end=started+120000,windowController=new AbortController(),windowSignal=AbortSignal.any([op.signal,windowController.signal]);
     const windowTimer=setTimeout(()=>windowController.abort(),Math.max(1,end-now()));

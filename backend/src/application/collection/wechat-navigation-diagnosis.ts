@@ -13,7 +13,7 @@ const SETTLEMENT_BUDGET_MS=120_000;
 const FINAL_MARGIN_MS=10_000;
 export const WECHAT_NAVIGATION_BUDGET_MS=EXECUTION_BUDGET_MS+SETTLEMENT_BUDGET_MS+FINAL_MARGIN_MS;
 const hash=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const configSchema=z.object({authorizationId:z.string().min(1).max(160),groupId:z.string().min(1),accountId:z.string().min(1),privateRoot:z.string().min(1),sourceSha:z.string().regex(/^[a-f0-9]{40}$/)}).strict();
+const configSchema=z.object({authorizationId:z.string().min(1).max(160),groupId:z.string().min(1),accountId:z.string().min(1),privateRoot:z.string().min(1),sourceSha:z.string().regex(/^[a-f0-9]{40}$/),targetPage:z.enum(['home','report']).default('home')}).strict();
 export type WechatNavigationConfiguration=z.infer<typeof configSchema>;
 type Account={id:string;userId:string;platform:string;externalAccountId?:string|null;status:string;updatedAt:string};
 type Group={id:string;userId:string;status:string;version:number};
@@ -129,7 +129,7 @@ export function createWechatNavigationDiagnosis(ports:WechatNavigationDiagnosisP
    await assertScopeFresh();
    observerEntered=true;
    observation=await ports.observeNavigation(checkout.authDir,scope.platformIdentity,{
-    signal,deadlineAt:new Date(executionDeadline).toISOString(),diagnosticRunId,privateEvidenceDir:directory,assertScopeFresh,
+    signal,deadlineAt:new Date(executionDeadline).toISOString(),diagnosticRunId,privateEvidenceDir:directory,assertScopeFresh,targetPage:config.targetPage,
     onBrowserOpened:()=>{stop.browserOpened=true;},onContextCloseStarted:()=>{stop.contextCloseStarted=true;},
     onPhysicalStopped:occurredAt=>{stop.physicalStopConfirmed=true;stop.physicalStoppedAt=occurredAt;},
     onStopped:async()=>{await checkout!.onStopped();stop.hostLeaseReleaseConfirmed=true;stop.hostLeaseReleasedAt=new Date(now()).toISOString();stop.stopPending=false;},
@@ -154,7 +154,7 @@ export function createWechatNavigationDiagnosis(ports:WechatNavigationDiagnosisP
    const quarantined=scopeChanged||signal.aborted||status!=='completed';
    const result=wechatNavigationDiagnosisResource.parse({diagnosticRunId,status,reasonCode,startedAt:new Date(started).toISOString(),deadlineAt:new Date(deadline).toISOString(),completedAt:new Date(now()).toISOString(),scopeProofHash,identityMatched:observation?.identityMatched??null,sampleCount:observation?.sampleCount??0,screenshots:quarantined?[]:(observation?.snapshots??[]).map(snapshot=>({phase:snapshot.phase,...snapshot.screenshot})),stop});
    await until(settlementDeadline,()=>privateDirectory(directory));
-   await until(settlementDeadline,()=>atomic(path.join(directory,'manifest.json'),{schema:'wechat-navigation-private-manifest/v1',diagnosticRunId,scope,sourceSha:config.sourceSha,auditReceipt:checkout?.auditReceipt??null,quarantined,observation:observation??null,result},settlementDeadline));
+   await until(settlementDeadline,()=>atomic(path.join(directory,'manifest.json'),{schema:'wechat-navigation-private-manifest/v1',diagnosticRunId,scope,sourceSha:config.sourceSha,targetPage:config.targetPage,auditReceipt:checkout?.auditReceipt??null,quarantined,observation:observation??null,result},settlementDeadline));
    const prepared=path.join(directory,'result.prepared.json');
    await until(settlementDeadline,()=>atomic(prepared,{result,quarantined},settlementDeadline));
    // 最后的异步边界之后，signal/deadline/目录与rename处于同一JS执行段。
