@@ -731,3 +731,16 @@ describe('T1406 公众号入口evaluateAll实证协议窄恢复',()=>{
  });
 
 });
+
+// 固定协议形状的观察，不连接账号或读取原始响应内容。
+describe('T1457 作品响应拒绝分支保持原失败并给出安全形状',()=>{
+ it.each(['endpoint','request_window','response_incomplete','body_unreadable','response_error','count_type','count_bounds','list_type','list_count'] as const)('%s原失败code不变且不携带原始数据',async reason=>{
+  const frame={} as Frame,base=response(1788969600,1791475200,13,{frame});
+  const request={...base.request(),postDataJSON:()=>({startTime:1788969600,endTime:1791475200,pageSize:10,currentPage:reason==='request_window'?2:1})};
+  const raw={errCode:reason==='response_error'?1:0,data:{totalCount:reason==='count_type'?'13':reason==='count_bounds'?10001:13,list:reason==='list_type'?null:Array.from({length:reason==='list_count'?1:10},()=>({secret:'synthetic-private-content'}))}};
+  const r={...base,request:()=>request,status:()=>reason==='endpoint'?500:200,finished:async()=>reason==='response_incomplete'?Error('synthetic-private-network'):null,json:async()=>{if(reason==='body_unreadable')throw Error('synthetic-private-body');return raw;}} as unknown as Response;
+  const error=await readChannelsWorksResponse(r,frame,controls).catch(error=>error);
+  expect(error).toMatchObject({code:'REPORT_RESPONSE_INVALID',responseObservation:{reason}});
+  expect(JSON.stringify(error.responseObservation)).not.toContain('synthetic-private');
+ });
+});

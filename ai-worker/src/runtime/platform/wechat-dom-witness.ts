@@ -1,7 +1,7 @@
 import type {Frame,Page,Response,Request,Locator,ElementHandle} from '@playwright/test';
 import type {NativeReportKind,NativeReportPayload} from '@creatoros/contract';
 import {setTimeout as delay} from 'node:timers/promises';
-import {canRetryWechatVideoIdentityContext,WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation,type WechatEntryObservation,type WechatRootObservation,type WechatOwnershipObservation,type WechatIdentityObservation,type WechatIdentityRootObservation} from './wechat-browser-source';
+import {canRetryWechatVideoIdentityContext,WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation,type WechatEntryObservation,type WechatRootObservation,type WechatOwnershipObservation,type WechatIdentityObservation,type WechatIdentityRootObservation,type WechatResponseObservation} from './wechat-browser-source';
 
 // T1110 2026-10-09普通账号页/原生详情实测。只核身份、日期、响应和完整性，不做语义选择。
 // SEMANTIC_BOUNDARY_ALLOW: DOM标签、日期格式和原生响应为固定协议，不解释内容或推断指标累计口径。
@@ -297,17 +297,27 @@ export async function readWechatReportDom(scope:Page|Frame,kind:NativeReportKind
 }
 export async function readChannelsWorksResponse(response:Response,frame:Frame,controls:WechatOperationControls):Promise<WorksObservation>{
  controls.signal.throwIfAborted();let body:{errCode?:unknown;data?:{totalCount?:unknown;list?:unknown}},selection:NativeReportPayload['selection'];
+ const shape:WechatResponseObservation={reason:'endpoint',errorCodeState:'missing',countType:'missing',reportedCount:null,listState:'missing',listLength:null,currentPageOne:null,pageSizeTen:null};
+ const reject=(reason:WechatResponseObservation['reason'],message:string):never=>{const error=new WechatBrowserSourceError('REPORT_RESPONSE_INVALID',message);error.responseObservation={...shape,reason};throw error;};
  try{
   const url=nativeUrl(response.url(),origins.wechatVideo,'wechatVideo'),request=response.request();
-  if(url.pathname!==worksEndpoint||response.status()!==200||request.method()!=='POST'||request.frame()!==frame)return fail('REPORT_RESPONSE_INVALID','单篇视频原生响应未对应当前页面');
+  if(url.pathname!==worksEndpoint||response.status()!==200||request.method()!=='POST'||request.frame()!==frame)return reject('endpoint','单篇视频原生响应未对应当前页面');
   const data=request.postDataJSON() as {startTime?:unknown;endTime?:unknown;pageSize?:unknown;currentPage?:unknown};
-  const startDate=dateSeconds(data.startTime),endDate=dateSeconds(data.endTime);
-  if(!startDate||!endDate||startDate>endDate||data.currentPage!==1||data.pageSize!==10)return fail('REPORT_RESPONSE_INVALID','单篇视频原生日期协议无效');
-  const result=await response.finished();controls.signal.throwIfAborted();if(result)return fail('REPORT_RESPONSE_INVALID','单篇视频原生响应未完成');
+  const startDate=dateSeconds(data.startTime),endDate=dateSeconds(data.endTime);shape.currentPageOne=data.currentPage===1;shape.pageSizeTen=data.pageSize===10;
+  if(!startDate||!endDate||startDate>endDate||data.currentPage!==1||data.pageSize!==10)return reject('request_window','单篇视频原生日期协议无效');
+  const result=await response.finished();controls.signal.throwIfAborted();if(result)return reject('response_incomplete','单篇视频原生响应未完成');
   body=await response.json();selection={startDate,endDate,timeZone:'Asia/Shanghai',meaning:'publishedDates'};
- }catch(error){if(error instanceof WechatBrowserSourceError||controls.signal.aborted)throw error;return fail('REPORT_RESPONSE_INVALID','单篇视频原生响应无法核对');}
- const count=body?.data?.totalCount;
- if(body?.errCode!==0||typeof count!=='number'||!Number.isSafeInteger(count)||count<0||count>10000||!Array.isArray(body.data?.list)||body.data.list.length!==Math.min(count,10))return fail('REPORT_RESPONSE_INVALID','单篇视频原生总数无法核对');
+ }catch(error){if(error instanceof WechatBrowserSourceError||controls.signal.aborted)throw error;return reject('body_unreadable','单篇视频原生响应无法核对');}
+ const count=body?.data?.totalCount,list=body?.data?.list,code=body?.errCode;
+ const bounded=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=0&&v<=10000;
+ shape.errorCodeState=code===0?'zero':typeof code==='number'&&Number.isFinite(code)?'nonzero':code===undefined?'missing':'invalid';
+ shape.countType=typeof count==='number'?'number':typeof count==='string'?'string':count===undefined?'missing':'invalid';shape.reportedCount=bounded(count)?count:null;
+ shape.listState=Array.isArray(list)?'array':list===undefined?'missing':list===null?'null':'invalid';shape.listLength=Array.isArray(list)&&bounded(list.length)?list.length:null;
+ if(code!==0)return reject('response_error','单篇视频原生总数无法核对');
+ if(typeof count!=='number')return reject('count_type','单篇视频原生总数无法核对');
+ if(!bounded(count))return reject('count_bounds','单篇视频原生总数无法核对');
+ if(!Array.isArray(list))return reject('list_type','单篇视频原生总数无法核对');
+ if(list.length!==Math.min(count,10))return reject('list_count','单篇视频原生总数无法核对');
  return {selection,reportedRows:count};
 }
 export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{identityWitness:WechatIdentityWitness;reportWitness:WechatReportWitness}{
