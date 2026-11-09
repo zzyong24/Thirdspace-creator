@@ -1,3 +1,4 @@
+import {mkdtemp,rm} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {resolve} from 'node:path';
 import type {Browser} from '@playwright/test';
@@ -46,7 +47,7 @@ describe('视频号真实菜单 → 原source/DOM witness/原生下载（真实C
  let browser:Browser;
  beforeAll(async()=>{browser=await chromium.launch({headless:true,timeout:120000,args:['--disable-background-networking','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost']});},120000);
  afterAll(async()=>{await browser?.close();},120000);
- async function fixture(mode:'folded'|'expanded'|'legacy'|'ambiguous'){
+ async function fixture(mode:'folded'|'expanded'|'legacy'|'ambiguous',diagnosticClock?:()=>number){
   const context=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block'}),page=await context.newPage();let directReports=0,released=false,menuClicks=0;
   page.on('console',message=>{if(message.text()==='synthetic-menu-click')menuClicks++;});
   await context.route('**/*',async route=>{
@@ -60,7 +61,7 @@ describe('视频号真实菜单 → 原source/DOM witness/原生下载（真实C
    const html=home(mode,direct&&fixedWorks,u.pathname.endsWith('follower'))+(direct&&!fixedWorks?'<script>history.replaceState({},"","/platform")</script>':'');
    await route.fulfill({contentType:'text/html; charset=utf-8',body:html});
   });
-  const source=createWechatBrowserSource({...createVerifiedWechatDomWitnesses({now:()=>instant}),openProfile:async(_dir,_headless,c)=>guardedLaunch(null,async()=>context,{signal:c.signal,onStopped:c.onStopped,timeoutMs:120000})});
+  const source=createWechatBrowserSource({...createVerifiedWechatDomWitnesses({now:()=>instant}),...(diagnosticClock?{now:diagnosticClock}:{}),openProfile:async(_dir,_headless,c)=>guardedLaunch(null,async()=>context,{signal:c.signal,onStopped:c.onStopped,timeoutMs:120000})});
   return {source,page,context,directReports:()=>directReports,menuClicks:()=>menuClicks,released:()=>released,onStopped:async()=>{released=true;}};
  }
  it.each(['folded','expanded','legacy'] as const)('%s完整原生三报表保留日期/响应/下载核验',{timeout:120000,retry:0},async mode=>{
@@ -78,4 +79,11 @@ describe('视频号真实菜单 → 原source/DOM witness/原生下载（真实C
   try{await f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-menu-id',{onStopped:f.onStopped},async r=>{reports.push(r);});expect(reports.map(r=>r.kind)).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);expect(f.menuClicks()).toBe(0);expect(f.directReports()).toBe(3);expect(f.released()).toBe(true);}
   finally{await f.context.close();}
  });
+ it('T1456 report-entry沿原真实菜单进入再拍两帧，不走整页goto或导出',{timeout:120000,retry:0},async()=>{
+  let clock=Date.now(),shots=0,downloads=0;const f=await fixture('folded',()=>clock),directory=await mkdtemp('/tmp/t1456-menu-');
+  const screenshot=f.page.screenshot.bind(f.page);f.page.screenshot=async options=>{shots++;if(shots===1)setTimeout(()=>{clock+=120000;},1000);return screenshot(options);};f.page.on('download',()=>{downloads++;});
+  try{const result=await f.source.observeNavigation('/synthetic-only-profile','synthetic-menu-id',{diagnosticRunId:'same-menu-diagnosis',targetPage:'report-entry',privateEvidenceDir:directory,deadlineAt:new Date(clock+2450000).toISOString(),assertScopeFresh:async()=>{},onStopped:f.onStopped} as never);expect(f.menuClicks()).toBe(1);expect(f.directReports()).toBe(0);expect(result.snapshots.map(x=>x.routeClass)).toEqual(['platform_post','platform_post']);expect(shots).toBe(2);expect(downloads).toBe(0);expect(f.released()).toBe(true);expect(f.page.isClosed()).toBe(true);}
+  finally{await f.context.close();await rm(directory,{recursive:true,force:true});}
+ });
+
 });

@@ -13,7 +13,7 @@ const SETTLEMENT_BUDGET_MS=120_000;
 const FINAL_MARGIN_MS=10_000;
 export const WECHAT_NAVIGATION_BUDGET_MS=EXECUTION_BUDGET_MS+SETTLEMENT_BUDGET_MS+FINAL_MARGIN_MS;
 const hash=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const configSchema=z.object({authorizationId:z.string().min(1).max(160),groupId:z.string().min(1),accountId:z.string().min(1),privateRoot:z.string().min(1),sourceSha:z.string().regex(/^[a-f0-9]{40}$/),targetPage:z.enum(['home','report']).default('home')}).strict();
+const configSchema=z.object({authorizationId:z.string().min(1).max(160),groupId:z.string().min(1),accountId:z.string().min(1),privateRoot:z.string().min(1),sourceSha:z.string().regex(/^[a-f0-9]{40}$/),targetPage:z.enum(['home','report','report-entry']).default('home')}).strict();
 export type WechatNavigationConfiguration=z.infer<typeof configSchema>;
 type Account={id:string;userId:string;platform:string;externalAccountId?:string|null;status:string;updatedAt:string};
 type Group={id:string;userId:string;status:string;version:number};
