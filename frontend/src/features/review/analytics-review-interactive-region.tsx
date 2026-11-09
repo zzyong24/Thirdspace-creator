@@ -26,6 +26,7 @@
  * 语义(不换数据、不换图型)—— 图表区改为直接并排布,chartTab state 一并移除。
  */
 
+import { useReviewConclusion, type ReviewConclusion } from "./review-conclusion-signal";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
@@ -659,6 +660,34 @@ function CommentsSection({
 // 本区有采纳按钮(AdjudicationQueue 的 learning-adopt),AI 卡无任何动作。
 // ---------------------------------------------------------------------------
 
+/** 批次2-8b：没有候选时展示最近一次复盘结论（对话复盘卡写入本机，按项目隔离）。 */
+function ReviewConclusionBlock({ conclusion }: { conclusion: ReviewConclusion }) {
+  return (
+    <div
+      data-slot="current-period-review-conclusion"
+      data-testid="current-period-review-conclusion"
+      className="flex w-full flex-col gap-1.5 rounded-lg border border-border bg-surface px-3 py-3 text-[12px] leading-relaxed text-foreground"
+    >
+      <p className="text-[12px] font-medium">最近一次复盘结论</p>
+      {conclusion.observations.length > 0 ? (
+        <div><span className="text-muted-foreground">实际观察：</span>{conclusion.observations.join("；")}</div>
+      ) : null}
+      {conclusion.hypotheses.length > 0 ? (
+        <div><span className="text-muted-foreground">待验证解释：</span>{conclusion.hypotheses.join("；")}</div>
+      ) : null}
+      {conclusion.nextExperiment.trim() ? (
+        <div><span className="text-muted-foreground">下一条检验：</span>{conclusion.nextExperiment}</div>
+      ) : null}
+      {conclusion.insufficientReason.trim() ? (
+        <div className="text-muted-foreground">暂不沉淀经验：{conclusion.insufficientReason}</div>
+      ) : null}
+      {conclusion.learningTitles.length > 0 ? (
+        <div className="text-muted-foreground">已默认沉淀的经验：{conclusion.learningTitles.join("、")}（可在对话里撤销）</div>
+      ) : null}
+    </div>
+  );
+}
+
 function CurrentPeriodLearnings({
   candidates,
   projectId,
@@ -671,6 +700,8 @@ function CurrentPeriodLearnings({
   analysisScope?: string;
 }) {
   const isEmpty = candidates.length === 0;
+  const conclusion = useReviewConclusion(projectId);
+  const conclusionBlock = isEmpty && conclusion ? <ReviewConclusionBlock conclusion={conclusion} /> : null;
   return (
     <section
       data-slot="current-period-learnings"
@@ -697,7 +728,9 @@ function CurrentPeriodLearnings({
           />
         )}
       </header>
-      {!reviewEvidenceReady ? (
+      {conclusionBlock && !reviewEvidenceReady ? (
+        conclusionBlock
+      ) : !reviewEvidenceReady ? (
         <div
           data-slot="current-period-learnings-empty"
           className="rounded-lg border border-dashed border-border bg-surface px-3 py-4"
@@ -708,6 +741,16 @@ function CurrentPeriodLearnings({
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
             当前项目还没有可核验的指标或观众评论。可先检查稿件，效果结论需等待真实数据。
           </p>
+        </div>
+      ) : isEmpty && conclusionBlock ? (
+        <div className="flex flex-col items-start gap-2">
+          {conclusionBlock}
+          <ReviewAnalyzeButton
+            analysisScope={analysisScope}
+            projectId={projectId}
+            slot="current-period-learnings-cta"
+            className="h-7 w-fit px-3 text-[11px] [&_svg]:size-3.5"
+          />
         </div>
       ) : isEmpty ? (
         <div

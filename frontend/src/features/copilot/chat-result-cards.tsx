@@ -14,6 +14,7 @@
  * 铁律②:AI 只产候选,人确认才物化。所有「采纳」按钮按下才调 create;不自动落库。
  */
 
+import { publishReviewConclusion } from "@/features/review/review-conclusion-signal";
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
@@ -344,6 +345,14 @@ export function ChatLearningsCard({
     },
     [router, setAt, projectId, patchAuto],
   );
+  // 批次2-8b：把复盘结论按项目发给复盘页「本期经验」区，没有候选时也能看到结论。
+  React.useEffect(() => {
+    if (!projectId) return;
+    publishReviewConclusion(projectId, {
+      observations: [...observations], hypotheses: [...hypotheses], nextExperiment, insufficientReason,
+      learningTitles: items.map((l) => l.title).filter(Boolean), at: autoAdoptKey ?? "",
+    });
+  }, [projectId, observations, hypotheses, nextExperiment, insufficientReason, items, autoAdoptKey]);
   const eligible = React.useCallback((l: ChatLearningItem) => !!projectId && !!l.source?.trim() && !!l.applicability?.trim(), [projectId]);
   React.useEffect(() => {
     if (!autoAdoptKey || auto.started) return;
