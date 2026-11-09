@@ -239,7 +239,7 @@ it('REFINEMENT-RED creation空layout经真实NoteRelay与native渲染/导出，�
   await waitFor(()=>expect(screen.getByRole('button',{name:'复制公众号文章'})).not.toBeDisabled());
   const preview=host.container.innerHTML;
   const details=screen.getByText('更多导出').closest('details')!;details.open=true;fireEvent(details,new Event('toggle'));fireEvent.click(screen.getByRole('button',{name:'导出 HTML'}));
-  await screen.findByText('交付文件已生成。');const exported=host.htmlExports[0];
+  await screen.findByText('已开始下载。');const exported=host.htmlExports[0];
   saveRefinement('creation-empty-preview.html',preview);saveRefinement('creation-empty-export.html',exported);saveRefinement('creation-empty-modal.html',document.body.innerHTML);
   expect(exported).toContain('同源文章正文');expect(click).toHaveBeenCalledOnce();
   expect(preview).not.toMatch(/\{\{[^}]+\}\}/);expect(exported).not.toMatch(/\{\{[^}]+\}\}/);
@@ -261,7 +261,7 @@ it('REFINEMENT 显式nativeLayout经真实NoteRelay与native导出仍优先且�
  try{
   fireEvent.click(within(view.container.querySelectorAll('article')[0]).getByRole('button',{name:'预览候选'}));await waitFor(()=>expect(screen.getByRole('button',{name:'复制公众号文章'})).not.toBeDisabled());
   expect(api.nativeRequest.mock.calls.find(([op])=>op==='load')?.[1].layout).toEqual(nativeLayout);expect(host.container.textContent).toContain('真实栏目');expect(host.container.textContent).toContain('同源文章正文');
-  const details=screen.getByText('更多导出').closest('details')!;details.open=true;fireEvent(details,new Event('toggle'));fireEvent.click(screen.getByRole('button',{name:'导出 HTML'}));await screen.findByText('交付文件已生成。');
+  const details=screen.getByText('更多导出').closest('details')!;details.open=true;fireEvent(details,new Event('toggle'));fireEvent.click(screen.getByRole('button',{name:'导出 HTML'}));await screen.findByText('已开始下载。');
   expect(host.htmlExports[0]).toContain('同源文章正文');expect(host.htmlExports[0]).toContain('真实栏目');expect(host.htmlExports[0]).toContain('真实作者');expect(click).toHaveBeenCalledOnce();
   saveRefinement('creation-explicit-preview.html',host.container.innerHTML);saveRefinement('creation-explicit-export.html',host.htmlExports[0]);expect(value.article.nativeLayout).toEqual(nativeLayout);
  }finally{view.unmount();await host.close();click.mockRestore();URL.createObjectURL=createObjectURL;URL.revokeObjectURL=revokeObjectURL;}

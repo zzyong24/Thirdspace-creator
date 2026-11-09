@@ -19,7 +19,10 @@ vi.mock('next/navigation',()=>({useRouter:()=>({refresh:h.refresh,push:vi.fn(),r
 // 仅替换 rail 装配插槽，真实卡仍在 wrapper 的 React 子树；不替换 Portal/键盘事件路径。
 vi.mock('@/features/draft-workbench/draft-chat-rail',()=>({DraftChatRail:()=>h.renderRail?.()??null}));
 vi.mock('@/features/reference-editors/native-editor-surface',()=>({NativeEditorSurface:React.forwardRef(function Surface(props:any,ref:any){
- React.useImperativeHandle(ref,()=>({request:(op:string,input:any)=>h.native(op,input,props.owner)}),[props.owner]);
+ // 与真实 NativeEditorSurface 同一契约：句柄在一次挂载内稳定（deps=[]），按 ref 读最新 owner。
+ // 旧替身按 owner 对象身份重建句柄，宿主重渲染即被当成「已切换编辑器」而丢弃预览结果。
+ const owner=React.useRef(props.owner);owner.current=props.owner;
+ React.useImperativeHandle(ref,()=>({request:(op:string,input:any)=>h.native(op,input,owner.current)}),[]);
  React.useEffect(()=>{props.onReady();},[]);
  return <div data-testid="native-surface" data-output={props.owner.outputId}/>;
 })}));
