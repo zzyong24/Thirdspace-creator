@@ -1,7 +1,7 @@
 import type {Frame,Page,Response,Request,Locator,ElementHandle} from '@playwright/test';
 import type {NativeReportKind,NativeReportPayload} from '@creatoros/contract';
 import {setTimeout as delay} from 'node:timers/promises';
-import {canRetryWechatVideoIdentityContext,WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation,type WechatEntryObservation,type WechatRootObservation,type WechatIdentityObservation,type WechatIdentityRootObservation} from './wechat-browser-source';
+import {canRetryWechatVideoIdentityContext,WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation,type WechatEntryObservation,type WechatRootObservation,type WechatOwnershipObservation,type WechatIdentityObservation,type WechatIdentityRootObservation} from './wechat-browser-source';
 
 // T1110 2026-10-09普通账号页/原生详情实测。只核身份、日期、响应和完整性，不做语义选择。
 // SEMANTIC_BOUNDARY_ALLOW: DOM标签、日期格式和原生响应为固定协议，不解释内容或推断指标累计口径。
@@ -398,7 +398,8 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
   let scope:Page|Frame=page,uiRoot:Page|Frame|Locator=page,works:WorksObservation|undefined,shadow:RenderedShadow|undefined;
   let host:ElementHandle<Element>|null=null,frameElement:ElementHandle<Node>|undefined;
   const emptyRoot=():WechatRootObservation=>({parentRoute:'unknown',matchingFrameCount:null,selectedFrameCurrent:null,visibleHostCount:null,hostCurrent:null,openShadow:null,runtimeParentTarget:null,runtimeHostCount:null,runtimeRootOpen:null,runtimeSectionCount:null,runtimeContainsSection:null,association:null,frameElementVisible:null});
-  let lastRoot=emptyRoot();
+  const emptyOwnership=():WechatOwnershipObservation=>({gate:'not_checked',sandboxPresent:null,frameElementPresent:null,hostIdPresent:null,frameIdPresent:null,idMatch:null,matchingHostIds:null,matchingFrameNames:null});
+  let lastRoot=emptyRoot(),lastOwnership=emptyOwnership();
   const rootReady=async()=>{
    controls.signal.throwIfAborted();controls.timeoutMs();
    if(platform!=='wechatVideo')return true;
@@ -429,12 +430,23 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
      // SEMANTIC_BOUNDARY_ALLOW: 官方Wujie实例的精确对象关联；首页路径本身不构成报表见证。
      const sandbox=(window as Window&{__WUJIE?:{iframe?:HTMLIFrameElement;shadowRoot?:ShadowRoot;proxyLocation?:{origin?:string;pathname?:string}}}).__WUJIE;
      const expectedFrame=pagePath.endsWith('/follower')?'/micro/statistic/follower':'/micro/statistic/post';
-     const owned=rootOpen&&sandbox?.iframe?.contentWindow===window&&sandbox.iframe===window.frameElement&&sandbox.shadowRoot===root&&sandbox.proxyLocation?.origin==='https://channels.weixin.qq.com'&&sandbox.proxyLocation.pathname===expectedFrame;
-     if(!owned)return {parentTarget,hostCount:hosts.length,rootOpen,sectionCount:nodes.length,contains,ready:false};
+     let gate:WechatOwnershipObservation['gate']='root_closed';
+     // 原短路条件/读取顺序保持一致；枚举只标记本次实际首个拒绝点。
+     const owned=rootOpen&&(gate=sandbox?'window_mismatch':'sandbox_missing',sandbox?.iframe?.contentWindow===window)&&(gate='element_mismatch',sandbox.iframe===window.frameElement)&&(gate='root_mismatch',sandbox.shadowRoot===root)&&(gate='origin_mismatch',sandbox.proxyLocation?.origin==='https://channels.weixin.qq.com')&&(gate='path_mismatch',sandbox.proxyLocation.pathname===expectedFrame);
+     if(owned)gate='bound';
+     const ownershipObservation:WechatOwnershipObservation={gate,sandboxPresent:!!sandbox,frameElementPresent:null,hostIdPresent:null,frameIdPresent:null,idMatch:null,matchingHostIds:null,matchingFrameNames:null};
+     // 只读固定官方DOM关系，原值不返回；诊断异常不能改变owned或原错误。
+     try{
+      const element=window.frameElement,hostId=hosts.length===1?hosts[0]!.getAttribute('data-wujie-id'):null,frameId=element?.getAttribute('name')??null;
+      ownershipObservation.frameElementPresent=!!element;ownershipObservation.hostIdPresent=!!hostId;ownershipObservation.frameIdPresent=!!frameId;ownershipObservation.idMatch=hostId&&frameId?hostId===frameId:null;
+      if(hostId)ownershipObservation.matchingHostIds=[...parent.document.querySelectorAll('wujie-app')].filter(h=>h.getAttribute('data-wujie-id')===hostId).length;
+      if(frameId)ownershipObservation.matchingFrameNames=[...parent.document.querySelectorAll('iframe')].filter(f=>f.getAttribute('name')===frameId).length;
+     }catch{/* 未执行/不可读保留null。 */}
+     if(!owned)return {parentTarget,hostCount:hosts.length,rootOpen,sectionCount:nodes.length,contains,ready:false,ownershipObservation};
      const renderedNodes=[...root!.querySelectorAll('*')].filter(node=>visible(node)&&node.textContent?.trim()===section&&![...node.children].some(child=>child.textContent?.trim()===section));
      const renderedContains=renderedNodes.length===1?parent.Node.prototype.contains.call(root,renderedNodes[0]!):null;
-     return {parentTarget,hostCount:hosts.length,rootOpen,sectionCount:renderedNodes.length,contains:renderedContains,ready:renderedNodes.length===1&&renderedContains===true};
-    },shadow!);controls.signal.throwIfAborted();lastRoot.runtimeParentTarget=associated.parentTarget;lastRoot.runtimeHostCount=associated.hostCount;lastRoot.runtimeRootOpen=associated.rootOpen;lastRoot.runtimeSectionCount=associated.sectionCount;lastRoot.runtimeContainsSection=associated.contains;lastRoot.association=associated.ready;return associated.ready;
+     return {parentTarget,hostCount:hosts.length,rootOpen,sectionCount:renderedNodes.length,contains:renderedContains,ready:renderedNodes.length===1&&renderedContains===true,ownershipObservation};
+    },shadow!);controls.signal.throwIfAborted();lastRoot.runtimeParentTarget=associated.parentTarget;lastRoot.runtimeHostCount=associated.hostCount;lastRoot.runtimeRootOpen=associated.rootOpen;lastRoot.runtimeSectionCount=associated.sectionCount;lastRoot.runtimeContainsSection=associated.contains;lastRoot.association=associated.ready;lastOwnership='ownershipObservation' in associated&&associated.ownershipObservation?associated.ownershipObservation:emptyOwnership();return associated.ready;
    }
    const visible=await frameElement?.isVisible();controls.signal.throwIfAborted();lastRoot.frameElementVisible=visible??null;return visible===true;
   };
@@ -447,7 +459,7 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    let exactTab=scope.getByText(section,{exact:true}),tab=exactTab.filter({visible:true});
    try{
     await observe(controls,async()=>{
-     lastRoot=emptyRoot();
+     lastRoot=emptyRoot();lastOwnership=emptyOwnership();
      const hosts=page.locator('wujie-app').filter({visible:true}),hostCount=await hosts.count();
      lastRoot.visibleHostCount=hostCount;
      if(hostCount>1)return fail('REPORT_SECTION_AMBIGUOUS','原生数据面板不唯一');
@@ -465,7 +477,7 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    }catch(error){
     controls.signal.throwIfAborted();
     if(!(error instanceof WechatBrowserSourceError)||error.code!=='REPORT_SECTION_MISSING')throw error;
-    error.rootObservation={...lastRoot};
+    error.rootObservation={...lastRoot};error.ownershipObservation={...lastOwnership};
     // 原五字段仍严格来自同Frame；可见Shadow分支不拼接两种根的诊断。
     if(!host)try{const observation=await readMissingSectionObservation(scope as Frame,exactTab,tab,controls);controls.signal.throwIfAborted();controls.timeoutMs(120000);if(observation)error.observation=observation;}
     catch{controls.signal.throwIfAborted();controls.timeoutMs(120000);}

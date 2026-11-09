@@ -191,7 +191,11 @@ describe('T1110 Wujie分离DOM与当前公众号设置页：正式source回归�
    expect(f.onReport).not.toHaveBeenCalled();expect(f.onStopped).toHaveBeenCalledOnce();const root=onDiagnostic.mock.calls[0]?.[0].rootObservation;
    expect(root).toMatchObject({parentRoute:'target',matchingFrameCount:1,selectedFrameCurrent:mode!=='replaced-frame',visibleHostCount:1});
    if(mode==='replaced-frame')expect(root).toMatchObject({hostCurrent:null,association:null,runtimeContainsSection:null});
-   else expect(root).toMatchObject({hostCurrent:true,openShadow:true,runtimeParentTarget:true,runtimeHostCount:1,runtimeRootOpen:true,runtimeSectionCount:1,runtimeContainsSection:false,association:false});
+   else{
+    expect(root).toMatchObject({hostCurrent:true,openShadow:true,runtimeParentTarget:true,runtimeHostCount:1,runtimeRootOpen:true,runtimeSectionCount:1,runtimeContainsSection:false,association:false});
+    expect(onDiagnostic.mock.calls[0]?.[0].ownershipObservation).toMatchObject({gate:'sandbox_missing',sandboxPresent:false,frameElementPresent:true,hostIdPresent:false,frameIdPresent:false,idMatch:null,matchingHostIds:null,matchingFrameNames:null});
+   }
+   if(mode==='replaced-frame')expect(onDiagnostic.mock.calls[0]?.[0].ownershipObservation).toMatchObject({gate:'not_checked',sandboxPresent:null,frameElementPresent:null});
   }finally{f.dispose();}
  });
  it('公开login起步实际落在settingpage且存在3个设置href：直接读唯一AppID而不重走入口',async()=>{

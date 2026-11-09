@@ -99,6 +99,17 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
   expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('rootObservation');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private');expect(f.onStopped).toHaveBeenCalledOnce();
  });
+ it.each([false,true])('T1455归属诊断固定字段出端口且保留原错误，observer throws=%s',async throwing=>{
+  const f=fixture(),ownership={gate:'sandbox_missing',sandboxPresent:false,frameElementPresent:true,hostIdPresent:true,frameIdPresent:true,idMatch:true,matchingHostIds:1,matchingFrameNames:1};
+  const error=Object.assign(new WechatBrowserSourceError('REPORT_SECTION_MISSING','原失败保留'),{ownershipObservation:ownership}),onDiagnostic=vi.fn(()=>{if(throwing)throw Error('合成观察者异常');});vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic).toHaveBeenCalledWith(expect.objectContaining({ownershipObservation:ownership}));expect(f.onStopped).toHaveBeenCalledOnce();expect(f.close).toHaveBeenCalledOnce();
+ });
+ it.each([{gate:'https://private.invalid/token'},{gate:'sandbox_missing',secret:'Cookie=private'},{gate:'bound',sandboxPresent:true,frameElementPresent:true,hostIdPresent:true,frameIdPresent:true,idMatch:'private',matchingHostIds:1,matchingFrameNames:1}])('T1455不合法归属信息不能泄漏',async ownership=>{
+  const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_SECTION_MISSING','原失败保留'),{ownershipObservation:ownership}),onDiagnostic=vi.fn();vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('ownershipObservation');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private');expect(f.onStopped).toHaveBeenCalledOnce();
+ });
  it('T1363后续report不会继承前一入口子步骤，下载失败也不附旧prepare诊断',async()=>{
   const f=fixture(),onDiagnostic=vi.fn();
   vi.mocked(f.reportWitness.prepare).mockImplementationOnce(async(_page,_platform,_kind,op)=>{op.onEntryObservation?.({entryPhase:'wait_target_route',entryVisibleCount:1,centreClicked:false});return {scope:f.page,download:f.locator,state:{selection,dates:['2026-10-07','2026-10-08']}};});
