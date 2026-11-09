@@ -1,0 +1,7 @@
+# 视频号报表导航研究
+
+当前正式生产失败族：authenticated-report-section-unreachable。身份已匹配的新绑定自动同步真实REPORT_SECTION_MISSING，非LOGIN_REQUIRED；两次授权诊断原始失败保留。第二次约125秒SOURCE_URL_INVALID只支持导航后最终固定路径失配，实际最终路径保持未知。
+
+官方公开主应用与统计子应用2026-11-09源代码证明原路径/“全部视频、单篇视频、关注者增长”仍存在，不应盲换路径/标签。公开UI库MpNavigationSub明确给出折叠容器hover→popup和展开inline路径；主页真实2个隐藏标题也吻合此结构。候选A盲改固定路由被当前官方源代码否定；候选B优先使用已有菜单动作、保留旧无菜单goto兼容可在不放宽数据守卫下验证。临时证据public-routes-source.json/public-routes-assets.json/public-micro-js-assets.json包含官方URL与SHA（有些首次异步URL误用了CSS hash而404，已保留；正确JS map单独提取后获取，不执行远端脚本）。
+
+计划区分实验：合成真实Chromium复刻公开DOM事件及直接整页导航回首页，执行原完整原生报表链；实际安装后仅正常公开同步回读。未知不能通过放宽selector歧义、身份、范围、timeout或数据完整性来消除。

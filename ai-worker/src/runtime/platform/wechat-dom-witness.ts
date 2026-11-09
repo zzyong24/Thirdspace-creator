@@ -27,6 +27,37 @@ async function observe<T>(controls:WechatOperationControls,read:(end:number)=>Pr
  const end=Date.now()+controls.timeoutMs(requested);
  for(;;){controls.signal.throwIfAborted();const value=await read(end);controls.signal.throwIfAborted();if(value!==null)return value;if(Date.now()>=end)return fail(code,'微信后台数据尚未就绪，请查看原任务');await delay(250,undefined,{signal:controls.signal});}
 }
+/** 2026-11-09官方MpNavigationSub协议；折叠侧栏的文字隐藏不代表其可见菜单不可用。 */
+async function navigateChannelsMenu(page:Page,sourcePath:string,controls:WechatOperationControls):Promise<boolean>{
+ // SEMANTIC_BOUNDARY_ALLOW: 固定官方UI组件类、精确菜单标题及原父路由为机械协议，不猜图标或账号权限。
+ controls.signal.throwIfAborted();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
+ const roots=page.locator('li.weui-desktop-menu__sub__wrp').filter({visible:true});
+ if(await roots.count()===0)return false; // 历史无该组件的合法页面仍走原固定goto。
+ const menu=roots.filter({has:page.locator('.weui-desktop-menu__name').getByText('数据中心',{exact:true})});
+ const count=await menu.count();controls.signal.throwIfAborted();
+ if(count===0)return false;
+ if(count!==1)return false; // 未点击，仍可安全使用原固定入口；不选第一项。
+ const label=sourcePath===paths.channelsFollowers?'关注者数据':'视频数据';
+ let entry=menu.locator('ul.weui-desktop-sub-menu').getByText(label,{exact:true}).filter({visible:true});
+ const inline=await entry.count();controls.signal.throwIfAborted();
+ if(inline>1)return false;
+ if(inline===0){
+  await menu.hover({timeout:controls.timeoutMs(120000)});controls.signal.throwIfAborted();
+  entry=menu.locator('.weui-desktop-menu__popup_sub_menu').filter({visible:true}).getByText(label,{exact:true}).filter({visible:true});
+  try{
+   const found=await observe(controls,async()=>{const count=await entry.count();return count>1?'fallback':count===1?'entry':null;},'REPORT_LINK_MISSING',120000);
+   if(found==='fallback')return false;
+  }catch(error){
+   controls.signal.throwIfAborted();controls.timeoutMs();
+   if(error instanceof WechatBrowserSourceError&&error.code==='REPORT_LINK_MISSING')return false;
+   throw error;
+  }
+ }
+ nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
+ await entry.click({timeout:controls.timeoutMs(120000)});controls.signal.throwIfAborted();
+ await observe(controls,async()=>nativeUrl(page.url(),origins.wechatVideo,'wechatVideo').pathname===sourcePath?true:null,'REPORT_PAGE_MISSING',120000);
+ return true;
+}
 /** 一次失败后的固定数字快照；不读取/返回正文、链接或身份，不改原报表选择。 */
 async function readMissingSectionObservation(frame:Frame,exact:Locator,visible:Locator,controls:WechatOperationControls):Promise<WechatSectionObservation|undefined>{
  controls.signal.throwIfAborted();const timeoutMs=controls.timeoutMs(120000);
@@ -335,8 +366,9 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    if(!unique.length)return fail('REPORT_LINK_MISSING','当前页面没有原生报表入口');
    await page.goto(unique[0]!,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
   }else if(current.pathname!==sourcePath){
-   // SEMANTIC_BOUNDARY_ALLOW: 只用既有kind→固定官方父路由协议，不按图标/文本猜导航或平台权限。
-   const response=await page.goto(new URL(sourcePath,origins.wechatVideo).href,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs(120000)});
+   const navigated=await navigateChannelsMenu(page,sourcePath,controls);
+   // 无已核实菜单结构时保留原固定路由；菜单已点击后不另开第二次导航。
+   const response=navigated?null:await page.goto(new URL(sourcePath,origins.wechatVideo).href,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs(120000)});
    controls.signal.throwIfAborted();controls.timeoutMs();nativeUrl(page.url(),origins.wechatVideo,'wechatVideo');
    const loggedOut=await identityWitness.isLoggedOut(page,'wechatVideo',controls);
    controls.signal.throwIfAborted();controls.timeoutMs();

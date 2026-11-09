@@ -9,7 +9,7 @@ function channelsTestPage(config:Record<string,any>):Page{
  let current=config.url();const originalLocator=config.locator,originalGoto=config.goto;
  for(const frame of config.frames())if(!frame.frameElement)frame.frameElement=async()=>({isVisible:async()=>true,dispose:async()=>{}});
  const page={evaluate:async(_fn:Function,arg:unknown)=>arg===undefined?false:{identity:null},...config,url:()=>current,goto:async(url:string,options:unknown)=>{current=url;await originalGoto?.(url,options);},
-  locator:(selector:string)=>selector==='wujie-app'?{filter(){return this;},count:async()=>0}:originalLocator(selector),
+  locator:(selector:string)=>['wujie-app','li.weui-desktop-menu__sub__wrp'].includes(selector)?{filter(){return this;},count:async()=>0}:originalLocator(selector),
   getByText:(text:string)=>({filter(){return this;},count:async()=>1,click:async()=>{if(text==='视频数据')current=channels+'/platform/statistic/post';if(text==='关注者数据')current=channels+'/platform/statistic/follower';}}),
   waitForURL:async(predicate:(url:URL)=>boolean)=>{expect(predicate(new URL(current))).toBe(true);},
  };return page as unknown as Page;
@@ -595,9 +595,10 @@ describe('T1424 固定官方报表导航边界',()=>{
   let current=start;const entered=Error('synthetic report root reached');
   const goto=vi.fn(async(url:string)=>{if(options.error)throw options.error;current=options.landed??url;options.afterGoto?.();return {status:()=>options.status??200};});
   const frames=vi.fn(()=>{throw entered;}),evaluate=vi.fn(async(_fn?:unknown,arg?:unknown)=>arg===undefined?options.loggedOut??false:{identity:null});
-  return {entered,goto,frames,evaluate,page:{url:()=>current,goto,frames,evaluate} as unknown as Page};
+  const locator=()=>({filter(){return this;},count:async()=>0}); // 此旧路由族明确没有导航组件。
+  return {entered,goto,frames,evaluate,page:{url:()=>current,goto,frames,evaluate,locator} as unknown as Page};
  }
- it.each([['channelsDaily','post'],['channelsFollowers','follower'],['channelsWorks','post']] as const)('%s只用固定官方%s父路径，不需要菜单或调用URL',async(kind,path)=>{
+ it.each([['channelsDaily','post'],['channelsFollowers','follower'],['channelsWorks','post']] as const)('%s无菜单时仍用固定官方%s父路径，不接任意URL',async(kind,path)=>{
   const f=navigation();await expect(createVerifiedWechatDomWitnesses().reportWitness.prepare(f.page,'wechatVideo',kind,controls)).rejects.toBe(f.entered);
   expect(f.goto).toHaveBeenCalledExactlyOnceWith(channels+'/platform/statistic/'+path,{waitUntil:'domcontentloaded',timeout:120000});expect(f.frames).toHaveBeenCalledOnce();
  });
@@ -638,7 +639,7 @@ describe('T1424 固定报表导航复用原可信QR业务见证',()=>{
  it.each(['normal','cancel','deadline','foreign'] as const)('%s：无顶层登录文案的QR重定向，父取消/期限及官方origin优先',async mode=>{
   const s=surface(visible+qr,channels+'/fixture-login'),controller=new AbortController(),reason=Object.assign(Error('synthetic original stop'),{code:'EXECUTION_DEADLINE_EXCEEDED'});let current=channels+'/platform',calls=0,expired=false;
   const goto=vi.fn(async()=>{current=channels+'/fixture-login';return {status:()=>200};}),frames=vi.fn(()=>[]);
-  const page={url:()=>current,goto,frames,evaluate:async(fn:Function,arg:unknown)=>{const value=await s.page.evaluate(fn as never,arg as never);if(++calls===2){if(mode==='cancel')controller.abort(reason);if(mode==='deadline')expired=true;if(mode==='foreign')current='https://foreign.invalid/fixture-login';}return value;}} as unknown as Page;
+  const page={url:()=>current,goto,frames,locator:()=>({filter(){return this;},count:async()=>0}),evaluate:async(fn:Function,arg:unknown)=>{const value=await s.page.evaluate(fn as never,arg as never);if(++calls===2){if(mode==='cancel')controller.abort(reason);if(mode==='deadline')expired=true;if(mode==='foreign')current='https://foreign.invalid/fixture-login';}return value;}} as unknown as Page;
   const op={signal:controller.signal,timeoutMs:(requested?:number)=>{if(expired)throw reason;return requested??120000;}};
   try{const run=createVerifiedWechatDomWitnesses().reportWitness.prepare(page,'wechatVideo','channelsDaily',op);if(mode==='cancel'||mode==='deadline')await expect(run).rejects.toBe(reason);else await expect(run).rejects.toMatchObject({code:mode==='foreign'?'SOURCE_URL_INVALID':'LOGIN_REQUIRED'});expect(calls).toBe(2);expect(goto).toHaveBeenCalledOnce();expect(frames).not.toHaveBeenCalled();}finally{s.dom.window.close();}
  });
