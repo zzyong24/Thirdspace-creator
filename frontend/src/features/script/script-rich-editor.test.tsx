@@ -482,6 +482,26 @@ describe("真实富文本编辑器严格保存", () => {
     expect(mockCreateArtifactVersion.mock.calls[1][0]).toMatchObject({params:{artifactId:'first-real'},body:{contentData:{html:editor!.getHTML()},contentText:editor!.getText()}});
     expect(mockGetArtifact).toHaveBeenCalledWith({params:{artifactId:'first-real'},query:undefined,body:undefined});
   });
+  it("B6：恢复到v1后编辑器换成v1，审核/生成直接用v1版本，不误报并发更新、不重复追加", async () => {
+    mockCreateArtifactVersion.mockImplementation(async()=>({id:'v3'}));
+    const rows:Record<string,{id:string;artifactId:string;contentText:string;contentData:Record<string,unknown>}>={v1:{id:'v1',artifactId:'a-b6',contentText:'第一版正文',contentData:{html:'<p>第一版正文</p>'}}};
+    let current='v3';
+    mockGetArtifact.mockImplementation(async()=>({id:'a-b6',projectId:'project-b6',currentVersionId:current}));
+    mockListArtifactVersions.mockImplementation(async()=>{const input=mockCreateArtifactVersion.mock.calls.at(-1)?.[0] as any;return [...Object.values(rows),...(input?[{id:'v3',artifactId:'a-b6',contentText:input.body.contentText,contentData:input.body.contentData}]:[])];});
+    let editor:Editor|null=null;
+    const view=(html:string,versionId:string)=><DraftChatRequestProvider><FlushProbe/><ScriptRichEditor projectId="project-b6" artifactId="a-b6" currentVersionId={versionId} initialHtml={html} onEditorReady={e=>{editor=e;}}/></DraftChatRequestProvider>;
+    const mounted=render(view("<p>第二版正文</p>","v2"));
+    const pm=await findProseMirror();await waitFor(()=>expect(editor).not.toBeNull());
+    await act(async()=>{editor!.commands.setContent('<p>第三版正文</p>');await strictFlush();});
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1);
+    current='v1';
+    mounted.rerender(view("<p>第一版正文</p>","v1"));
+    await waitFor(()=>expect(pm.textContent).toBe("第一版正文"));
+    let source:unknown;
+    await act(async()=>{source=await prepareScript();});
+    expect(source).toEqual({kind:'project_script',id:'a-b6',versionId:'v1'});
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1);
+  });
   it("落库响应未知保留正文，读取原版本恢复且不重复追加", async () => {
     let editor: Editor | null = null;
     render(<DraftChatRequestProvider><FlushProbe /><ScriptRichEditor artifactId="a1" initialHtml="<p>原稿</p>" onEditorReady={e => { editor = e; }} /></DraftChatRequestProvider>);

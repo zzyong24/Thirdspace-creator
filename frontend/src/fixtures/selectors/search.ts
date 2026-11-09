@@ -1,3 +1,5 @@
+import { knowledgeTypeLabelZh } from "@/lib/knowledge-type-label";
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * Global Search selector.
  *
@@ -97,7 +99,7 @@ function hashToken(input: string): string {
 
 function formatDate(iso: string): string {
   if (iso.length < 10) return iso;
-  return iso.slice(0, 10);
+  return formatLocalDay(iso);
 }
 
 function knowledgeTypeLabel(type: string): string {
@@ -113,7 +115,7 @@ function knowledgeTypeLabel(type: string): string {
     case "transcript":
       return "记录";
     default:
-      return type;
+      return knowledgeTypeLabelZh(type);
   }
 }
 

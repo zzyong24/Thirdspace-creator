@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScriptVersionMenu } from "./script-version-restore";
+import { beginForegroundActivity } from "@/lib/foreground-activity";
 
 const refresh = vi.fn();
 const restoreArtifact = vi
@@ -87,5 +88,49 @@ describe("[T-716] ScriptVersionMenu", () => {
       });
     });
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it("B6（月明录屏 2026-11-10）：选旧版本能看到该版正文预览，恢复成功后明确提示「已恢复到 vN」", async () => {
+    const view = render(
+      <ScriptVersionMenu
+        artifactId="artifact-1"
+        currentVersionId="version-3"
+        versions={versions}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("选择口播稿版本"), {
+      target: { value: "version-1" },
+    });
+    const preview = screen.getByRole("region", { name: "v1 正文预览" });
+    expect(preview).toHaveTextContent("第一版");
+    expect(preview).toHaveTextContent("预览中，尚未恢复");
+    fireEvent.click(screen.getByRole("button", { name: "恢复此版本" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("已恢复到 v1"));
+    // 页面 refresh 后当前版本指针变成 v1：提示保留、下拉回到当前、预览收起。
+    view.rerender(
+      <ScriptVersionMenu
+        artifactId="artifact-1"
+        currentVersionId="version-1"
+        versions={versions}
+      />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("已恢复到 v1");
+    expect((screen.getByLabelText("选择口播稿版本") as HTMLSelectElement).value).toBe("version-1");
+    expect(screen.queryByRole("region", { name: /正文预览/ })).toBeNull();
+  });
+
+  it("B6：稿面有未保存修改时不恢复（否则失焦自动保存会把旧稿再存成新版本盖回去），提示先保存", async () => {
+    const end = beginForegroundActivity("脚本有未保存的修改");
+    try {
+      render(
+        <ScriptVersionMenu artifactId="artifact-1" currentVersionId="version-3" versions={versions} />,
+      );
+      fireEvent.change(screen.getByLabelText("选择口播稿版本"), { target: { value: "version-1" } });
+      fireEvent.click(screen.getByRole("button", { name: "恢复此版本" }));
+      expect(screen.getByRole("alert")).toHaveTextContent("先保存");
+      expect(restoreArtifact).not.toHaveBeenCalled();
+    } finally {
+      end();
+    }
   });
 });

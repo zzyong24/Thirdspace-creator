@@ -1,4 +1,6 @@
 "use client";
+import { knowledgeTypeLabelZh } from "@/lib/knowledge-type-label";
+import { formatLocalDay } from "@/lib/date-time";
 
 /**
  * [T-098] context.* 只读工具的对话内数据渲染卡(SPEC 2026-07-03 context-layer-redesign §2)。
@@ -166,7 +168,7 @@ export function ChatProjectListCard({
               {p.stage}
             </span>
             <span className="shrink-0 text-[10px] text-muted-foreground">
-              {p.publishedAt ? `发布于 ${String(p.publishedAt).slice(0, 10)}` : p.status}
+              {p.publishedAt ? `发布于 ${formatLocalDay(String(p.publishedAt))}` : p.status}
             </span>
           </li>
         ))}
@@ -342,7 +344,7 @@ export function ChatCommentListCard({
             </span>
             <span className="text-[10px] text-text-subtle">
               {c.likeCount !== null ? `👍 ${c.likeCount} · ` : ""}
-              {c.source} · {String(c.createdAt).slice(0, 10)}
+              {c.source} · {formatLocalDay(String(c.createdAt))}
             </span>
           </li>
         ))}
@@ -480,7 +482,7 @@ export function ChatProjectDetailCard({
           {project.publish.published
             ? `已发布${project.publish.platform ? ` · ${project.publish.platform}` : ""}${
                 project.publish.publishedAt
-                  ? ` · ${project.publish.publishedAt.slice(0, 10)}`
+                  ? ` · ${formatLocalDay(project.publish.publishedAt)}`
                   : ""
               }`
             : `未发布 · ${project.status}`}
@@ -510,7 +512,7 @@ export function ChatProjectDetailCard({
                 </span>
                 <span className="shrink-0 text-text-subtle">
                   {a.versionCount} 版 · {a.charCount} 字
-                  {a.updatedAt ? ` · ${a.updatedAt.slice(0, 10)}` : ""}
+                  {a.updatedAt ? ` · ${formatLocalDay(a.updatedAt)}` : ""}
                 </span>
               </li>
             ))}
@@ -653,7 +655,7 @@ export function ChatKnowledgeDetailCard({
   return (
     <CardShell
       slot="chat-knowledge-detail-card"
-      heading={`知识原子 · ${item.knowledgeType}`}
+      heading={`知识原子 · ${knowledgeTypeLabelZh(item.knowledgeType)}`}
     >
       <p className="text-[13px] font-medium leading-snug text-foreground">
         {item.title || "（无标题）"}
@@ -752,7 +754,7 @@ export function ChatArtifactListCard({
             <span className="shrink-0 text-text-subtle">
               {a.currentVersion !== null ? `v${a.currentVersion} · ` : ""}
               {a.totalChars} 字
-              {a.updatedAt ? ` · ${a.updatedAt.slice(0, 10)}` : ""}
+              {a.updatedAt ? ` · ${formatLocalDay(a.updatedAt)}` : ""}
             </span>
           </li>
         ))}
@@ -873,7 +875,7 @@ export function ChatKnowledgeTextCard({
     <ChatFullTextCard
       found={result.found ?? false}
       heading={`知识全文 · ${result.title || "（无标题）"}`}
-      subheading={result.knowledgeType || undefined}
+      subheading={result.knowledgeType ? knowledgeTypeLabelZh(result.knowledgeType) : undefined}
       text={result.text ?? ""}
       offset={result.offset ?? 0}
       totalChars={result.totalChars ?? 0}
@@ -941,7 +943,7 @@ export function ChatPublicationListCard({
               {p.platform}
             </span>
             <span className="shrink-0 text-[10px] text-muted-foreground">
-              {p.publishedAt ? String(p.publishedAt).slice(0, 10) : p.status}
+              {p.publishedAt ? formatLocalDay(String(p.publishedAt)) : p.status}
             </span>
           </li>
         ))}

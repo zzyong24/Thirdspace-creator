@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 import "server-only";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
@@ -464,7 +465,7 @@ function mergeRecentRows(
     id: row.id,
     title: row.title,
     type: "经验",
-    updatedAt: row.updatedAt.slice(0, 10),
+    updatedAt: formatLocalDay(row.updatedAt),
     sortTimestamp: row.updatedAt,
     status: "active",
     tags: [],

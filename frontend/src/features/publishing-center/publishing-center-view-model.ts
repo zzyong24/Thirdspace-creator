@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * Adapter: contract `publishingCenterPage` DTO → the rich `PublishingCenterViewModel`
  * the PublishingCenterPage renders (Task 5 server-read switch, module Q decision (a)).
@@ -83,7 +84,7 @@ function formatNumber(value: number): string {
 }
 
 function formatDate(iso: string): string {
-  return iso.length < 10 ? iso : iso.slice(0, 10);
+  return iso.length < 10 ? iso : formatLocalDay(iso);
 }
 
 export function publishingCenterPageToViewModel(

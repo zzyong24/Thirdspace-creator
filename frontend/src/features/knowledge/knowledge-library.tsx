@@ -1,4 +1,5 @@
 "use client";
+import { formatLocalDay } from "@/lib/date-time";
 
 import * as React from "react";
 import Link from "next/link";
@@ -650,7 +651,7 @@ function KnowledgeLibraryWorkspace({
                   </span>
                   <span className="flex flex-wrap items-center justify-between gap-2 pl-6 text-muted-foreground">
                     <span>{libraryTypeLabel(item.knowledgeType)}</span>
-                    <time>{item.updatedAt.slice(0, 10)}</time>
+                    <time>{formatLocalDay(item.updatedAt)}</time>
                   </span>
                 </button>
               ))
@@ -696,7 +697,7 @@ function KnowledgeLibraryWorkspace({
                   {libraryTypeLabel(selected.knowledgeType)} ·{" "}
                   {selected.sourceMetadata?.fileName
                     ? "文件导入"
-                    : selected.updatedAt.slice(0, 10)}
+                    : formatLocalDay(selected.updatedAt)}
                 </p>
                 <h2 className="break-words text-balance text-xl font-semibold leading-8">
                   {selected.title}

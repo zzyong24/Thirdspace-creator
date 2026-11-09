@@ -31,6 +31,18 @@ export function formatLocalDate(value: DateLike): string {
   return `${part.year}-${part.month}-${part.day}`;
 }
 
+/**
+ * 界面上「某天」的显示：带时间的 ISO/UTC 时间戳按本机时区取日历日，
+ * 纯日期（YYYY-MM-DD）原样返回。不要再用 iso.slice(0, 10)——北京时间早上 8 点前
+ * 新建的条目会显示成前一天（月明录屏 2026-11-10，知识库）。
+ */
+export function formatLocalDay(value: string | null | undefined): string {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const day = formatLocalDate(value);
+  return day === "时间未知" ? value.slice(0, 10) : day;
+}
+
 /** 紧凑到分钟；秒和时区偏移保留在数据层，不挤占产品界面。 */
 export function formatLocalDateTime(value: DateLike): string {
   const part = dateParts(value, {

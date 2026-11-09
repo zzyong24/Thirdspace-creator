@@ -1,4 +1,5 @@
 "use client";
+import { formatLocalDay } from "@/lib/date-time";
 
 /**
  * `AssetsInteractiveRegion` is the Client island for the Assets Center
@@ -594,7 +595,7 @@ function TrashList({
               {asset.name}
             </span>
             <span className="text-[11px] text-muted-foreground">
-              {asset.updatedAt.slice(0, 10)}
+              {formatLocalDay(asset.updatedAt)}
             </span>
           </span>
           <Button

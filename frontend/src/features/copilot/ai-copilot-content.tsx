@@ -1,5 +1,6 @@
 "use client";
 
+import { displayUserMessageText } from "./user-message-display";
 import { PositioningConversationStart, SCRATCH_POSITIONING_PROMPT } from "./positioning-conversation";
 import positioningStyles from "./positioning-conversation.module.css";
 import {useAssistantEngine} from "./use-assistant-engine";
@@ -2971,7 +2972,7 @@ export function AICopilotContent({
                     });
                     if (!text.trim()) return null;
                     return message.role === "user" ? (
-                      <CopilotUserMessageText text={text} />
+                      <CopilotUserMessageText text={displayUserMessageText(text)} />
                     ) : (
                       <div
                         data-slot="copilot-message-text"

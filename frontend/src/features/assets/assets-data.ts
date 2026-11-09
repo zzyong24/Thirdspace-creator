@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 import "server-only";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
@@ -160,7 +161,7 @@ function emptyAssetsViewModel(): AssetsViewModel {
 }
 
 function isoDay(iso: string): string {
-  return iso.length < 10 ? iso : iso.slice(0, 10);
+  return iso.length < 10 ? iso : formatLocalDay(iso);
 }
 
 /**

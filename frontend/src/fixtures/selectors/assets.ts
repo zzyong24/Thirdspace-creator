@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * Assets Center selector.
  *
@@ -215,7 +216,7 @@ export function buildAssetsViewModel(): AssetsViewModel {
         projectId: output.projectId,
         projectTitle: project?.title ?? "未关联项目",
         note: usageLabel[row.usageType] ?? row.usageType,
-        dateLabel: production.updatedAt.slice(0, 10),
+        dateLabel: formatLocalDay(production.updatedAt),
       };
     })
     .filter((row): row is AssetUsageRow => row !== null)

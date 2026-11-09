@@ -277,6 +277,31 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
+  it("知识库「AI 提炼」预填文字不改也能直接发送：按钮与 Cmd+Enter 都生效（月明录屏 2026-11-10）", async () => {
+    const { distillCopilotHref } = await import("@/features/knowledge/knowledge-dump-zone");
+    for (const content of ["AI 口播稿一读就像说明书，是因为只讲功能不讲场景。", ""]) {
+      sendMessage.mockReset();
+      mockSearch = distillCopilotHref(content).slice(1);
+      const user = userEvent.setup();
+      const view = render(<AICopilotContent viewModel={VM} />);
+      const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+      await waitFor(() => expect(textarea.value.length).toBeGreaterThan(0));
+      const submit = screen.getByLabelText("提交提示给 Copilot");
+      await waitFor(() => expect(submit).not.toBeDisabled());
+      await user.click(submit);
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      view.unmount();
+    }
+    sendMessage.mockReset();
+    mockSearch = distillCopilotHref("一段资料原文").slice(1);
+    const user = userEvent.setup();
+    render(<AICopilotContent viewModel={VM} />);
+    const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+    await waitFor(() => expect(textarea.value).toBe("一段资料原文"));
+    textarea.focus();
+    await user.keyboard("{Meta>}{Enter}{/Meta}");
+    await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+  });
   it("文章配图深链在已有会话仍预填，并提交可信文章与段落锚点", async () => {
     mockMessages = [{id: "earlier", role: "assistant", parts: [{type: "text", text: "上一轮答复"}]}];
     mockSearch = "copilot=open&surface=project&fn=material.generate.image&selKind=article_section&selId=section-1" +

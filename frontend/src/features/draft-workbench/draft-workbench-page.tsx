@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * 稿面工作台(T-055a,SPEC §3)。
  *
@@ -123,7 +124,6 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
               {scriptArtifactId && (script.versions?.length ?? 0) > 0 ? (
                 <span className="ml-auto">
                   <ScriptVersionMenu
-                    key={script.currentVersionId ?? "no-current-version"}
                     artifactId={scriptArtifactId}
                     currentVersionId={script.currentVersionId ?? null}
                     versions={script.versions ?? []}
@@ -149,6 +149,7 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
               <ScriptRichEditor
                 initialHtml={initialHtml}
                 artifactId={scriptArtifactId}
+                currentVersionId={script.currentVersionId ?? null}
                 projectId={project.id}
               />
             </ScriptStructureToggle>
@@ -347,7 +348,7 @@ function PublishPackSection({
               )}
             >
               {outputPublished
-                ? `已发布${publishedAt ? ` · ${publishedAt.slice(0, 10)}` : ""}`
+                ? `已发布${publishedAt ? ` · ${formatLocalDay(publishedAt)}` : ""}`
                 : publishPack.status}
             </span>
           ) : unlocked ? (
