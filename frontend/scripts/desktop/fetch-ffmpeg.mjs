@@ -24,6 +24,7 @@
 //   都会 rmSync,缓存必须放 sidecar 外)。
 
 import { spawnSync } from "node:child_process";
+import {downloadGithubReleaseAsset} from "./github-release-asset.mjs";
 import { chmodSync, existsSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -130,12 +131,11 @@ function ensureStaticBinary(tool, triple) {
   const part = `${cached}.part`;
   rmSync(part, { force: true });
   console.log(`[fetch-ffmpeg] 下载 ${url} …(静态构建,~50-80MB)`);
-  const r = spawnSync("curl", ["-fL", "--retry", "3", "--retry-delay", "2", "-o", part, url], {
-    stdio: "inherit",
-  });
-  if (r.status !== 0) {
-    rmSync(part, { force: true });
-    throw new Error(`[fetch-ffmpeg] 下载失败(curl exit ${r.status}):${url}`);
+  try {
+    downloadGithubReleaseAsset({repository:"eugeneware/ffmpeg-static",tag:RELEASE_TAG,asset,outputPath:part});
+  } catch (error) {
+    rmSync(part, {force:true});
+    throw new Error(`[fetch-ffmpeg] 下载未完成:${error.message}`);
   }
   // 尺寸下限硬校验:四个资产均 >40MB;截断/错误页(几 KB)绝不放行。
   const size = statSync(part).size;

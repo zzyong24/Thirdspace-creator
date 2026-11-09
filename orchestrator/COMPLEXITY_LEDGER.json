@@ -8634,6 +8634,45 @@
       "scope_source": "docs/features/t1425-tab-navigation-performance-fixes.md",
       "reason": "证据原样记录当前宿主PATH中的既有 .cargo/bin，未安装、调用或新增该语言工具链，产品实现没有新增运行时。保留原证据与守卫，不改写标记或放宽扫描。",
       "acceptance": "仅闭合精确文件哈希上的环境词汇登记；不代替测试、浏览器验收或任何安装版性能结论。"
+    },
+    {
+      "task_id": "T-1448",
+      "files": [
+        ".github/workflows/desktop-release.yml"
+      ],
+      "file_sha256": "10502bc37fbe5b61c16ed47e6a0d58b81bd1b4631ed780d93ec500f7e38f976d",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户明确同意独立下载修复与双平台安装交付；保留原构建系统，新增持久机制预算为0",
+      "scope_source": "docs/features/t1448-build-dependency-download-recovery.md",
+      "reason": "全文件marker来自既有GitHub凭据/NSIS部署/Cargo工具链/Apple签名流程。本次workflow仅在三个既有构建步骤传递已有github.token供同官方资源API只读下载；凭据只走stdin配置，不新增credential store、签名材料、部署目标、工具链版本或生产变更。NSIS继续原Tauri2.11.4固定3.11/插件0.5.3及原缓存。",
+      "acceptance": "绑定此精确workflow哈希，保留首轮4项HALT；登记不代表网络、打包、签名或真安装已通过。须新候选完整双平台正式CI。",
+      "budget": {
+        "new_persistent_mechanisms": 0,
+        "new_runtime_dependencies": 0,
+        "new_signing_identities": 0,
+        "new_production_targets": 0
+      }
+    },
+    {
+      "task_id": "T-1448",
+      "files": [
+        "docs/features/t1448-build-dependency-download-recovery.md"
+      ],
+      "file_sha256": "e816bc32e6d4146353317274d6cdb07c04370de00cc531586fd8d68521a93e19",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户明确授权独立下载修复，规格仅保留原签名公证验收，新增签名机制预算0",
+      "scope_source": "docs/features/t1448-build-dependency-download-recovery.md",
+      "reason": "规格提到既有Developer ID/公证/staple/Gatekeeper作为最终验收，不引入新证书、密钥、签名格式或绕过；原始HALT保留，按精确规格哈希登记。",
+      "acceptance": "规格登记不代替任何签名、公证、下载或真安装证据。"
     }
   ],
   "historical_baselines": []

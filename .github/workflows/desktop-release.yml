@@ -431,6 +431,7 @@ jobs:
       - name: 构建 clean Runtime Image(T-487,仅 cache miss)
         if: runner.os != 'Windows' && (steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true')
         env:
+          GH_TOKEN: ${{ github.token }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
           # [T-635] live program-gate GO 前所有可分发包固定关闭领取。
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
@@ -466,6 +467,7 @@ jobs:
       - name: 构建并接入 Windows production closure(T-675)
         if: runner.os == 'Windows' && inputs.windows_capsule_mode != 'consume'
         env:
+          GH_TOKEN: ${{ github.token }}
           CREATOROS_MIGRATION_ASSET_GIT_VERIFY: "1"
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
@@ -827,6 +829,7 @@ jobs:
         if: inputs.windows_capsule_mode != 'prepare'
         working-directory: frontend
         env:
+          GH_TOKEN: ${{ github.token }}
           CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM: ${{ inputs.windows_capsule_mode != 'consume' && secrets.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PEM || '' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""

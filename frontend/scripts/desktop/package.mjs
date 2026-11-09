@@ -37,6 +37,7 @@ import { tauriMacSigningOverride } from "./tauri-signing-config.mjs";
 import { runSidecarSigning } from "./sign-sidecar.mjs";
 import { verifyAdoptedCapsule } from "../../../tools/windows-closure-rat/signed-sidecar-capsule.mjs";
 import { resolveLocalDmgLayoutEnv } from "./local-dmg-layout-env.mjs";
+import {prepareNsisTools} from "./prepare-nsis-tools.mjs";
 
 // 必须早于预清 DMG、写构建报告和任何重型构建步骤。Homebrew node@22 抢 PATH 时，
 // 入口会自动重启到已验证的 Node 25；找不到则硬失败，禁止继续产错 V8 字节码包。
@@ -472,6 +473,14 @@ if (!isFullRelease) {
   console.log(
     "[desktop:package] [T-452] cargo profile = release(fat lto,正式发布档;15-30 min)。",
   );
+}
+// 仅预备当前CLI的原NSIS工具；未就绪/自定义工具目录继续由原bundler处理。
+if(platform==="win32"){
+  const tauriConfig=JSON.parse(readFileSync(join(FRONTEND,"src-tauri","tauri.conf.json"),"utf8"));
+  if(!tauriConfig.bundle?.useLocalToolsDir&&!process.env.CREATOROS_TAURI_PACKAGE_CONFIG?.trim()){
+    const cliVersion=JSON.parse(readFileSync(join(FRONTEND,"node_modules","@tauri-apps","cli","package.json"),"utf8")).version;
+    prepareNsisTools({cliVersion});
+  }
 }
 step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs, {
   ...pathEnv,
