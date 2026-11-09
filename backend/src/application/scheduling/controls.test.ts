@@ -1,18 +1,19 @@
 import {afterAll,beforeAll,expect,it,vi} from 'vitest';
-import {createDb,aiTasks,jobRuns,eq,type Db} from '@creatoros/backend';
+import {createDb,aiTasks,jobRuns,executionTasks,eq,type Db} from '@creatoros/backend';
 import {ENDPOINTS,type RequestContext} from '@creatoros/contract';
 import {createAiService} from '../../modules/ai/ai.service';
 import {createSchedulingService} from '../../modules/scheduling/scheduling.service';
 import {createScheduledRunIntentService} from '../../modules/scheduling/daily-topic-run-intent.service';
 import {createSchedulingControls} from './controls';
 import {triggerScheduledJob} from '../../modules/ai-runtime/scheduled-collection-scheduler';
+import {createPersistentTaskService} from '../../modules/execution/persistent-task.service';
 import {createCommentsCollector} from '../collection/comments';
 import {createPublicationSyncService} from '../../modules/analytics';
 const ctx:RequestContext={userId:'controls-user',accountId:'controls-account',requestId:'window-one',source:'user'};
 let db:Db,close:()=>Promise<void>,seq=0;
 const now=()=> '2026-09-15T00:00:00.000Z',nextId=(prefix:string)=>`${prefix}-controls-${++seq}`;
 beforeAll(async()=>{const isolated=await createDb();db=isolated.db;close=()=>isolated.client.close();});afterAll(async()=>close());
-async function fixture(sourceKind:'self.metrics'|'comments'='self.metrics'){
+async function fixture(sourceKind:'self.metrics'|'comments'='self.metrics',platform:'douyin'|'wechatVideo'='douyin'){
  const owner={...ctx,accountId:`controls-account-${++seq}`};
  const unused=async()=>{throw Error('本用例不调用创作端口');};
  const aiService=createAiService({db,now,nextId,artifacts:{createVersion:unused,adoptThesisCandidate:unused},knowledge:{createKnowledge:unused},candidate:{createFromAIResult:unused,enrichCard:unused},learnings:{createLearning:unused},publishing:{createPublicationFromDraft:unused},materialLinks:{link:unused},positioning:{upsertProfile:unused,createStatementVersion:unused},calibration:{createDraftPrediction:unused}});
@@ -21,12 +22,13 @@ async function fixture(sourceKind:'self.metrics'|'comments'='self.metrics'){
  const ensureDefault=vi.fn(async()=>{});
  const dispatch=vi.fn(async()=>{}),ensure=createScheduledRunIntentService(db,{now,nextId},['self.metrics','topic.daily','comments']).ensureRunForTask;
  const validate=vi.fn(async(c:RequestContext,ids:readonly string[])=>{if(c.accountId!==owner.accountId||ids.some(id=>!['p1','p2'].includes(id)))throw Error('作品不可采集');});
- const controls=createSchedulingControls({aiService,schedulingService,platformAccountService:{getAccount:async()=>({id:owner.accountId,userId:owner.userId,platform:'douyin',accountHandle:'fixture',externalAccountId:null,secretReference:null,followerBaseline:0,status:'active',createdAt:now(),updatedAt:now()})},dispatchScheduledCollection:dispatch,deps:{now},ensureDailyRun:ensure,ensureCollectionRun:ensure,ensureDefaultRubric:ensureDefault,migrateProfile:async()=>{},scheduling:{request:async()=>{throw Error('不应落入普通transport');}},...{assertCommentPublications:validate}});
+ const tasks=createPersistentTaskService(db,{now,nextId});
+ const controls=createSchedulingControls({executionTasks:tasks,aiService,schedulingService,platformAccountService:{getAccount:async()=>({id:owner.accountId,userId:owner.userId,platform,accountHandle:'fixture',externalAccountId:null,secretReference:null,followerBaseline:0,status:'active',createdAt:now(),updatedAt:now()})},dispatchScheduledCollection:dispatch,deps:{now},ensureDailyRun:ensure,ensureCollectionRun:ensure,ensureDefaultRubric:ensureDefault,migrateProfile:async()=>{},scheduling:{request:async()=>{throw Error('不应落入普通transport');}},...{assertCommentPublications:validate}});
  const run=async(c=owner,publicationIds?:string[])=>{
   const result=await controls.schedulingWithRunNow.request(ENDPOINTS.runScheduledJobNow,{params:{jobId:job.id},query:undefined,body:publicationIds?{publicationIds}:{}},c) as {data:unknown};
   return ENDPOINTS.runScheduledJobNow.response.parse(result.data);
  };
- return{ctx:owner,controls,job,aiService,schedulingService,dispatch,run,validate,ensureDefault};
+ return{ctx:owner,controls,job,aiService,schedulingService,dispatch,run,validate,ensureDefault,tasks};
 }
 
 it('显式少量范围不能被吞成全量，非comments拒绝且不创建task',async()=>{
@@ -169,3 +171,32 @@ it('真实绑定warmup薄接线传完整ctx，ensure拒绝仍保持bootstrap bes
  f.ensureDefault.mockRejectedValueOnce(new Error('受控默认初始化失败'));
  try{await expect(f.controls.bootstrapDouyinOnBind(selected)).resolves.toBeUndefined();expect(f.ensureDefault).toHaveBeenCalledExactlyOnceWith(selected);expect(warning).toHaveBeenCalled();}finally{warning.mockRestore();error.mockRestore();}
 },3600000);
+
+
+async function loginBlockedFixture(errorCode='FLYWHEEL_LOGIN_REQUIRED'){
+ const f=await fixture('self.metrics','wechatVideo'),original=await f.run();
+ const executionId=nextId('execution');
+ await db.insert(executionTasks).values({id:executionId,userId:f.ctx.userId,accountId:f.ctx.accountId!,kind:'ai_task',ownerType:'ai_task',ownerId:original.aiTaskId,status:'waiting_user',priority:100,idempotencyKey:executionId,payload:{},attempt:1,maxAttempts:3,lastErrorCode:errorCode,createdAt:now(),updatedAt:now()});
+ await db.update(aiTasks).set({executionTaskId:executionId}).where(eq(aiTasks.id,original.aiTaskId));
+ await f.schedulingService.updateRun(f.ctx,original.jobRunId,{status:'needs_reconnect',error:'旧登录失效',finishedAt:now()});f.dispatch.mockClear();
+ return {...f,original,executionId};
+}
+it('T1449 新扫码回执结束明确旧登录阻塞并启动新同步，保留原记录；重复回执不重复采集',async()=>{
+ const f=await loginBlockedFixture();
+ await f.controls.bootstrapDouyinOnBind(f.ctx,{bindingRunId:'verified-binding-original'});
+ expect(await f.tasks.get(f.ctx,f.executionId)).toMatchObject({id:f.executionId,status:'cancelled',attempt:1});
+ const runs=await f.schedulingService.listRunsByJob(f.ctx,f.job.id,{limit:20,offset:0});expect(runs.rows).toHaveLength(2);expect(runs.rows.some(r=>r.id===f.original.jobRunId)).toBe(true);
+ const fresh=runs.rows.find(r=>r.aiTaskId!==f.original.aiTaskId)!;expect(fresh.status).toBe('running');expect(f.dispatch).toHaveBeenCalledOnce();
+ await db.update(aiTasks).set({status:'succeeded'}).where(eq(aiTasks.id,fresh.aiTaskId!));await f.schedulingService.updateRun(f.ctx,fresh.id,{status:'succeeded',finishedAt:now()});f.dispatch.mockClear();
+ await f.controls.bootstrapDouyinOnBind(f.ctx,{bindingRunId:'verified-binding-original'});
+ expect((await f.schedulingService.listRunsByJob(f.ctx,f.job.id,{limit:20,offset:0})).rows).toHaveLength(2);expect(f.dispatch).not.toHaveBeenCalled();
+});
+it.each(['no-receipt','other-error','disabled','unknown-result','wrong-owner'])('T1449 %s不借绑定重放原任务或造新同步',async(mode)=>{
+ const f=await loginBlockedFixture(mode==='other-error'?'FLYWHEEL_CALL_REQUIRES_RECONCILIATION':undefined);
+ if(mode==='wrong-owner')await db.update(executionTasks).set({ownerId:'other-ai-owner'}).where(eq(executionTasks.id,f.executionId));
+ if(mode==='unknown-result')await db.update(executionTasks).set({status:'unknown_result'}).where(eq(executionTasks.id,f.executionId));
+ if(mode==='disabled')await f.schedulingService.updateJob(f.ctx,f.job.id,{enabled:false});
+ await f.controls.bootstrapDouyinOnBind(f.ctx,mode==='no-receipt'?undefined:{bindingRunId:'verified-binding-guard'});
+ expect(await f.tasks.get(f.ctx,f.executionId)).toMatchObject({id:f.executionId,status:'blocked',runtimeStatus:mode==='unknown-result'?'unknown_result':'waiting_user'});expect(f.dispatch).not.toHaveBeenCalled();
+ expect((await f.schedulingService.listRunsByJob(f.ctx,f.job.id,{limit:20,offset:0})).rows).toHaveLength(1);
+});

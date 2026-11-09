@@ -8673,6 +8673,29 @@
       "scope_source": "docs/features/t1448-build-dependency-download-recovery.md",
       "reason": "规格提到既有Developer ID/公证/staple/Gatekeeper作为最终验收，不引入新证书、密钥、签名格式或绕过；原始HALT保留，按精确规格哈希登记。",
       "acceptance": "规格登记不代替任何签名、公证、下载或真安装证据。"
+    },
+    {
+      "task_id": "T-1449",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "1b5ce0dbefbbdff12e617a216906e721512442b094998c2147c39320e267f51a",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户持续要求修复扫码绑定问题；仅既有组合根端口接线，新增持久机制/凭据/原生进程预算0",
+      "scope_source": "docs/features/t1449-wechat-video-rebind-loop.md",
+      "reason": "整份组合根的marker来自既有凭据、工具链及桌面宿主。本次只把原persistentTaskService窄端口交给现scheduling controls，并将已成功binding runId传给bootstrap；不新增credential store、语言工具链、原生可执行体或截图诊断配置。",
+      "acceptance": "只登记精确文件哈希的既有机制复用；不代表真实报表导出、安装更新或待用户授权的定向诊断已通过。",
+      "budget": {
+        "new_persistent_mechanisms": 0,
+        "new_runtime_dependencies": 0,
+        "new_credentials": 0,
+        "new_native_executables": 0
+      }
     }
   ],
   "historical_baselines": []

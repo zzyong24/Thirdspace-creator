@@ -5036,7 +5036,7 @@ dispatchIntelligenceRun});
       if(!await accountGroupService.hasVerifiedBinding(c,accountId))throw new Error('绑定成功回执尚未完成，请保留原扫码任务');
       const member=await accountGroupService.forAccount(c,accountId);
       const account=await platformAccountService.getAccount(c,accountId),frozen={...c,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion' as const};
-      if(['douyin','xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(account.platform))await bootstrapDouyinOnBind(frozen);
+      if(['douyin','xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(account.platform))await bootstrapDouyinOnBind(frozen,{bindingRunId:runId});
     },
     onBoundError:()=>console.warn('[account-binding] 账号已绑定，默认采集计划补齐未完成，下次启动会按真实账号重试'),
   });
@@ -5369,7 +5369,7 @@ FAVORITES_PROMOTE_PER_RUN
   // (D5,scheduledJobs.runNow)共用同一份执行端口。
   // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
   // dispatchScheduledCollection。
-  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({assertCommentPublications:async(ctx,ids)=>{for(const id of ids)await trafficService.assertPublication(ctx,id);},aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureDefaultRubric:c=>calibrationService.ensureDefaultRubric(c),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
+  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({executionTasks:persistentTaskService,assertCommentPublications:async(ctx,ids)=>{for(const id of ids)await trafficService.assertPublication(ctx,id);},aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureDefaultRubric:c=>calibrationService.ensureDefaultRubric(c),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
       try {
         const fromDir = await douyinAuthDirFor(null,undefined,ctx.userId); // _default
         const toDir = await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId);

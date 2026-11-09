@@ -14,6 +14,7 @@ ensureCollectionRun:ReturnType<typeof import("../../modules/ai-runtime").createS
 ensureDefaultRubric:(ctx:RequestContext)=>Promise<unknown>;
 migrateProfile:(ctx:RequestContext)=>Promise<void>;
 assertCommentPublications?:(ctx:RequestContext,ids:readonly string[])=>Promise<void>;
+executionTasks?:Pick<import('../../modules/execution/persistent-task.service').PersistentTaskService,'get'|'command'>;
 scheduling:Transport;}){
 const {aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun,ensureCollectionRun,ensureDefaultRubric,migrateProfile,scheduling}=ports;
   const triggerDeps: TriggerDeps = {
@@ -73,7 +74,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
   //   job(self.metrics / self.detail / comments)+ 按序初始化触发一次拉全量(triggerScheduledJob
   //   经 triggerDeps → dispatch 挂 gate-F5 串行链)。用**请求 ctx**(带当前号 accountId,init 采集
   //   走该号 authDir);整体经 void 包裹不阻塞绑定返回。schedulingService/triggerDeps 均已在上方装配。
-  const bootstrapDouyinOnBind = async (ctx: RequestContext) => {
+  const bootstrapDouyinOnBind = async (ctx: RequestContext, binding?:{bindingRunId:string}) => {
     // [T-201a2] 登录态锚点对齐:新绑号 scan 时 ctx.accountId=null(号是 scan 后 ensureAccount 才建)→
     //   loginDouyin 的 `login({accountId: null})` 把登录态落 `.auth/douyin/_default`;而账号是真 id →
     //   设置/自动化按号探针 statusDouyin(带 x-account-id)读 `.auth/douyin/<id>` 找不到登录 → 误报
@@ -124,7 +125,20 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
       //   [T-433 S1] 透传 options(绑号 self.detail 带 skipHeavyBackfill,重活延后次日)。
       trigger: async (c, job, options) => {
         const actual=await schedulingService.getJob(c,job.id);
-        await triggerScheduledJob(c,{...job,groupId:actual.groupId,groupVersion:actual.groupVersion,membershipVersion:actual.membershipVersion},triggerDeps,options);
+        if(binding?.bindingRunId&&ports.executionTasks&&job.sourceKind==='self.metrics'){
+          const latest=(await schedulingService.listRunsByJob(c,job.id,{limit:1,offset:0})).rows[0];
+          if(latest?.status==='needs_reconnect'&&latest.aiTaskId){
+            const original=await aiService.getTask(c,latest.aiTaskId);
+            if(original.executionTaskId){
+              const execution=await ports.executionTasks.get(c,original.executionTaskId);
+              // 新扫码只结束已明确因登录挂起的旧采集；旧原生报表预算不续期，未知结果不重放。
+              if(execution.runtimeStatus==='waiting_user'&&execution.errorCode==='FLYWHEEL_LOGIN_REQUIRED'){
+                await ports.executionTasks.command(c,{taskIds:[execution.id],command:'cancel',idempotencyKey:`binding:${binding.bindingRunId}:close-login-wait:${execution.id}`});
+              }
+            }
+          }
+        }
+        await triggerScheduledJob(c,{...job,groupId:actual.groupId,groupVersion:actual.groupVersion,membershipVersion:actual.membershipVersion},triggerDeps,{...options,...(binding?.bindingRunId?{bindingRunId:binding.bindingRunId}:{})});
       },
       // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)接线已全链退役
       //   (SPEC §4.4):strict + NOT NULL 世界不存在无号存量,绑定 = 只建号绑定 job + 初始化

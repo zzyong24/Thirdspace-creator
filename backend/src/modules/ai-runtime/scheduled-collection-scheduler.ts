@@ -179,7 +179,7 @@ export function scheduledAttemptId(jobId: string, triggerAnchor: string): string
 const submissionKey=Symbol.for('creatoros.scheduling.submission-queue.v1');
 const submissionGlobals=globalThis as typeof globalThis&{[submissionKey]?:Map<string,Promise<void>>};
 const submissions=submissionGlobals[submissionKey]??=new Map<string,Promise<void>>();
-type TriggerOptions={scheduledFor?:string;skipHeavyBackfill?:boolean;manual?:boolean};
+type TriggerOptions={scheduledFor?:string;skipHeavyBackfill?:boolean;manual?:boolean;bindingRunId?:string};
 export async function triggerScheduledJob(ctx:RequestContext,job:SchedulableJob,deps:TriggerDeps,options?:TriggerOptions):Promise<TriggerResult>{
   const key=JSON.stringify([ctx.userId,job.accountId??ctx.accountId??null,job.id]);
   const previous=submissions.get(key);
@@ -318,7 +318,8 @@ async function submitScheduledJob(
   const trafficAnchor = `traffic-after:${recent.rows[0]?.id ?? "initial"}`;
   // 同一轮提交稳定，上一条运行结束后自然换锚；不依赖毫秒时间或自然日吞掉用户新一次运行。
   const manualAnchor = `manual-after:${createHash("sha256").update(JSON.stringify(recent.rows.map(row=>row.id).sort())).digest("hex")}`;
-  const idempotencyKey = options?.manual ? `${job.id}:${manualAnchor}` : job.sourceKind === "self.traffic" ? `${job.id}:${trafficAnchor}` : `${job.id}:${today}`;
+  const bindingAnchor=options?.bindingRunId?`binding:${options.bindingRunId}`:null;
+  const idempotencyKey = bindingAnchor?`${job.id}:${bindingAnchor}`:options?.manual ? `${job.id}:${manualAnchor}` : job.sourceKind === "self.traffic" ? `${job.id}:${trafficAnchor}` : `${job.id}:${today}`;
 
   // 闸②(createTask 层):idempotencyKey 走 inputData,命中 in-flight task 返回既有
   //   (ai_tasks_user_idempotency,SPEC §5 复用既有幂等,不自造)。ctx 带派生号 → ai_task 落正确号。
@@ -328,7 +329,7 @@ async function submitScheduledJob(
     // cron 用 scheduledFor 分钟锚；立即运行用已有运行集合锚，相同时间内结束后仍可再运行。
     attemptId: scheduledAttemptId(
       job.id,
-      options?.scheduledFor ?? (options?.manual ? manualAnchor : job.sourceKind === "self.traffic" ? trafficAnchor : nowIso),
+      bindingAnchor ?? options?.scheduledFor ?? (options?.manual ? manualAnchor : job.sourceKind === "self.traffic" ? trafficAnchor : nowIso),
     ),
     inputData: {
       idempotencyKey,
@@ -338,6 +339,9 @@ async function submitScheduledJob(
     },
   });
   if (task.status !== "queued" && task.status !== "running") {
+    // 同一真实扫码回执可能重复通知；已经结束的同意图只回读原绑定，不再创建running投影。
+    const prior=bindingAnchor?recent.rows.find(row=>row.aiTaskId===task.id):undefined;
+    if(prior)return {jobRunId:prior.id,aiTaskId:task.id,deduped:true};
     throw new Error(
       `自动化任务 ${task.id} 已是终态 ${task.status}，拒绝创建新的 running 运行记录`,
     );
