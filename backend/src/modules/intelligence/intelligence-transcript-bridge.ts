@@ -16,6 +16,9 @@ import {transcribeConfiguration} from '../ai-runtime/transcribe-business-executi
 import {IntelligenceGenerationSuspended} from './topic-preview-runner';
 import type {PersistentTaskService} from '../execution/persistent-task.service';
 import type {IntelligenceTranscriptPort} from './transcript-runner';
+import {lockWorkspaceMembership} from '../platform-account/membership-lock.service';
+import {platformAccounts} from '../../schema/platform-account';
+import {OwnershipError} from './intelligence.errors';
 
 type PreparationDeps=Parameters<typeof createExecutionTranscribePreparationService>[1];
 export interface IntelligenceTranscriptBridgeDeps {
@@ -101,7 +104,19 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
       const current=(await verify()).task.payload as Record<string,unknown>;
       if(current.intelligenceTranscriptSkip==='IMAGE_ALBUM')return {skippedReason:'IMAGE_ALBUM'};
       if((await audio.read(ref,{awemeId},controller.signal)).status==='missing'){
-       const source=await deps.readSource(ctx,awemeId,controller.signal).catch(error=>{preparationError=error;throw error;});controller.signal.throwIfAborted();await verify();
+       // 组任务保留NULL账号；仅取流沿原item的真实来源账号授权，不能打开_default临时档案。
+       // SEMANTIC_BOUNDARY_ALLOW: 原作品ID、用户及有效组成员关系的机械核验，不选择创作账号。
+       const sourceContext=await leases.withLease(ref,'admission',async scope=>{
+        const bound=await bindIntelligenceTranscript(scope);
+        if(ctx.accountId||!ctx.groupId||!bound.item.accountId)return ctx;
+        const target={...ctx,accountId:bound.item.accountId,membershipVersion:undefined};
+        const frozen=await lockWorkspaceMembership(scope.tx,target);
+        const [account]=await scope.tx.select({platform:platformAccounts.platform}).from(platformAccounts).where(and(eq(platformAccounts.id,target.accountId),eq(platformAccounts.userId,ctx.userId)));
+        if(account?.platform!=='douyin')throw new OwnershipError('来源账号不是当前账号组的有效抖音账号');
+        controller.signal.throwIfAborted();
+        return {...target,membershipVersion:frozen.membershipVersion??undefined};
+       });
+       const source=await deps.readSource(sourceContext,awemeId,controller.signal).catch(error=>{preparationError=error;throw error;});controller.signal.throwIfAborted();await verify();
        if(source.kind==='image-album'){
         await leases.withLease(ref,'admission',async scope=>{await bindIntelligenceTranscript(scope);await scope.tx.update(executionTasks).set({payload:{...scope.task.payload as Record<string,unknown>,intelligenceTranscriptSkip:'IMAGE_ALBUM'}}).where(eq(executionTasks.id,scope.task.id));});
         return {skippedReason:'IMAGE_ALBUM'};
