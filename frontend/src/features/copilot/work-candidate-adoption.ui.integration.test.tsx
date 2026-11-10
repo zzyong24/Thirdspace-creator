@@ -30,7 +30,7 @@ const script={kind:'project_script' as const,id:'script-real',versionId:'script-
 const location={conversationId:'conversation-real',sourceMessageId:'source-message',toolCallId:'tool-real'};
 const source={taskId:'source-task',callId:'source-call',toolCallId:'tool-real',candidateDigest:'sha256:'+'d'.repeat(64)};
 const article=articleDocument.parse({schemaVersion:1,title:'候选文章',summary:'',sections:[{sectionId:'s-real',order:0,heading:'要点',headingLevel:2,body:'同源文章正文',sourceRefs:[script]}],factItems:[],visualBriefs:[],imageUses:[]});
-const graphic=graphicPostDocument.parse({schemaVersion:1,title:'候选图文',body:'同源图文正文',summary:'',tags:[],sourceRefs:[script],imageUses:[],ruleSnapshotRef:null,cardBriefs:[{cardId:'card-real',title:'图卡',body:'图卡正文',sourceRefs:[script]}]});
+const graphic=graphicPostDocument.parse({schemaVersion:1,title:'候选图文',body:'同源图文正文',summary:'',tags:[],sourceRefs:[script],imageUses:[],ruleSnapshotRef:null,cardBriefs:[{cardId:'card-real',title:'图卡',body:'同源图文正文',sourceRefs:[script]}]});
 const joint=workCreationProposalResult.parse({kind:'work.creation.propose',schemaVersion:1,target:{schemaVersion:1,clientRequestId:'request-real',projectId:'p',compositionId:'composition-real',compositionRevision:3,scriptSourceRef:script,scriptConfirmation:{confirmedBy:'user',source:'current-click'},articleMember:{kind:'article',outputId:'article-real',artifactId:'article-artifact',baseVersionId:'article-base'},graphicMember:{kind:'image',outputId:'image-real',artifactId:'graphic-artifact',baseVersionId:'graphic-base'}},targetDigest:'a'.repeat(64),article,graphic,articleDigest:'b'.repeat(64),graphicDigest:'c'.repeat(64),scriptSourceRef:script,error:null});
 type Owner='article'|'image';
 let fixture:ReturnType<typeof makeFixture>;
@@ -39,7 +39,7 @@ function Witness(){chat=useDraftChatRequest();return <output data-testid="dirty-
 function makeFixture(empty:boolean,groupId='t1303-owned'){
  const emptyArticle=articleDocument.parse({...article,title:'',sections:[]});
  const emptyGraphic=graphicPostDocument.parse({...graphic,title:'',body:'',sourceRefs:[],cardBriefs:[]});
- const bases={article:empty?emptyArticle:{...article,title:'原文章',sections:[{...article.sections[0],body:'原文章正文'}]},image:empty?emptyGraphic:{...graphic,title:'原图文',body:'原图文正文'}};
+ const bases={article:empty?emptyArticle:{...article,title:'原文章',sections:[{...article.sections[0],body:'原文章正文'}]},image:empty?emptyGraphic:{...graphic,title:'原图文',body:'原图文正文',cardBriefs:[{...graphic.cardBriefs[0],body:'原图文正文'}]}};
  const context={state:'ready',scriptRef:script,scriptText:'逐字脚本原稿',metadata:{title:'原稿标题',summary:'',tags:[]},message:''};
  const resource=(kind:Owner,doc:any,versionId:string)=>({projectId:'p',outputId:kind==='article'?'article-real':'image-real',artifactId:kind==='article'?'article-artifact':'graphic-artifact',currentVersionId:versionId,current:doc,versions:[],scriptContext:context,...(kind==='image'?{targetPlatform:null}:{})});
  const current={article:resource('article',bases.article,'article-base'),image:resource('image',bases.image,'graphic-base')};
@@ -171,7 +171,10 @@ it('RED-increment-current: 原保存后有v3，新整树明确历史状态而不
  view=render(tree('article'));await within(row('article')).findByText('这份内容已保存，当前成稿已有后续版本。');expect(fixture.writes).toHaveLength(1);expect(fixture.current.article.currentVersionId).toBe('article-later');
 });
 it.each(['article','image'] as const)('RED-increment-registration: %s原owner仍挂载，保存等待时真实注册替换不得先同步旧owner',async(owner)=>{
- fixture=makeFixture(false);const dispatch=fixture.dispatch;let finish!:()=>void;const gate=new Promise<void>(resolve=>{finish=resolve;});fixture.dispatch=async(...args)=>{const id=JSON.parse(args[1].body).id;if(id===(owner==='article'?'articles.versions.create':'graphicPosts.versions.create'))await gate;return dispatch(...args);};render(tree(owner));await preview(owner);fireEvent.click(within(row(owner)).getByRole('button',{name:owner==='article'?'采纳文章':'采纳图文'}));await waitFor(()=>expect(within(row(owner)).getByRole('button',{name:'正在确认保存…'})).toBeDisabled());
+ fixture=makeFixture(false);const dispatch=fixture.dispatch;let finish!:()=>void;const gate=new Promise<void>(resolve=>{finish=resolve;});fixture.dispatch=async(...args)=>{const id=JSON.parse(args[1].body).id;if(id===(owner==='article'?'articles.versions.create':'graphicPosts.versions.create'))await gate;return dispatch(...args);};render(tree(owner));
+ // 图文主编辑器自 2026-10-28（T-1420）起收进「文字排版与旧稿导出」折叠区，展开后才挂载原 owner，与本例「原owner仍挂载」前提一致。
+ if(owner==='image'){const legacy=screen.getByText('文字排版与旧稿导出').closest('details')!;act(()=>{legacy.open=true;legacy.dispatchEvent(new Event('toggle'));});await waitFor(()=>expect(h.native.mock.calls.some(([op,_i,o]:any)=>op==='load'&&o?.sourceVersionId==='graphic-base')).toBe(true));}
+ await preview(owner);fireEvent.click(within(row(owner)).getByRole('button',{name:owner==='article'?'采纳文章':'采纳图文'}));await waitFor(()=>expect(within(row(owner)).getByRole('button',{name:'正在确认保存…'})).toBeDisabled());
  act(()=>{chat.registerEditor({readState:()=>({target:null,outputId:'replacement',generation:0,dirty:false}),prepareForTurn:async()=>{throw Error('不得发送');},previewCandidate:async()=>null,adoptCandidate:async()=>({status:'adopted'})});});await act(async()=>finish());await within(row(owner)).findByRole('status');
  const mainLoads=h.native.mock.calls.filter(([op,_input,nativeOwner])=>op==='load'&&nativeOwner.outputId===(owner==='article'?'article-real':'image-real')&&nativeOwner.sourceVersionId===(owner==='article'?'article-base':'graphic-base'));expect(mainLoads.at(-1)![1].markdown).toContain(owner==='article'?'原文章正文':'原图文正文');expect(mainLoads.at(-1)![1].markdown).not.toContain(owner==='article'?'同源文章正文':'同源图文正文');expect(fixture.writes).toHaveLength(1);
 });
