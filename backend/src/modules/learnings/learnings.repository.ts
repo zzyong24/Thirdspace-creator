@@ -93,7 +93,7 @@ export interface LearningsRepository {
     filter?: ListLearningsFilter,
   ): Promise<{ rows: LearningRow[]; total: number }>;
   createLearning(input: CreateLearningInput): Promise<LearningRow>;
-  adoptLearning(input: AdoptLearningInput): Promise<LearningRow>;
+  adoptLearning(input: AdoptLearningInput): Promise<{row: LearningRow; createdThisCall: boolean}>;
   getLearningRowById(learningId: string): Promise<LearningRow>;
   updateLearningStatus(
     learningId: string,
@@ -316,7 +316,7 @@ export function createLearningsRepository(
                 ),
               )
               .returning();
-            return adopted!;
+            return {row: adopted!, createdThisCall: false};
           }
 
           const [created] = await tx
@@ -339,7 +339,7 @@ export function createLearningsRepository(
               updatedAt: deps.now(),
             })
             .returning();
-          return created!;
+          return {row: created!, createdThisCall: true};
         });
       } catch (error) {
         // 两个窗口同时采纳同一经验时，唯一索引只允许一个事务成功。败方在事务回滚后
@@ -356,7 +356,7 @@ export function createLearningsRepository(
             ),
           )
           .limit(1);
-        if (winner) return winner;
+        if (winner) return {row: winner, createdThisCall: false};
         throw error;
       }
     },

@@ -99,7 +99,9 @@ describe("learnings service (validationStatus machine + confidence + apply)", ()
     });
     expect(first.validationStatus).toBe("validated");
     expect(first.confidenceScore).toBe(40);
+    expect(first.createdThisCall).toBe(true);
     expect(second.id).toBe(first.id);
+    expect(second.createdThisCall).toBe(false);
     const listed = await service.listLearnings(
       ctx,
       { limit: 20, offset: 0 },

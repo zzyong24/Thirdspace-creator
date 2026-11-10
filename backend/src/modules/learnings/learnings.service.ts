@@ -9,8 +9,10 @@ import {
 } from "./learnings.repository";
 import {
   toLearningDto,
+  toLearningAdoptDto,
   toLearningApplicationDto,
   type LearningResource,
+  type LearningAdoptReceipt,
   type LearningApplicationResource,
 } from "./learnings.schema";
 import { ConflictError, OwnershipError } from "./learnings.errors";
@@ -183,7 +185,7 @@ export interface LearningsService {
       source?: string;
       applicability?: string;
     },
-  ): Promise<LearningResource>;
+  ): Promise<LearningAdoptReceipt>;
   // The Reviews→Learnings bridge (roadmap §4 G13/G14). Called by ReviewsService via
   // this module's index.ts public interface only (no Reviews repo import here, no
   // Learnings repo import there).
@@ -407,7 +409,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
       if (body.projectId) await projects.assertOwnsProject(ctx, body.projectId);
       const title = body.title.trim();
       const insight = [(body.insight ?? "").trim(), body.source?.trim() ? `来源依据：${body.source.trim()}` : "", body.applicability?.trim() ? `适用条件：${body.applicability.trim()}` : ""].filter(Boolean).join("\n");
-      const row = await repoFor(
+      const adopted = await repoFor(
         ctx,
         "learnings.adoptLearning",
       ).adoptLearning({
@@ -417,7 +419,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
         projectId: body.projectId ?? null,
         contentFingerprint: adoptedContentFingerprint(title, body.projectId ? `${body.projectId}\u001f${insight}` : insight),
       });
-      return toLearningDto(row);
+      return toLearningAdoptDto(adopted.row, adopted.createdThisCall);
     },
 
     async promoteReviewInsight(ctx, input) {

@@ -1,6 +1,6 @@
 import {expect,it,vi} from "vitest";
 import {createLearningsService} from "./learnings.service";
-const adopt=vi.hoisted(()=>vi.fn(async(input:Record<string,unknown>)=>({...input,id:"learning",userId:"u",accountId:"a",validationStatus:"validated",confidenceScore:0,reuseCount:0,createdAt:"2026-09-11",updatedAt:"2026-09-11"})));
+const adopt=vi.hoisted(()=>vi.fn(async(input:Record<string,unknown>)=>({row:{...input,id:"learning",userId:"u",accountId:"a",validationStatus:"validated",confidenceScore:0,reuseCount:0,createdAt:"2026-09-11",updatedAt:"2026-09-11"},createdThisCall:true})));
 vi.mock("./learnings.repository",()=>({createLearningsRepository:()=>({adoptLearning:adopt})}));
 const ctx={userId:"u",accountId:"a",requestId:"test",source:"user" as const};
 it("聊天经验采纳在写入前核对项目归属；正文保留依据与适用条件",async()=>{

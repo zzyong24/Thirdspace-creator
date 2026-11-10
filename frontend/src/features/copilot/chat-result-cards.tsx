@@ -267,7 +267,7 @@ export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT
   );
 }
 
-interface AutoAdoptEntry { learningId: string; status: "adopted" | "undone" }
+interface AutoAdoptEntry { learningId: string; status: "adopted" | "undone"; createdThisCall?: boolean }
 interface AutoAdoptRecord { started: boolean; items: Record<number, AutoAdoptEntry> }
 const autoAdoptStorageKey = (key: string) => `creatoros:auto-adopt:${key}`;
 function readAutoAdopt(key: string | null | undefined): AutoAdoptRecord {
@@ -337,7 +337,7 @@ export function ChatLearningsCard({
           body: { title: l.title, insight: l.insight, ...(projectId ? {projectId} : {}), source:l.source, applicability:l.applicability },
         });
         setAt(i, "adopted");
-        if (viaAuto && created?.id) patchAuto(i, { learningId: created.id, status: "adopted" });
+        if (viaAuto && created?.id) patchAuto(i, { learningId: created.id, status: "adopted", createdThisCall: created.createdThisCall === true });
         router.refresh();
       } catch {
         setAt(i, "error");
@@ -362,11 +362,14 @@ export function ChatLearningsCard({
     items.forEach((l, i) => { if (eligible(l)) void adopt(i, l, true); });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 每个工具调用只跑一次
   }, [autoAdoptKey]);
-  const undo = React.useCallback(async (i: number, learningId: string) => {
+  const undo = React.useCallback(async (i: number, learningId: string, createdThisCall?: boolean) => {
     setAt(i, "adopting");
     try {
-      await client.evaluateLearning({ params: { learningId }, query: undefined, body: { validationStatus: "discarded" } });
-      patchAuto(i, { learningId, status: "undone" });
+      // 只撤本次新建；复用已有经验或旧回执缺标记时不调用 discard，避免撤掉用户更早的同名经验。
+      if (createdThisCall === true) {
+        await client.evaluateLearning({ params: { learningId }, query: undefined, body: { validationStatus: "discarded" } });
+      }
+      patchAuto(i, { learningId, status: "undone", createdThisCall });
       setAt(i, "idle");
       router.refresh();
     } catch {
@@ -431,7 +434,7 @@ export function ChatLearningsCard({
                       data-slot="chat-learning-undo"
                       aria-label={`撤销「${l.title}」`}
                       disabled={s === "adopting"}
-                      onClick={() => void undo(i, auto.items[i]!.learningId)}
+                      onClick={() => void undo(i, auto.items[i]!.learningId, auto.items[i]!.createdThisCall)}
                       className="inline-flex h-6 items-center rounded-control px-2 text-[10px] text-text-subtle hover:text-foreground disabled:opacity-50"
                     >
                       撤销

@@ -46,6 +46,12 @@ export const learningResource = z.object({
 });
 export type LearningResource = z.infer<typeof learningResource>;
 
+// 采纳回执：createdThisCall=true 表示本次新建；false 表示复用已有同名经验。撤销只能撤新建的。
+export const learningAdoptReceipt = learningResource.extend({
+  createdThisCall: z.boolean(),
+});
+export type LearningAdoptReceipt = z.infer<typeof learningAdoptReceipt>;
+
 // LearningApplication extends BaseEntity only (no Timestamped).
 export const learningApplicationResource = z.object({
   id,
