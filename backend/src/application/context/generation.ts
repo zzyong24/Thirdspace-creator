@@ -86,6 +86,7 @@ return (() => {
             (await knowledgeService.listKnowledge(c))
               .slice(0, opts.limit ?? 40)
               .map((k) => ({
+                id: k.id,
                 title: k.title,
                 knowledgeType: k.knowledgeType,
                 usedCount: k.usedCount,
@@ -111,6 +112,7 @@ return (() => {
             const all = await knowledgeService.listKnowledge(c);
             const byId = new Map(all.map((k) => [k.id, k]));
             const rows: Array<{
+              id: string;
               title: string;
               knowledgeType: string;
               usedCount?: number;
@@ -122,6 +124,7 @@ return (() => {
               const k = byId.get(h.document.entityId);
               if (!k) continue; // 命中的索引行对应的知识已删/跨号不可见 → 跳过
               rows.push({
+                id: k.id,
                 title: k.title,
                 knowledgeType: k.knowledgeType,
                 usedCount: k.usedCount,

@@ -18,6 +18,7 @@ import {
 } from "@creatoros/contract/execution-worker";
 import { scriptDraftSchema } from "@creatoros/ai-worker";
 import { projectScriptDraftCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { readKnowledgeCatalogFacet, resolveKnowledgeSources } from "../ai-runtime/knowledge-sources";
 import { ConflictError } from "./ai.errors";
 /** 只读真实结算与冻结上下文；公开展示字段不能授权partial采纳。 */
 export async function assertScriptPartialAdoptable(
@@ -99,6 +100,8 @@ export async function assertScriptPartialAdoptable(
     const object = z
       .object({
         shots: scriptDraftSchema.shape.shots,
+        // 第三批步骤2/3：新版脚本输出带 sources；旧结果没有该键。
+        sources: scriptDraftSchema.shape.sources,
         pipelineMetadata: z.record(z.string(), z.json()),
       })
       .strict()
@@ -168,6 +171,7 @@ export async function assertScriptPartialAdoptable(
       sourceMetadata: sourceMetadata as Parameters<
         typeof projectScriptDraftCandidate
       >[0]["sourceMetadata"],
+      knowledgeSources: resolveKnowledgeSources(object.sources, readKnowledgeCatalogFacet(frozen.facets)),
     }).resultData;
     const actual = z
       .record(z.string(), z.unknown())

@@ -216,5 +216,7 @@ export async function prepareScriptDraftContext(
     nodeInput,
     frozenSources,
     fingerprintContext,
+    // 第三批步骤3：冻结本次注入的知识目录，结果回传来源只认这份。
+    knowledgeCatalog: context.knowledgeCatalog ?? [],
   };
 }

@@ -1,3 +1,4 @@
+import type {KnowledgeSourceRef} from "@creatoros/contract";
 import type {
   ScriptShot,
   RunScriptNodeResult,
@@ -26,6 +27,8 @@ export interface ScriptDraftProjectionInput {
   >;
   pipelineMetadata: Record<string, unknown>;
   sourceMetadata: Array<Omit<FrozenScriptSource, "body">>;
+  /** 第三批步骤3：已按冻结目录核验的知识来源；空则不写键，旧结果逐字不变。 */
+  knowledgeSources?: KnowledgeSourceRef[];
 }
 interface Storyboard {
   sections: ScriptShot[];
@@ -90,6 +93,7 @@ export function projectScriptDraftCandidate(
     effectiveSkill,
     pipelineMetadata,
     sourceMetadata,
+    knowledgeSources = [],
   } = input;
   if (!validation)
     throw new Error(
@@ -141,6 +145,7 @@ export function projectScriptDraftCandidate(
       generationAttempts: generation.attempts,
       ...pipelineMetadata,
       ...(sourceMetadata.length > 0 ? { sourceSnapshots: sourceMetadata } : {}),
+      ...(knowledgeSources.length > 0 ? { knowledgeSources } : {}),
     },
   };
 }

@@ -1,3 +1,5 @@
+import type {KnowledgeSourceRef} from "@creatoros/contract";
+import {buildKnowledgeCatalog} from "./knowledge-sources";
 import type { RequestContext } from "@creatoros/contract";
 
 // 机制② CreativeContext — the "接力棒" every AI node reads. It is assembled (read-only)
@@ -38,6 +40,8 @@ export interface CreativeContext {
   // topic.generate `knowledge` basis can出题 from accumulated material. Empty until the
   // knowledge reader is wired or when the library is empty.
   knowledgeBrief: string;
+  // 第三批步骤3：本次注入知识条目的冻结目录（knowledgeId + 标题），供结果回传来源；旧构造可缺省。
+  knowledgeCatalog?: KnowledgeSourceRef[];
   // T-730：仅允许组合根 reader 返回的“当前项目当前版本、显式 adopted”论点进入写稿。
   thesisBrief: string;
   // 内容合同 brief — a compact rendering of the project's ADOPTED content contract (受众定位/
@@ -229,6 +233,8 @@ export interface SignalsReader {
 // 0/false/null 兜底,brief 退化为无战绩排序)。
 // [T-186] 检索/列举返回的知识行形状(list 与 search 同形,便于共用 formatKnowledgeBrief)。
 export interface KnowledgeRow {
+  /** 第三批步骤3：知识条目 ID，用于冻结来源目录；旧 fake 不给时该行不进目录。 */
+  id?: string | null;
   title: string;
   knowledgeType: string;
   usedCount?: number;
@@ -566,6 +572,7 @@ export async function assembleCreativeContext(
   }
 
   let knowledgeBrief = "";
+  let knowledgeCatalog: KnowledgeSourceRef[] = [];
   if (deps.knowledge && !input.excludeHistoricalCreatorContext) {
     try {
       // [T-186] L3 策展护栏 —— 知识注入从「最近 40 条 dump」升级为「按当前选题/定位相关性检索 +
@@ -603,8 +610,10 @@ export async function assembleCreativeContext(
         rawBrief,
         KNOWLEDGE_BRIEF_BUDGET_CHARS,
       );
+      knowledgeCatalog = knowledgeBrief ? buildKnowledgeCatalog(rows) : [];
     } catch {
       knowledgeBrief = ""; // 知识库 is best-effort context; never block a node on it
+      knowledgeCatalog = [];
     }
   }
 
@@ -824,6 +833,7 @@ export async function assembleCreativeContext(
     currentAccountLine,
     signalsBrief,
     knowledgeBrief,
+    knowledgeCatalog,
     thesisBrief,
     contractBrief,
     outlineBrief,
