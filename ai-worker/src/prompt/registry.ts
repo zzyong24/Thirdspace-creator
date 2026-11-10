@@ -47,6 +47,7 @@ import { PLANNING_THESIS_TEMPLATE } from "./templates/planning-thesis";
 import { SCRIPT_REVIEW_TEMPLATE } from "./templates/script-review";
 // [T-271] 封面方案 skill(cover.brief)—— 制作封面链的「结构化产方案」位(brief/script 硬锚 + 文案诚实门)。
 import { COVER_BRIEF_TEMPLATE } from "./templates/cover-brief";
+import { BUNDLE_TITLES_TEMPLATE } from "./templates/bundle-titles";
 import { PLANNING_CONTRACT_TEMPLATE } from "./templates/planning-contract";
 import { PLANNING_OUTLINE_TEMPLATE } from "./templates/planning-outline";
 import { PLATFORM_ADAPT_TEMPLATE } from "./templates/platform-adapt";
@@ -145,6 +146,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   SCRIPT_REVIEW_TEMPLATE,
   // [T-271] 封面方案:立项 brief(核心信息/内容形式)+ 口播稿主张硬锚 → 结构化封面文案 + 主视觉 + 构图。
   COVER_BRIEF_TEMPLATE,
+  // 第三批成稿包：一句话想法 → 标题三选一。
+  BUNDLE_TITLES_TEMPLATE,
   PLANNING_CONTRACT_TEMPLATE,
   PLANNING_OUTLINE_TEMPLATE,
   PLATFORM_ADAPT_TEMPLATE,

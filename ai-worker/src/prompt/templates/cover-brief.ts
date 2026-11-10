@@ -1,3 +1,4 @@
+import {KNOWLEDGE_CITATION_CLAUSE, knowledgeCitationsField} from "./knowledge-citations";
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
 import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
@@ -30,6 +31,8 @@ export const coverBriefSchema = z
     visualConcept: z.string().default(""),
     // 构图建议(主体位置/文案排布/层次)。
     composition: z.string().default(""),
+    // 第三批步骤2：实际引用的知识库条目标题；旧结果缺省 []。
+    sources: knowledgeCitationsField,
     // 色调/风格基调(可空)。
     palette: z.string().default(""),
   })
@@ -40,6 +43,7 @@ export const coverBriefSchema = z
     visualConcept: "",
     composition: "",
     palette: "",
+    sources: [],
   })
   .refine(
     (value) => Boolean(value.headline.trim() || value.visualConcept.trim()),
@@ -50,7 +54,7 @@ export type CoverBriefOutput = z.infer<typeof coverBriefSchema>;
 export const COVER_BRIEF_TEMPLATE: PromptTemplate = {
   id: "cover.brief",
   outputRecovery: "creative-partial",
-  version: "v3",
+  version: "v4",
   outputSchema: coverBriefSchema,
   tools: [],
   system:
@@ -78,8 +82,9 @@ export const COVER_BRIEF_TEMPLATE: PromptTemplate = {
 
 **封面文案铁律(诚实门)**:headline / subheadline / keyPoints 里出现的任何**数字、成绩、榜单名、机构/人物名**,都必须能在上方【立项硬约束】/口播稿/素材里找到出处;找不到就**别写这个数字**,换成不含具体数字的说法。封面不是靠编数字博眼球的地方——一个假数字压在封面上,比不吸引更糟。
 ${ANTI_FABRICATION_CLAUSE}
+${KNOWLEDGE_CITATION_CLAUSE}
 【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹),形如:
-{"headline":"封面主标题","subheadline":"副标题(可空)","keyPoints":["信息点1","信息点2"],"visualConcept":"主视觉建议","composition":"构图建议","palette":"色调风格(可空)"}`,
+{"headline":"封面主标题","subheadline":"副标题(可空)","keyPoints":["信息点1","信息点2"],"visualConcept":"主视觉建议","composition":"构图建议","palette":"色调风格(可空)","sources":["知识条目标题"]}`,
   requiredFacets: ["positioning"],
   // [T-271] 声明式 context 注入 —— 封面链的接地根:brief(立项硬锚,核心信息/内容形式)+ reviewSubject
   // (口播稿主张,复用 review 的 getScript 读 output_script 当前版本)+ projectMaterials(封面数字的
