@@ -39,7 +39,7 @@ function Witness(){chat=useDraftChatRequest();return <output data-testid="dirty-
 function makeFixture(empty:boolean,groupId='t1303-owned'){
  const emptyArticle=articleDocument.parse({...article,title:'',sections:[]});
  const emptyGraphic=graphicPostDocument.parse({...graphic,title:'',body:'',sourceRefs:[],cardBriefs:[]});
- const bases={article:empty?emptyArticle:{...article,title:'原文章',sections:[{...article.sections[0],body:'原文章正文'}]},image:empty?emptyGraphic:{...graphic,title:'原图文',body:'原图文正文',cardBriefs:[{...graphic.cardBriefs[0],body:'原图文正文'}]}};
+ const bases={article:empty?emptyArticle:{...article,title:'原文章',sections:[{...article.sections[0],body:'原文章正文'}]},image:empty?emptyGraphic:{...graphic,title:'原图文',body:'原图文正文',cardBriefs:[{...graphic.cardBriefs![0]!,body:'原图文正文'}]}};
  const context={state:'ready',scriptRef:script,scriptText:'逐字脚本原稿',metadata:{title:'原稿标题',summary:'',tags:[]},message:''};
  const resource=(kind:Owner,doc:any,versionId:string)=>({projectId:'p',outputId:kind==='article'?'article-real':'image-real',artifactId:kind==='article'?'article-artifact':'graphic-artifact',currentVersionId:versionId,current:doc,versions:[],scriptContext:context,...(kind==='image'?{targetPlatform:null}:{})});
  const current={article:resource('article',bases.article,'article-base'),image:resource('image',bases.image,'graphic-base')};
