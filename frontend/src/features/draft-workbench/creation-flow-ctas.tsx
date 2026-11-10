@@ -21,7 +21,8 @@ import { uploadFileToProject } from "./upload-to-project";
 const UPLOAD_ACCEPT = "image/*,video/*,.pdf,.doc,.docx,.md,.txt";
 const CREATION_PREFILL="请使用已确认脚本与同一创作方法，一起生成完整文章和图文候选。我会分别预览采纳，再继续微调。不要生成视频、语音或插画。";
 
-export function WorkCreationCta({ projectId }: { projectId: string }) {
+/** primary（批次2-7）：未发布时它是脚本阶段唯一主按钮；已发布后主按钮让位给「看复盘」。 */
+export function WorkCreationCta({ projectId, primary = true }: { projectId: string; primary?: boolean }) {
   const { openChat,prepareScriptForCreation,readWritingContext } = useDraftChatRequest();
   const client=useCreationClient(),scope=useCreationScope(),scopeKey=creationScopeKey(scope);
   const storageKey=`creatoros:t1070:creation:${scopeKey}:${projectId}`;
@@ -61,7 +62,7 @@ export function WorkCreationCta({ projectId }: { projectId: string }) {
       aria-label="由脚本生成文章和图文"
       className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface-subtle px-3 py-2"
     >
-      <Button type="button" disabled={creating||submission==='preparing'} onClick={()=>void createPair()} className="min-h-11 gap-2"><Sparkles className="size-4"/>{creating||submission==='preparing'?"正在保存并准备…":submitted?"查看原文章和图文生成":creationError||submission==='not-submitted'?"恢复原请求 · 一键生成文章和图文":"一键生成文章和图文"}</Button>
+      <Button type="button" variant={primary?"default":"outline"} disabled={creating||submission==='preparing'} onClick={()=>void createPair()} className="min-h-11 gap-2"><Sparkles className="size-4"/>{creating||submission==='preparing'?"正在保存并准备…":submitted?"查看原文章和图文生成":creationError||submission==='not-submitted'?"恢复原请求 · 一键生成文章和图文":"一键生成文章和图文"}</Button>
       <span className="text-[11px] text-text-subtle">使用上方已保存的脚本，分别生成文章和图文候选，预览后再采纳</span>
       {creationError?<p role="alert" className="w-full text-sm text-destructive">{creationError}</p>:null}
     </section>

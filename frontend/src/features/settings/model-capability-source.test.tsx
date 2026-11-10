@@ -33,19 +33,19 @@ describe('T1278 真实 contract client / HTTP adapter 的来源表单',()=>{
   const expected={'文本创作与结构化':['','official','self','codex'],'图片':['','mixed','official','self','codex'],'视频生成':['','official','self'],'语音转文字':['','official','self','local']};
   expect(screen.getAllByRole('combobox')).toHaveLength(4);expect(screen.queryByRole('combobox',{name:'检索向量模型来源'})).toBeNull();expect(screen.queryByRole('combobox',{name:'图片理解模型来源'})).toBeNull();
   for(const [name,options] of Object.entries(expected)){const select=screen.getByRole('combobox',{name:`${name}模型来源`}) as HTMLSelectElement;expect(Array.from(select.options).map(option=>option.value)).toEqual(options);}
-  expect(screen.getByText('理解：未核实；生成：可用；编辑：未核实')).toBeInTheDocument();expect(screen.queryByRole('combobox',{name:'编导引擎'})).toBeNull();
+  expect(screen.getByText('可以生成图片；识别图片、修改图片还没检测是否可用')).toBeInTheDocument();expect(document.querySelector('[data-slot="model-source-status-text"]')).toHaveTextContent('暂不能使用：还没设置模型，可点「配置」补上');expect(document.body.textContent).not.toMatch(/项已返回|用途可用|用途尚未|理解：/);expect(screen.queryByRole('combobox',{name:'编导引擎'})).toBeNull();
   expect(f.requests.map(request=>request.id)).toEqual(['settings.modelRouting.get']);
  });
  it('choices=null旧Codex默认来自后端effective，未修改不PUT，首次真实修改保存完整六槽',{timeout:180_000,retry:0},async()=>{
   const f=http(resource(0,null));await mount();expect(screen.getByRole('combobox',{name:'图片模型来源'})).toHaveValue('codex');expect(screen.getByRole('button',{name:'保存模型来源'})).toBeDisabled();expect(screen.getByRole('status')).toHaveTextContent('未修改');expect(f.requests.filter(request=>request.id.includes('put'))).toHaveLength(0);
-  fireEvent.change(screen.getByRole('combobox',{name:'语音转文字模型来源'}),{target:{value:'local'}});fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存并读回当前设置',{}, {timeout:120_000});
+  fireEvent.change(screen.getByRole('combobox',{name:'语音转文字模型来源'}),{target:{value:'local'}});fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存',{}, {timeout:120_000});
   expect(f.requests.map(request=>request.id)).toEqual(['settings.modelRouting.get','settings.modelRouting.put','settings.modelRouting.get']);
   expect(f.requests[1]!.input.body).toEqual({schemaVersion:1,choices:{text:'codex',vision:'codex',image:'codex',video:'official',audio:'local',embed:'official'},expectedRevision:0});
  });
  it('一次来源修改走 PUT 原 revision 再 GET；卸载再进入读服务值',{timeout:180_000,retry:0},async()=>{
   const f=http();await mount();fireEvent.change(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'}),{target:{value:'codex'}});fireEvent.change(screen.getByRole('combobox',{name:'图片模型来源'}),{target:{value:'self'}});
   expect(document.querySelector('[data-slot="model-source-current-text"]')).toHaveTextContent('当前使用：自配模型');expect(f.requests).toHaveLength(1);
-  fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存并读回当前设置',{}, {timeout:120_000});
+  fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存',{}, {timeout:120_000});
   expect(f.requests[1]!.input.body).toEqual({schemaVersion:1,choices:{...choices,text:'codex',vision:'self',image:'self'},expectedRevision:1});
   cleanup();const module=await import('@/features/copilot/assistant-engine');await act(async()=>module.loadModelRouting(true));await mount();expect(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'})).toHaveValue('codex');expect(f.current().revision).toBe(2);
  });
@@ -56,12 +56,12 @@ describe('T1278 真实 contract client / HTTP adapter 的来源表单',()=>{
   fireEvent.click(screen.getByRole('button',{name:'已核对，保留草稿继续编辑'}));expect(screen.getByRole('button',{name:'保存模型来源'})).toBeEnabled();
   // 不自动重试 PUT；下一次保存必须来自用户动作。
   expect(attempts).toBe(1);expect(f.requests.filter(request=>request.id==='settings.modelRouting.put')[0]!.input.body!.expectedRevision).toBe(1);
-  fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存并读回当前设置',{}, {timeout:120_000});expect(attempts).toBe(2);expect(f.requests.filter(request=>request.id==='settings.modelRouting.put')[1]!.input.body!.expectedRevision).toBe(2);
+  fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));await screen.findByText('已保存',{}, {timeout:120_000});expect(attempts).toBe(2);expect(f.requests.filter(request=>request.id==='settings.modelRouting.put')[1]!.input.body!.expectedRevision).toBe(2);
  });
  it('保存中禁重复，PUT已受理但GET失败不能说已保存，原草稿保留',{timeout:180_000,retry:0},async()=>{
   let release!:(value:Response)=>void,reads=0;const fetch=vi.spyOn(globalThis,'fetch').mockImplementation(async(_url,options)=>{const request=JSON.parse(String(options?.body)) as Request;if(request.id==='settings.modelRouting.get'){if(++reads>1)throw Error('readback unavailable');return envelope(resource());}return new Promise(resolve=>{release=resolve;});});
   await mount();fireEvent.change(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'}),{target:{value:'codex'}});fireEvent.click(screen.getByRole('button',{name:'保存模型来源'}));expect(screen.getByRole('button',{name:'正在保存…'})).toBeDisabled();expect(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'})).toBeDisabled();
-  await act(async()=>release(envelope(resource(2,{...choices,text:'codex'}))));await screen.findByRole('alert',{}, {timeout:120_000});expect(screen.getByRole('alert')).toHaveTextContent('保存已受理');expect(screen.queryByText('已保存并读回当前设置')).toBeNull();expect(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'})).toHaveValue('codex');expect(fetch).toHaveBeenCalledTimes(3);
+  await act(async()=>release(envelope(resource(2,{...choices,text:'codex'}))));await screen.findByRole('alert',{}, {timeout:120_000});expect(screen.getByRole('alert')).toHaveTextContent('保存已受理');expect(screen.queryByText('已保存')).toBeNull();expect(screen.getByRole('combobox',{name:'文本创作与结构化模型来源'})).toHaveValue('codex');expect(fetch).toHaveBeenCalledTimes(3);
  });
  it('scope 改变清旧状态，旧 GET 晚回执不能反写当前组',{timeout:180_000,retry:0},async()=>{
   const pending:Array<(response:Response)=>void>=[];vi.spyOn(globalThis,'fetch').mockImplementation(()=>new Promise(resolve=>pending.push(resolve)));

@@ -19,6 +19,7 @@
  * 整稿生成吃波1接地(brief 硬锚 + 素材可溯 + anti-fabrication),不凭空编数字。
  */
 
+import { consumeAutoFirstDraft, scriptEditorBusy } from "@/features/draft-workbench/auto-first-draft-signal";
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
@@ -270,6 +271,15 @@ function OrdinaryChatScriptDraftCard({
       setConfirming(false);
     }
   }, [taskId, canAdopt, sections, router]);
+
+  // 批次2-3：稿面自动起草的那一稿，候选可采纳时自动写入（稿面有未保存修改则保留手动采纳）。
+  const autoWriteTried = React.useRef(false);
+  React.useEffect(() => {
+    if (phase !== "review" || !canAdopt || autoWriteTried.current) return;
+    autoWriteTried.current = true;
+    if (scriptEditorBusy()) return;
+    if (consumeAutoFirstDraft(projectId)) void adopt();
+  }, [phase, canAdopt, projectId, adopt]);
 
   const shown = expanded ? sections : sections.slice(0, 3);
   return (

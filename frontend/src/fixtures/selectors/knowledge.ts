@@ -1,3 +1,5 @@
+import { knowledgeTypeLabelZh } from "@/lib/knowledge-type-label";
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * Knowledge & Memory selector.
  *
@@ -308,7 +310,7 @@ function buildRecentRows(): ReadonlyArray<KnowledgeRow> {
       id: item.id,
       title: item.title,
       type: knowledgeTypeLabel(item.knowledgeType),
-      updatedAt: item.updatedAt.slice(0, 10),
+      updatedAt: formatLocalDay(item.updatedAt),
       status: item.status,
       tags: tagsForKnowledge(item.id),
     }));
@@ -345,7 +347,7 @@ export function buildRecentRowsFromItems(
       id: item.id,
       title: item.title,
       type: knowledgeTypeLabel(item.knowledgeType),
-      updatedAt: item.updatedAt.slice(0, 10),
+      updatedAt: formatLocalDay(item.updatedAt),
       sortTimestamp: item.createdAt ?? item.updatedAt,
       status: item.status,
       tags: tagsForKnowledge(item.id),
@@ -363,7 +365,7 @@ export function knowledgeTypeLabel(type: string): string {
     case "transcript":
       return "记录";
     default:
-      return type;
+      return knowledgeTypeLabelZh(type);
   }
 }
 

@@ -1,3 +1,4 @@
+import {KNOWLEDGE_CATALOG_FACET,readKnowledgeCatalogFacet,resolveKnowledgeSources} from "./knowledge-sources";
 import { createHash } from "node:crypto";
 import { scriptDraftSchema } from "@creatoros/ai-worker";
 import { structuredGenerationInputSchema } from "@creatoros/contract/execution-worker";
@@ -112,6 +113,7 @@ export function createScriptBusinessAdapter(
           ...(initialVoiceover ? { initialVoiceover } : {}),
         }),
         __scriptSources: JSON.stringify(prepared.frozenSources.metadata),
+        [KNOWLEDGE_CATALOG_FACET]: JSON.stringify(prepared.knowledgeCatalog),
       };
     },
     project(inputData, object, execution) {
@@ -131,7 +133,7 @@ export function createScriptBusinessAdapter(
       }
       const result = execution?.structuredResult;
       if (!result) throw new Error("缺少文稿真实生成回执");
-      const { shots } = scriptDraftSchema.parse(object);
+      const { shots, sources } = scriptDraftSchema.parse(object);
       const pipelineMetadata =
         (object as { pipelineMetadata?: Record<string, unknown> })
           .pipelineMetadata ?? {};
@@ -154,6 +156,7 @@ export function createScriptBusinessAdapter(
         effectiveSkill,
         pipelineMetadata,
         sourceMetadata: JSON.parse(input.facets.__scriptSources ?? "[]"),
+        knowledgeSources: resolveKnowledgeSources(sources, readKnowledgeCatalogFacet(input.facets)),
       });
     },
   };

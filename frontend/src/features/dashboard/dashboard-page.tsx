@@ -141,7 +141,7 @@ export async function DashboardPage({
       <details data-slot="studio-home-data">
         <summary>数据概况与筛选范围</summary>
         <div data-slot="studio-home-data-body">{filters}<SummaryMetrics metrics={summaryMetrics} />
-          {workspace&&<p className="text-xs text-muted-foreground">{workspace.collected?.state==='ready'?'已采集作品为所选日期内已纳入汇总的作品，不代表平台完整目录。':'平台作品数量暂不可读。'} CreatorOS 已发布内容：{workspace.contentCount.toLocaleString('zh-CN')} 期 · CreatorOS 发布记录：{workspace.publicationCount.toLocaleString('zh-CN')} 条 · 待处理任务：{workspace.pendingCount.toLocaleString('zh-CN')} 项；与平台采集作品分别统计。</p>}
+          {workspace&&<p className="text-xs text-muted-foreground">{workspace.collected?.state==='ready'?'已采集作品指所选日期内发布、已拿到数据的作品。':'暂时读不到作品数量。'} CreatorOS 已发布内容：{workspace.contentCount.toLocaleString('zh-CN')} 期 · CreatorOS 发布记录：{workspace.publicationCount.toLocaleString('zh-CN')} 条 · 待处理任务：{workspace.pendingCount.toLocaleString('zh-CN')} 项；这些只统计通过 CreatorOS 发布的内容。</p>}
           {workspace&&vm.metrics.find(metric=>metric.id==='g-content')&&<p className="text-xs text-muted-foreground">CreatorOS 全组项目数：{vm.metrics.find(metric=>metric.id==='g-content')!.value}，不代表当前平台的作品数量。</p>}
           {summaryMetrics.some(metric=>metric.value==='—'&&metric.id==='g-read')&&<p className="text-xs text-muted-foreground">文章阅读暂缺：当前筛选内暂无可用阅读指标。可到<Link href={`/overview${overviewQuery?'?'+overviewQuery:''}`} className="text-brand underline underline-offset-4">创作者总览</Link>查看账号绑定与采集情况。</p>}
         </div>

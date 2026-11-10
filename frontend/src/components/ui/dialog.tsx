@@ -66,6 +66,17 @@ function DialogContent({
           className
         )}
         {...props}
+        onEscapeKeyDown={(event) => {
+          props.onEscapeKeyDown?.(event)
+          if (event.defaultPrevented) return
+          // 原生下拉框展开时按 Esc 只该收起下拉，不能连同弹窗一起关掉（月明录屏 2026-11-10，设置→模型配置）。
+          // 焦点在 <select> 上的这次 Esc 交给下拉框；移开焦点后再按 Esc 照常关闭弹窗。
+          const target = event.target
+          if (typeof HTMLSelectElement !== "undefined" && target instanceof HTMLSelectElement) {
+            event.preventDefault()
+            target.blur()
+          }
+        }}
       >
         {children}
         {showCloseButton && (

@@ -3,6 +3,7 @@ import { defineEndpoint } from "../endpoint-definition";
 import { id, paginationQuery } from "../primitives";
 import {
   learningResource,
+  learningAdoptReceipt,
   learningApplicationResource,
 } from "../resources/learnings";
 import { calibrationRuleSuggestionResource } from "../resources/calibration";
@@ -64,7 +65,7 @@ export const learningsOperations = {
         ])
         .optional(),
     }),
-    response: learningResource,
+    response: learningAdoptReceipt,
     fr: ["FR-LEARNINGS-CREATE"],
   }),
   // [T-062a gate-F1] 裁决台 inline 编辑:与 create 的 schema 差异仅在字段全可选。

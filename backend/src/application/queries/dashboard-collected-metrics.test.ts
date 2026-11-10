@@ -156,14 +156,14 @@ describe('T1356 实际归属/去重/错误隔离公共保护',()=>{
   const before=JSON.stringify(await f.db.select().from(platformWorkMetricSnapshots)),history=JSON.stringify(await f.db.select().from(accountGroupMemberships));
   const execute=vi.spyOn(f.db,'execute');const facts=await f.collections.readDashboardSummary(f.ctx,{groupId:f.a.id,platform:'xiaohongshu',startDate:'2026-09-20',endDate:'2026-10-19'});expect(execute).toHaveBeenCalledTimes(3);execute.mockRestore();
   expect(facts.works).toHaveLength(1);expect(facts.unattributableWorkCount).toBe(1);
-  const page=await f.read({platform:'xiaohongshu'});expect(value(page)).toBe('123');expect(page.workspace.collected).toMatchObject({catalogWorkCount:1,unattributableWorkCount:1});expect(page.workspace.coverage).toContain('已读取 1 条平台作品');
+  const page=await f.read({platform:'xiaohongshu'});expect(value(page)).toBe('123');expect(page.workspace.collected).toMatchObject({catalogWorkCount:1,unattributableWorkCount:1});expect(page.workspace.coverage).toContain('共 1 条作品有数据');
   expect(JSON.stringify(await f.db.select().from(platformWorkMetricSnapshots))).toBe(before);expect(JSON.stringify(await f.db.select().from(accountGroupMemberships))).toBe(history);
  }),180000);
  it('新摘要失败只降级来源覆盖，旧合法指标与其它工作台卡保留',()=>isolated(async f=>{
   await seedPublication(f);const app=createGroupWorkspaceApplication({...f.services,collectedMetrics:{async readDashboardSummary(){throw new Error('synthetic-summary-read-failure');}}} as any);
   const t=createQueryServicesTransport({groupOverview:app} as any),r:any=await t.request(ENDPOINTS.getGroupOverview,{params:{groupId:f.a.id},query:{platform:'xiaohongshu'},body:undefined},f.ctx);
   const summary:any=await t.request(ENDPOINTS.getGroupWorkspace,{params:{groupId:f.a.id},query:{platform:'xiaohongshu'},body:undefined},f.ctx);expect(summary.data).toEqual({workspace:r.data.workspace});
-  expect(value(r.data)).toBe('5');expect(r.data.workspace.collected.state).toBe('unavailable');expect(r.data.workspace.coverage).toContain('摘要暂不可读');expect(r.data.scheduleReminderReadState).toEqual(baseline.scheduleReminderReadState);expect(r.data.dataOverview.trend).toEqual([]);
+  expect(value(r.data)).toBe('5');expect(r.data.workspace.collected.state).toBe('unavailable');expect(r.data.workspace.coverage).toContain('平台数据暂时读不到');expect(r.data.scheduleReminderReadState).toEqual(baseline.scheduleReminderReadState);expect(r.data.dataOverview.trend).toEqual([]);
  }),180000);
 });
 

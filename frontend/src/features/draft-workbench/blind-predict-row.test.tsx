@@ -347,3 +347,10 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
     window.removeEventListener(SCRIPT_WRITE_EVENT, onScriptWrite);
   });
 });
+
+describe("批次2-7：每个阶段只亮一个主按钮", () => {
+  it("盲预测是辅助动作，用描边按钮，不与「一键生成文章和图文」抢主按钮", () => {
+    renderWithProvider(<BlindPredictRow projectId="proj-1" projectTitle="t" outputId="out-1" prediction={null} />);
+    expect(screen.getByTestId("blind-predict-button").getAttribute("data-variant")).toBe("outline");
+  });
+});

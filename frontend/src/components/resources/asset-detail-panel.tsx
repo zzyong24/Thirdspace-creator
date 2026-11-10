@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * `AssetDetailPanel` (SPEC §7, 内容与资源; page-specs §12) is the fixed
  * right-hand detail panel for the currently selected asset — preview,
@@ -203,7 +204,7 @@ export function AssetDetailPanel({
               ) : null}
               <dt>更新</dt>
               <dd className="text-right font-mono tabular-nums text-foreground">
-                {asset.updatedAt.slice(0, 10)}
+                {formatLocalDay(asset.updatedAt)}
               </dd>
             </dl>
           </SectionCard>

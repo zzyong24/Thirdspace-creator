@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * Adapter: contract `globalSearchPage` DTO → the FE `SearchViewModel` the
  * SearchPage renders (Task 5 "server read switch"). The op-backed `/search`
@@ -145,7 +146,7 @@ export function globalSearchPageToViewModel(
     resultCount: 0,
     // The DTO carries an ISO timestamp; render the date portion (deterministic,
     // no Date.now). The history rows link by `query`, not this label.
-    searchedAtLabel: h.searchedAt.slice(0, 10),
+    searchedAtLabel: formatLocalDay(h.searchedAt),
   }));
 
   return {

@@ -104,3 +104,18 @@ it('T1347唯一有效成员先排除历史和归档；显式归档/多号/公众
  p.groups.get.mockResolvedValue({id:'g',name:'组',status:'active',version:1,members:[member('official',{platform:'wechatOfficial'})]} as never);expect((await app.getTrend(ctx,'g',{})).performanceTrend).toMatchObject({unit:'人',reason:'no_total_channel'});expect(read).not.toHaveBeenCalled();
  await expect(app.getTrend({...ctx,groupId:'other'},'g',{})).rejects.toMatchObject({code:'OwnershipError'});
 });
+
+it('已采集作品数计入只有发布快照的旧抖音作品，与累计播放同一口径（月明 2026-11-10 反馈：作品0但播放91435）',async()=>{
+ const p=ports();
+ p.publishing.listPublicationsForUser.mockResolvedValue(pubs.map(x=>({...x,userId:'owner'})));
+ const emptySummary={accounts:[{id:'d',platform:'douyin',name:'视频',historical:false,archived:false}],accountOptions:[],works:[],workMetrics:[],accountMetrics:[],unattributableWorkCount:0};
+ const app=createGroupWorkspaceApplication({...p,collectedMetrics:{readDashboardSummary:vi.fn(async()=>emptySummary)}} as any);
+ const {workspace}=await app.getWorkspace(ctx,'g',{platform:'douyin'});
+ expect(workspace.videoViews).toBe(0);
+ expect(workspace.collected).toMatchObject({state:'ready',catalogWorkCount:1});
+ expect(workspace.coverage).toContain('共 1 条作品有数据');
+ // 同一发布已有目录作品时只计一次。
+ const linked={...emptySummary,works:[{id:'work-1',accountId:'d',platform:'douyin',publicationId:'video',legacyPublicationId:null,hasOwned:true,hasUnattributed:false}]};
+ const app2=createGroupWorkspaceApplication({...p,collectedMetrics:{readDashboardSummary:vi.fn(async()=>linked)}} as any);
+ expect((await app2.getWorkspace(ctx,'g',{platform:'douyin'})).workspace.collected).toMatchObject({catalogWorkCount:1});
+});

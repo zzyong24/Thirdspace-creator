@@ -1,3 +1,4 @@
+import {KNOWLEDGE_CITATION_CLAUSE, knowledgeCitationsField} from "./knowledge-citations";
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
 import { ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE } from "../grounding-facets";
@@ -55,6 +56,8 @@ export const scriptDraftSchema = z.object({
   // [T-486] 空数组不是成功结果：把非空要求放进输出契约，generateObject 才会自动重试，
   // 而不是让空数组穿过 schema 后在 runner 末端直接失败。
   shots: z.array(scriptShotSchema).min(1),
+  // 第三批步骤2：实际引用的知识库条目标题；旧结果缺省 []。
+  sources: knowledgeCitationsField,
 });
 export type ScriptDraftOutput = z.infer<typeof scriptDraftSchema>;
 
@@ -103,7 +106,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   id: "script.draft",
   outputRecovery: "creative-partial",
   // T-944：统一因果写法与受众规则，保留本轮完整资料和明确方向优先。
-  version: "v11",
+  version: "v12",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry 取它
   // 绑 generateObject,模型必须吐 { shots:[...] },校验失败自动重试(防发散 + 根治不可解析)。
   outputSchema: scriptDraftSchema,
@@ -140,7 +143,8 @@ ${SCRIPT_FACT_SCOPE_SYSTEM}`,
 「口播」只放主播会念的话：一句一个意思，不放批注、修改建议、替代方案、结构标签或镜头说明。资料不足就缩小主张，用已有信息交付候选，不补造场景、数据或案例。
 ${AUDIENCE_MINDSET_CLAUSE}
 ${ANTI_FABRICATION_CLAUSE}
-【输出】只输出一个 JSON 对象 {"shots": [...]},shots 是分镜数组,每一项:
+${KNOWLEDGE_CITATION_CLAUSE}
+【输出】只输出一个 JSON 对象 {"shots": [...], "sources": [...]},shots 是分镜数组,每一项:
 {"role"(本镜结构角色；按实际段落功能填写，如 hook/body/cta，不为凑角色插入销售话术),"口播"(这一镜**要念出来的那句话本身**——只放念的话,一句一个意思,禁放批注/修改建议/替代方案/括号说明/镜头字幕提示),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s"),
  "visual"(可选,结构化视觉意图):{"description"(这一镜配什么画面,一句),"assetRefs"(点名素材的 assetId 数组),"missing"(需要但项目里没有的素材描述数组)}}。
 【visual 硬约束(诚实门)】若上方给了【项目素材库】清单:assetRefs **只能**填清单里出现过的真实 assetId(优先引用已有素材,让画面落到实拍/实图);清单里没有合适素材时,把需要的素材如实写进 missing(如「产品操作录屏」),**绝不虚构 assetId**。没给清单则 assetRefs 留空、需要的素材写 missing。

@@ -1,4 +1,5 @@
 "use client";
+import { formatLocalDay } from "@/lib/date-time";
 
 /**
  * 知识图谱视图(T-091 复原 / T-260a·b)—— 知识区的力导向探索主面:
@@ -228,7 +229,7 @@ export function KnowledgeGraphView({
                 "";
               return `关联:${label}(${edge.relationType ?? ""})<br/>强度 ${edge.strength ?? 1} · 由 ${who} 建立`;
             }
-            const when = (edge.createdAt ?? "").slice(0, 10);
+            const when = formatLocalDay(edge.createdAt);
             return `被〈${edge.projectTitle ?? ""}〉在 ${edge.stage || "-"} 阶段作 ${edge.role || "-"} 引用${when ? `<br/>${when}` : ""}`;
           }
           const title = typeof d.name === "string" ? d.name : "";

@@ -7,8 +7,8 @@
 // Topology (verified against reviews.schema.ts): the @creatoros/contract root barrel
 // re-exports `ENDPOINTS` but NOT the resource files. The op responses are reachable
 // as ENDPOINTS.<opKey>.response:
-//   - listLearnings.response === createLearning.response === evaluateLearning.response
-//       === learningResource
+//   - listLearnings / getLearning / evaluateLearning / patchLearning.response === learningResource
+//   - createLearning.response === learningAdoptReceipt（多 createdThisCall）
 //   - createLearningApplication.response === learningApplicationResource
 import { ENDPOINTS } from "@creatoros/contract";
 import type {
@@ -16,7 +16,8 @@ import type {
   LearningApplicationRow,
 } from "./learnings.repository";
 
-export const learningResource = ENDPOINTS.createLearning.response;
+export const learningResource = ENDPOINTS.getLearning.response;
+export const learningAdoptReceipt = ENDPOINTS.createLearning.response;
 export const learningApplicationResource =
   ENDPOINTS.createLearningApplication.response;
 
@@ -24,6 +25,7 @@ export const learningApplicationResource =
 // `z.infer<T>` is `T["_output"]`). The frontend package does not declare `zod` as a
 // direct dependency, so we read the output type structurally (mirrors reviews).
 export type LearningResource = (typeof learningResource)["_output"];
+export type LearningAdoptReceipt = (typeof learningAdoptReceipt)["_output"];
 export type LearningApplicationResource =
   (typeof learningApplicationResource)["_output"];
 
@@ -57,6 +59,14 @@ export function toLearningDto(
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+export function toLearningAdoptDto(
+  row: LearningRow,
+  createdThisCall: boolean,
+  reuseCount = 0,
+): LearningAdoptReceipt {
+  return { ...toLearningDto(row, reuseCount), createdThisCall };
 }
 
 export function toLearningApplicationDto(

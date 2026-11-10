@@ -1,4 +1,6 @@
 "use client";
+import { knowledgeTypeLabelZh } from "@/lib/knowledge-type-label";
+import { formatLocalDay } from "@/lib/date-time";
 
 import * as React from "react";
 import { FileText, Folder, FolderPlus, Search } from "lucide-react";
@@ -226,7 +228,7 @@ export function KnowledgeFileWorkspace({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-foreground">{item.title}</p>
                     <p className="text-[11px] text-text-subtle">
-                      {item.assetId ? "已绑定原始文件" : item.knowledgeType} · {item.updatedAt.slice(0, 10)}
+                      {item.assetId ? "已绑定原始文件" : knowledgeTypeLabelZh(item.knowledgeType)} · {formatLocalDay(item.updatedAt)}
                     </p>
                   </div>
                   <select

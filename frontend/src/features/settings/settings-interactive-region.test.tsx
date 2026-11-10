@@ -631,7 +631,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     });
     it("本地配置缺项保持可操作，来源状态未取得不伪造 ready",()=>{
       render(<SettingsDialog viewModel={VM} modelAuthority={{authority:'local',outcome:'not_configured',action:'请配置本地文本模型',capabilities:{},services:[]}}/>);
-      expect(document.querySelector('[data-slot="model-source-status-text"]')).toHaveTextContent('状态未核实');
+      expect(document.querySelector('[data-slot="model-source-status-text"]')).toHaveTextContent('还没检测是否可用');
       expect(document.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();
       expect(document.querySelector('[data-slot="model-save"]')).toBeEnabled();
     });

@@ -6,7 +6,8 @@ export function createAccountCollectionQueue(){
  const tails=new Map<string,Promise<void>>();
  return (ctx:RequestContext,run:()=>Promise<void>,signal?:AbortSignal):Promise<void>=>{
   signal?.throwIfAborted();
-  const key=JSON.stringify([ctx.userId,requireAccountId(ctx.accountId)]);
+  // 账号组级作业（如内容雷达同步）没有单一账号，按账号组串行；两者都没有才拒绝，不并入空账号队列。
+  const key=ctx.accountId||!ctx.groupId?JSON.stringify([ctx.userId,'account',requireAccountId(ctx.accountId)]):JSON.stringify([ctx.userId,'group',ctx.groupId]);
   const previous=tails.get(key)??Promise.resolve();
   let started=false;
   const pending=previous.then(()=>{signal?.throwIfAborted();started=true;return run();});

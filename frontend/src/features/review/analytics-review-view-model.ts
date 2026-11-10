@@ -18,6 +18,7 @@
  * in the route (`page.tsx`); this module only shapes the already-fetched data.
  */
 
+import { formatLocalDay } from "@/lib/date-time";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
 import { isFixtureAnalyticsProject } from "@/fixtures/selectors/review";
 import type {
@@ -89,10 +90,11 @@ function platformDisplayLabel(platform: string): string {
 //  - ≥2 个采集日 → mode "daily",画真折线(标签 MM-DD)。
 //  - 仅 1 个采集日 → mode "single",单点 + 「需多次采集」提示(不铺假曲线)。
 //  - 无快照 → mode "empty"(上游走空态)。
-function dayKey(iso: string): string {
-  // 取 ISO 时间戳的日历天 (UTC 切分即可,趋势只需稳定分桶,不做时区精修)。
-  return iso.slice(0, 10);
+/** 快照采集时间 → 本机时区日历天（批次2-9：UTC 切分会把北京时间 8 点前的采集算到前一天）。 */
+export function snapshotDayKey(iso: string): string {
+  return formatLocalDay(iso);
 }
+const dayKey = snapshotDayKey;
 
 function shortDayLabel(dayKeyStr: string): string {
   // "2026-06-12" → "06-12"

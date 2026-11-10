@@ -14,6 +14,7 @@
  * 铁律②:AI 只产候选,人确认才物化。所有「采纳」按钮按下才调 create;不自动落库。
  */
 
+import { publishReviewConclusion } from "@/features/review/review-conclusion-signal";
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
@@ -266,6 +267,23 @@ export function ChatDiagnosisCard({diagnosis,blindPredict,pollIntervalMs=DEFAULT
   );
 }
 
+interface AutoAdoptEntry { learningId: string; status: "adopted" | "undone"; createdThisCall?: boolean }
+interface AutoAdoptRecord { started: boolean; items: Record<number, AutoAdoptEntry> }
+const autoAdoptStorageKey = (key: string) => `creatoros:auto-adopt:${key}`;
+function readAutoAdopt(key: string | null | undefined): AutoAdoptRecord {
+  if (!key || typeof window === "undefined") return { started: false, items: {} };
+  try {
+    const raw = window.localStorage.getItem(autoAdoptStorageKey(key));
+    if (!raw) return { started: false, items: {} };
+    const parsed = JSON.parse(raw) as Partial<AutoAdoptRecord>;
+    return { started: true, items: parsed.items && typeof parsed.items === "object" ? parsed.items : {} };
+  } catch { return { started: false, items: {} }; }
+}
+function writeAutoAdopt(key: string | null | undefined, record: AutoAdoptRecord) {
+  if (!key || typeof window === "undefined") return;
+  try { window.localStorage.setItem(autoAdoptStorageKey(key), JSON.stringify(record)); } catch { /* 存不下只影响重放展示 */ }
+}
+
 // ── 经验卡(review.learnings)—— 逐条采纳 → 去重后直接进知识库 ─────────────────────────
 export interface ChatLearningItem {
   title: string;
@@ -276,8 +294,10 @@ export interface ChatLearningItem {
 
 export function ChatLearningsCard({
   items, projectId, observations = [], hypotheses = [], nextExperiment = "", insufficientReason = "",
-  error = null,
+  error = null, autoAdoptKey,
 }: {
+  /** 批次2-1：传入本次工具调用 id 即「默认接受」——有依据的经验自动采纳一次，逐条可撤销。 */
+  readonly autoAdoptKey?: string | null;
   readonly items: readonly ChatLearningItem[];
   readonly projectId?: string | null;
   readonly observations?: readonly string[];
@@ -296,23 +316,66 @@ export function ChatLearningsCard({
       setState((prev) => new Map(prev).set(i, s)),
     [],
   );
+  // 自动采纳的落库记录（learningId / 是否已撤销），按工具调用持久化，历史重放不重复写入也不丢撤销。
+  const [auto, setAuto] = React.useState<AutoAdoptRecord>(() => readAutoAdopt(autoAdoptKey));
+  const patchAuto = React.useCallback((i: number, entry: AutoAdoptEntry | null) => {
+    setAuto((prev) => {
+      const items = { ...prev.items };
+      if (entry) items[i] = entry; else delete items[i];
+      const next = { started: true, items };
+      writeAutoAdopt(autoAdoptKey, next);
+      return next;
+    });
+  }, [autoAdoptKey]);
   const adopt = React.useCallback(
-    async (i: number, l: ChatLearningItem) => {
+    async (i: number, l: ChatLearningItem, viaAuto = false) => {
       setAt(i, "adopting");
       try {
-        await client.createLearning({
+        const created = await client.createLearning({
           params: undefined,
           query: undefined,
           body: { title: l.title, insight: l.insight, ...(projectId ? {projectId} : {}), source:l.source, applicability:l.applicability },
         });
         setAt(i, "adopted");
+        if (viaAuto && created?.id) patchAuto(i, { learningId: created.id, status: "adopted", createdThisCall: created.createdThisCall === true });
         router.refresh();
       } catch {
         setAt(i, "error");
       }
     },
-    [router, setAt, projectId],
+    [router, setAt, projectId, patchAuto],
   );
+  // 批次2-8b：把复盘结论按项目发给复盘页「本期经验」区，没有候选时也能看到结论。
+  React.useEffect(() => {
+    if (!projectId) return;
+    publishReviewConclusion(projectId, {
+      observations: [...observations], hypotheses: [...hypotheses], nextExperiment, insufficientReason,
+      learningTitles: items.map((l) => l.title).filter(Boolean), at: autoAdoptKey ?? "",
+    });
+  }, [projectId, observations, hypotheses, nextExperiment, insufficientReason, items, autoAdoptKey]);
+  const eligible = React.useCallback((l: ChatLearningItem) => !!projectId && !!l.source?.trim() && !!l.applicability?.trim(), [projectId]);
+  React.useEffect(() => {
+    if (!autoAdoptKey || auto.started) return;
+    const next = { started: true, items: {} as Record<number, AutoAdoptEntry> };
+    writeAutoAdopt(autoAdoptKey, next);
+    setAuto(next);
+    items.forEach((l, i) => { if (eligible(l)) void adopt(i, l, true); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 每个工具调用只跑一次
+  }, [autoAdoptKey]);
+  const undo = React.useCallback(async (i: number, learningId: string, createdThisCall?: boolean) => {
+    setAt(i, "adopting");
+    try {
+      // 只撤本次新建；复用已有经验或旧回执缺标记时不调用 discard，避免撤掉用户更早的同名经验。
+      if (createdThisCall === true) {
+        await client.evaluateLearning({ params: { learningId }, query: undefined, body: { validationStatus: "discarded" } });
+      }
+      patchAuto(i, { learningId, status: "undone", createdThisCall });
+      setAt(i, "idle");
+      router.refresh();
+    } catch {
+      setAt(i, "error");
+    }
+  }, [patchAuto, router, setAt]);
 
   // [T-224 诚实门] 没读到真逐字稿 → 不产经验卡,渲诚实提示(要 projectId/逐字稿)。
   if (items.length === 0 && !observations.length && !hypotheses.length && !nextExperiment && !insufficientReason) {
@@ -361,7 +424,23 @@ export function ChatLearningsCard({
               {l.source ? <p className="text-xs text-text-subtle">依据：{l.source}</p> : null}
               {l.applicability ? <p className="text-xs text-text-subtle">适用条件：{l.applicability}</p> : null}
               <div className="flex items-center gap-2">
-                {s === "adopted" ? (
+                {auto.items[i]?.status === "undone" ? (
+                  <span data-slot="chat-learning-undone" className="text-[10px] text-text-subtle">已撤销</span>
+                ) : auto.items[i]?.status === "adopted" ? (
+                  <>
+                    <span data-slot="chat-learning-adopted" className="text-[10px] font-medium text-success">✓ 已自动采纳</span>
+                    <button
+                      type="button"
+                      data-slot="chat-learning-undo"
+                      aria-label={`撤销「${l.title}」`}
+                      disabled={s === "adopting"}
+                      onClick={() => void undo(i, auto.items[i]!.learningId, auto.items[i]!.createdThisCall)}
+                      className="inline-flex h-6 items-center rounded-control px-2 text-[10px] text-text-subtle hover:text-foreground disabled:opacity-50"
+                    >
+                      撤销
+                    </button>
+                  </>
+                ) : s === "adopted" ? (
                   <span
                     data-slot="chat-learning-adopted"
                     className="text-[10px] font-medium text-success"
@@ -635,7 +714,7 @@ export function ChatPositioningCard({
   return (
     <div
       data-slot="chat-positioning-card"
-      className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
+      className="@container mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
         {autoAdopt ? "AI 定位提案 · 继续深入当前账号，自动采纳" : "AI 定位提案 · 采纳写入定位母版"}
@@ -646,7 +725,7 @@ export function ChatPositioningCard({
             {suggestion.oneLiner}
           </p>
         ) : null}
-        <dl className="grid grid-cols-1 gap-0.5 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-0.5 @sm:grid-cols-2">
           {facets
             .filter(([, v]) => v.length > 0)
             .map(([label, value]) => (

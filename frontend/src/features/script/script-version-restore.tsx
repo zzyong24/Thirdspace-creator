@@ -15,6 +15,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { listForegroundActivities } from "@/lib/foreground-activity";
 import type { ScriptViewModel } from "@/types/view-models";
 
 function readableTime(value: string): string {
@@ -27,6 +28,10 @@ function readableTime(value: string): string {
         hour: "2-digit",
         minute: "2-digit",
       }).format(date);
+}
+
+function versionLabel(version: ScriptViewModel["versions"][number]): string {
+  return `v${version.versionNumber ?? version.label.match(/v(\d+)/)?.[1] ?? "?"}`;
 }
 
 /**
@@ -56,6 +61,13 @@ export function ScriptVersionMenu({
     orderedVersions[0];
   const [selectedId, setSelectedId] = React.useState(current?.id ?? "");
   const [error, setError] = React.useState<string | null>(null);
+  // B6：恢复成功需要明确反馈；refresh 后当前指针变化时下拉回到新当前版本，提示保留。
+  const [restoredLabel, setRestoredLabel] = React.useState<string | null>(null);
+  const [seenCurrentId, setSeenCurrentId] = React.useState(currentVersionId);
+  if (seenCurrentId !== currentVersionId) {
+    setSeenCurrentId(currentVersionId);
+    setSelectedId(current?.id ?? "");
+  }
   const [pending, startTransition] = React.useTransition();
   const selected =
     orderedVersions.find((version) => version.id === selectedId) ?? current;
@@ -66,6 +78,13 @@ export function ScriptVersionMenu({
   const restore = React.useCallback(() => {
     if (!selected || !canRestore) return;
     setError(null);
+    setRestoredLabel(null);
+    // 稿面还有未保存/保存中的修改时，失焦自动保存会在恢复后再追加一版旧稿，把恢复盖掉。
+    if (listForegroundActivities().some((label) => /(脚本|分镜脚本).*(未保存的修改|正在保存)/.test(label))) {
+      setError("稿面还有未保存的修改，请先保存（或撤销修改）再恢复旧版本。");
+      return;
+    }
+    const label = versionLabel(selected);
     startTransition(async () => {
       try {
         await client.restoreArtifact({
@@ -73,6 +92,7 @@ export function ScriptVersionMenu({
           query: undefined,
           body: { versionId: selected.id },
         });
+        setRestoredLabel(label);
         router.refresh();
       } catch {
         setError("恢复失败，当前稿件没有被修改，请稍后重试。");
@@ -96,7 +116,7 @@ export function ScriptVersionMenu({
       >
         {orderedVersions.map((version) => (
           <option key={version.id} value={version.id}>
-            v{version.versionNumber ?? version.label.match(/v(\d+)/)?.[1] ?? "?"}
+            {versionLabel(version)}
             {version.id === currentVersionId ? "（当前）" : ""} · {readableTime(version.createdAt)}
           </option>
         ))}
@@ -114,11 +134,31 @@ export function ScriptVersionMenu({
       ) : null}
       {selected && selected.id !== currentVersionId ? (
         <span
-          data-slot="script-version-preview"
+          data-slot="script-version-preview-summary"
           title={selected.previewText ?? ""}
           className="max-w-[280px] truncate text-[11px] text-muted-foreground"
         >
-          {selected.summary || selected.previewText || "该版本暂无摘要"}
+          {selected.summary || "该版本暂无摘要"}
+        </span>
+      ) : null}
+      {selected && selected.id !== currentVersionId ? (
+        <section
+          role="region"
+          aria-label={`${versionLabel(selected)} 正文预览`}
+          data-slot="script-version-preview"
+          className="absolute right-0 top-8 z-20 w-[360px] max-w-[80vw] rounded-lg border border-border bg-surface p-3 text-left shadow-lg"
+        >
+          <p className="mb-1 text-[11px] font-medium text-muted-foreground">
+            {versionLabel(selected)} · 预览中，尚未恢复；点「恢复此版本」后编辑器才会换成这一版
+          </p>
+          <p className="max-h-48 overflow-auto whitespace-pre-wrap text-xs leading-5 text-foreground">
+            {selected.previewText || "该版本没有可预览的正文"}
+          </p>
+        </section>
+      ) : null}
+      {restoredLabel ? (
+        <span role="status" className="text-[11px] font-medium text-brand">
+          已恢复到 {restoredLabel}
         </span>
       ) : null}
       {error ? (

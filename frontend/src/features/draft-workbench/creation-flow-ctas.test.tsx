@@ -128,3 +128,13 @@ it('T1097联合准备使用一次真实编辑器选择，unknown之后改变偏�
  readWritingContext.mockReturnValue({schemaVersion:1,brandProfileVersionId:null,sourceAssets:[]});fireEvent.click(screen.getByRole('button',{name:'查看原文章和图文生成'}));
  expect(openChat.mock.calls[1][0].creationTarget).toEqual(original.creationTarget);expect(preparePair).toHaveBeenCalledOnce();
 });
+
+describe("批次2-7：每个阶段只亮一个主按钮", () => {
+  it("未发布时「一键生成文章和图文」是本阶段唯一主按钮；已发布后让位给「看复盘」", () => {
+    const first = render(<WorkCreationCta projectId="p" />);
+    expect(screen.getByRole("button", { name: /一键生成文章和图文/ }).getAttribute("data-variant")).not.toBe("outline");
+    first.unmount();
+    render(<WorkCreationCta projectId="p" primary={false} />);
+    expect(screen.getByRole("button", { name: /一键生成文章和图文/ }).getAttribute("data-variant")).toBe("outline");
+  });
+});

@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * 定位中心 page (七步①② · SPEC §3.4) — the account-level positioning surface and
  * the upstream constraint source for downstream 选题/评分/变现.
@@ -586,5 +587,5 @@ function HistoryTable({
 
 // Deterministic ISO-8601 → YYYY-MM-DD (C-5: no Date.now; parse the stored string only).
 function formatDate(iso: string): string {
-  return iso.slice(0, 10);
+  return formatLocalDay(iso);
 }

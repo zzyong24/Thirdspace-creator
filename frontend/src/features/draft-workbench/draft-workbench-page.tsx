@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * 稿面工作台(T-055a,SPEC §3)。
  *
@@ -34,6 +35,7 @@ import { AmmoCardList } from "./ammo-card-list";
 import { DraftPrimaryAction } from "./draft-primary-action";
 // [T-374] 顶条「立即抓取逐字稿」:自己作品(有抖音锚)单条立抓,不等每日自动任务。
 import { ProjectPipelinePanel } from "./project-pipeline-panel";
+import { AutoFirstDraft } from "./auto-first-draft";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
 import { PublishPackageCta } from "./publish-package-cta";
@@ -123,7 +125,6 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
               {scriptArtifactId && (script.versions?.length ?? 0) > 0 ? (
                 <span className="ml-auto">
                   <ScriptVersionMenu
-                    key={script.currentVersionId ?? "no-current-version"}
                     artifactId={scriptArtifactId}
                     currentVersionId={script.currentVersionId ?? null}
                     versions={script.versions ?? []}
@@ -131,6 +132,10 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
                 </span>
               ) : null}
             </div>
+            {/* 批次2-3：空稿面（无版本、无正文、非导入、无项目准备流水线）进入即自动起草初稿。 */}
+            {script.versionCount === 0 && !initialHtml.trim() && !project.imported && vm.preparation?.registration !== "registered" ? (
+              <AutoFirstDraft enabled projectId={project.id} projectTitle={project.title} outputId={outputId} />
+            ) : null}
             {/* [T-070→T-072] 编辑|结构 双视图:结构 = **可编辑**分段卡(段型徽章内联,
                 保存产新 ArtifactVersion);有分段时默认进结构编辑(用户目标形态)。 */}
             <ScriptStructureToggle
@@ -149,6 +154,7 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
               <ScriptRichEditor
                 initialHtml={initialHtml}
                 artifactId={scriptArtifactId}
+                currentVersionId={script.currentVersionId ?? null}
                 projectId={project.id}
               />
             </ScriptStructureToggle>
@@ -167,7 +173,7 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
           </section>
 
           {/* [T-1070] 脚本保存确认、审阅之后才由脚本一键生成文章和图文，再进入发布。 */}
-          <WorkCreationCta projectId={project.id} />
+          <WorkCreationCta projectId={project.id} primary={!isPublished} />
 
           {/* ── 发布包区 ── */}
           {deferred ? <React.Suspense fallback={<DeferredSectionLoading label="发布信息"/>}>
@@ -347,7 +353,7 @@ function PublishPackSection({
               )}
             >
               {outputPublished
-                ? `已发布${publishedAt ? ` · ${publishedAt.slice(0, 10)}` : ""}`
+                ? `已发布${publishedAt ? ` · ${formatLocalDay(publishedAt)}` : ""}`
                 : publishPack.status}
             </span>
           ) : unlocked ? (
@@ -479,7 +485,7 @@ function AmmoDrawer({
         </div>
         <Link
           href={`/canvases?projectId=${encodeURIComponent(projectId)}`}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground transition hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <Images className="size-4" aria-hidden="true" />
           打开创作画布

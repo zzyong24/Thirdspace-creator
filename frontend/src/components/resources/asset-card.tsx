@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * `AssetCard` (SPEC §7, 内容与资源) renders a selectable asset tile with a
  * real `AssetThumbnail` (T-061: 图/视频渲签名 URL 真内容,其余 glyph), name and metadata subtitle. Selection is
@@ -56,7 +57,7 @@ export function AssetCard({ asset, selected, onSelect, libraryLayout = false }: 
           {libraryLayout ? (
             <span data-slot="asset-card-meta">
               <span>{({ image: "图片", video: "视频", audio: "音频", document: "文档", subtitle: "字幕" })[asset.type]} · {formatFileSize(asset.fileSizeBytes)}</span>
-              <time dateTime={asset.updatedAt}>{asset.updatedAt.slice(0, 10)}</time>
+              <time dateTime={asset.updatedAt}>{formatLocalDay(asset.updatedAt)}</time>
             </span>
           ) : (
             <span className="truncate text-[11px] leading-tight text-muted-foreground">{cardSubtitle(asset)}</span>
@@ -68,7 +69,7 @@ export function AssetCard({ asset, selected, onSelect, libraryLayout = false }: 
 }
 
 function cardSubtitle(asset: ResourceAsset): string {
-  const date = asset.updatedAt.slice(0, 10);
+  const date = formatLocalDay(asset.updatedAt);
   const size = formatFileSize(asset.fileSizeBytes);
   return `${date} · ${asset.mimeType} · ${size}`;
 }

@@ -41,3 +41,11 @@ it('T1086 指引沿当前项目作品和原工程读取，如实说明状态与�
  expect(buildAssistantFunctionalPrompt(['system.features'])).not.toContain('outputs.production.editor.get');
  expect(buildAssistantFunctionalPrompt([])).not.toContain('observedRevision');
 });
+
+it('批次2-4（月明 2026-11-10）：有知识库工具时自动先检索知识库，结论附知识库来源；没有该工具时不出现',()=>{
+ const prompt=buildAssistantFunctionalPrompt(['context.knowledge','script.draft']);
+ expect(prompt).toContain('先用context.knowledge');
+ expect(prompt).toContain('来源：知识库《');
+ expect(prompt).toContain('不编造来源');
+ expect(buildAssistantFunctionalPrompt(['script.draft'])).not.toContain('来源：知识库《');
+});

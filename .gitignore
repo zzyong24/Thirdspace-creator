@@ -60,8 +60,6 @@ backups/
 # 流程升级备份与本机临时诊断，原件保留。
 *.pre-update
 *.pre-update.*
-/docs/research/evidence/t915/browser-pi-full-normal-trace-1792590530272.ndjson
-/docs/research/evidence/t915/browser-pi-full-normal-trace-1792597069370.ndjson
-/docs/research/evidence/t915/browser-pi-full-unknown-trace-1792590537589.ndjson
-/docs/research/evidence/t915/browser-pi-full-unknown-trace-1792597085836.ndjson
+# agentic-browser-worker.integration.test 每次运行按 Date.now() 生成的 trace；已入库的证据仍受跟踪。
+/docs/research/evidence/t915/browser-pi-full-*-trace-*.ndjson
 /orchestrator/context/T-1331.md

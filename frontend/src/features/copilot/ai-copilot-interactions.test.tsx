@@ -277,6 +277,31 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
+  it("知识库「AI 提炼」预填文字不改也能直接发送：按钮与 Cmd+Enter 都生效（月明录屏 2026-11-10）", async () => {
+    const { distillCopilotHref } = await import("@/features/knowledge/knowledge-dump-zone");
+    for (const content of ["AI 口播稿一读就像说明书，是因为只讲功能不讲场景。", ""]) {
+      sendMessage.mockReset();
+      mockSearch = distillCopilotHref(content).slice(1);
+      const user = userEvent.setup();
+      const view = render(<AICopilotContent viewModel={VM} />);
+      const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+      await waitFor(() => expect(textarea.value.length).toBeGreaterThan(0));
+      const submit = screen.getByLabelText("提交提示给 Copilot");
+      await waitFor(() => expect(submit).not.toBeDisabled());
+      await user.click(submit);
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      view.unmount();
+    }
+    sendMessage.mockReset();
+    mockSearch = distillCopilotHref("一段资料原文").slice(1);
+    const user = userEvent.setup();
+    render(<AICopilotContent viewModel={VM} />);
+    const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+    await waitFor(() => expect(textarea.value).toBe("一段资料原文"));
+    textarea.focus();
+    await user.keyboard("{Meta>}{Enter}{/Meta}");
+    await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+  });
   it("文章配图深链在已有会话仍预填，并提交可信文章与段落锚点", async () => {
     mockMessages = [{id: "earlier", role: "assistant", parts: [{type: "text", text: "上一轮答复"}]}];
     mockSearch = "copilot=open&surface=project&fn=material.generate.image&selKind=article_section&selId=section-1" +
@@ -547,8 +572,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(screen.getByText(/综合判断/)).not.toBeNull();
   });
 
-  it("slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create", async () => {
-    const user = userEvent.setup();
+  it("slice 2:渲染 review.analyze 工具结果为经验卡,默认采纳 → learnings.create(批次2-1:不再逐条点确认,可撤销)", async () => {
+    localStorage.removeItem("creatoros:auto-adopt:tc-3");
     mockMessages = [
       {
         id: "a-3",
@@ -572,7 +597,6 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(
       document.querySelector('[data-slot="chat-learnings-card"]'),
     ).not.toBeNull();
-    await user.click(screen.getByText("采纳"));
     await waitFor(() => {
       expect(createLearning).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -580,6 +604,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
         }),
       );
     });
+    expect(await screen.findByRole("button", { name: "撤销「前3秒给结果」" })).toBeTruthy();
   });
 
   it("[T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送", async () => {

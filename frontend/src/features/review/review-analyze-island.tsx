@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 
 export const REVIEW_ANALYZE_PREFILL =
-  "复盘当前作品：分别说明实际观察、待验证的解释、下一条具体检验什么。结合真实稿件、指标及流量来源；没有表现数据时只诊断内容，不作效果归因。没有足够依据可以没有经验候选，不强行总结成功规律。";
+  "复盘当前作品：先调用复盘工具，再按固定结构交付——①一句话结论；②下一条的 3 条可执行改动（每条写清改哪里、怎么改、看哪个指标验证）；③1–3 条可一键采纳的经验候选，写清适用条件；证据不足时写成「待验证做法」候选并标明要验证什么，不要空着。结合真实稿件、指标及流量来源；没有表现数据时只诊断内容，不作效果归因，不把相关当因果。全程使用简体中文，不输出「我先读取…/接下来…」之类的过程旁白，过程交给工具卡展示。";
 
 export function ReviewAnalyzeButton({
   projectId,

@@ -53,7 +53,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock.calls.at(-1)![2];
     expect(patch.status).toBe('failed');
     expect(patch.error).toContain('账号作品数据');
-    expect(patch.error).toContain('查看原任务详情');
+    expect(patch.error).toContain('平台数据导出没有成功');expect(patch.error).not.toContain('扫码');
     expect(patch.error).not.toMatch(/抖音|扫码|登录态过期/);
     expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx, baseTask.id, patch.error);
     expect(deps.ai.markSucceeded).not.toHaveBeenCalled();

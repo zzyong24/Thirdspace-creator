@@ -266,6 +266,9 @@ export {
   coverBriefSchema,
   type CoverBriefOutput,
 } from "./prompt/templates/cover-brief";
+// 第三批成稿包：标题三选一模板与知识来源字段。
+export {BUNDLE_TITLES_TEMPLATE, bundleTitlesSchema, type BundleTitlesOutput} from "./prompt/templates/bundle-titles";
+export {knowledgeCitationsField, KNOWLEDGE_CITATION_CLAUSE} from "./prompt/templates/knowledge-citations";
 export {
   PLANNING_CONTRACT_TEMPLATE,
   contractSchema,

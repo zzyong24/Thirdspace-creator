@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 import "server-only";
 import {publicationVisualNoteSchema} from "@creatoros/contract";
 
@@ -173,7 +174,7 @@ function mapContentType(contentType: string): PublicationContentType {
 }
 
 function formatDate(iso: string): string {
-  return iso.length < 10 ? iso : iso.slice(0, 10);
+  return iso.length < 10 ? iso : formatLocalDay(iso);
 }
 
 /**

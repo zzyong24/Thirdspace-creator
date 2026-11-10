@@ -39,7 +39,13 @@ describe("ReviewAnalyzeIsland", () => {
     expect(container.querySelector('a[href*="copilot=open"]')).toBeNull();
 
     expect(REVIEW_ANALYZE_PREFILL).toContain("没有表现数据时只诊断内容，不作效果归因");
-    expect(REVIEW_ANALYZE_PREFILL).toContain("没有足够依据可以没有经验候选");
+    // B5（月明 2026-11-10 新要求，取代 T-623「可以没有经验候选」）：固定交付结构，
+    // 必须给可采纳的经验候选；全程简体中文、不输出过程旁白。
+    expect(REVIEW_ANALYZE_PREFILL).not.toContain("没有足够依据可以没有经验候选");
+    expect(REVIEW_ANALYZE_PREFILL).toContain("一句话结论");
+    expect(REVIEW_ANALYZE_PREFILL).toContain("3 条可执行改动");
+    expect(REVIEW_ANALYZE_PREFILL).toMatch(/1–3 条.*经验候选/);
+    expect(REVIEW_ANALYZE_PREFILL).toContain("全程使用简体中文");
     fireEvent.click(button);
     expect(openChat).toHaveBeenCalledWith({
       functionKey: "review.analyze",

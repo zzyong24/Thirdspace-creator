@@ -28,7 +28,7 @@ it.each(['douyin','kuaishou','wechatVideo'] as const)('%s只有播放指标，�
 it.each(['wechatOfficial','wechatOfficialAccount'] as const)('%s只展示阅读并保留未知说明',platform=>{
  render(<GroupOverview workspace={{...base,platform,accounts:[{...base.accounts[0]!,platform}],platforms:[],browseViews:null}}/>);
  expect(screen.getByText('文章累计阅读（次）').parentElement).toHaveTextContent('—');
- expect(screen.getByText('所选日期内暂无文章阅读样本')).toBeVisible();
+ expect(screen.getByText('所选日期内还没有文章阅读数据')).toBeVisible();
  expect(screen.queryByText('视频累计播放（次）')).toBeNull();expect(screen.queryByText('累计浏览（次）')).toBeNull();
  expect(screen.getByRole('rowheader',{name:/公众号/})).toBeVisible();
 });

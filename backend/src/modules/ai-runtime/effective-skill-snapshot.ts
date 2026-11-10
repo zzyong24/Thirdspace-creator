@@ -45,6 +45,8 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "asset.classify",
   "material.extract",
   "benchmark.teardown",
+  // 第三批成稿包：一句话想法 → 标题三选一。
+  "bundle.titles",
   "calibration.diagnose",
   "calibration.score",
   "chatbox.canvas",

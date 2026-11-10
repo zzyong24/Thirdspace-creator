@@ -71,6 +71,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["PATCH", "/account-groups/:groupId"],
   ["POST", "/account-groups/:groupId/archive"],
   ["POST", "/account-groups/:groupId/restore"],
+  // de74ac72d（11-09）：账号组各平台绑定与最近登录验证状态（只读）。
+  ["GET", "/account-groups/:groupId/binding-status"],
   ["POST", "/account-groups/transfer-preview"],
   ["POST", "/account-groups/transfer"],
   ["POST", "/account-groups/migration-preview"],

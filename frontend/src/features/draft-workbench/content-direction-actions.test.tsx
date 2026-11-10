@@ -67,4 +67,14 @@ describe("当前稿内容判断", () => {
     mount(); fireEvent.click(screen.getByRole("button", { name: "判断这条值不值得做" }));
     await screen.findByRole("alert"); expect(request).toBeNull();
   });
+  it("批次2-5：「改写」入口保存后基于真实新版本发起整稿改写候选（script.draft），采纳前不写入", async () => {
+    mount(); fireEvent.click(screen.getByRole("button", { name: "改写整稿" }));
+    await waitFor(() => expect(request?.autoSend).toBe(true));
+    expect(mocks.flush).toHaveBeenCalled();
+    expect(request?.functionKey).toBe("script.draft");
+    expect(request?.selection).toMatchObject({ id: "p1", artifactId: "a1", versionId: "v-new" });
+    expect(request?.prefill).toContain("改写");
+    expect(request?.prefill).toContain("版本 v-new");
+    expect(request?.prefill).toContain("采纳后才写入");
+  });
 });

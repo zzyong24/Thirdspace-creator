@@ -1,3 +1,4 @@
+import { formatLocalDay } from "@/lib/date-time";
 /**
  * Publishing Center selector.
  *
@@ -172,7 +173,7 @@ function formatDate(iso: string): string {
   // The fixture timestamps are fixed; the page never calls `Date.now`.
   // Slice the canonical "YYYY-MM-DD" portion off the ISO string.
   if (iso.length < 10) return iso;
-  return iso.slice(0, 10);
+  return formatLocalDay(iso);
 }
 
 function formatNumber(value: number): string {

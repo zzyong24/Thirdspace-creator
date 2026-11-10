@@ -16,6 +16,7 @@
  * 满足 C-5——时钟注入被收敛在这一处边界。
  */
 
+import { formatLocalDay } from "@/lib/date-time";
 import { ContentCalendarView } from "./content-calendar-view";
 import {
   localDateKey,
@@ -188,11 +189,11 @@ async function loadViewModel(
   const publications: CalendarPublicationItem[] = publishingVm.publications
     .filter(
       (row) =>
-        row.status === "published" && row.publishedAt.slice(0, 7) === month,
+        row.status === "published" && formatLocalDay(row.publishedAt).slice(0, 7) === month,
     )
     .map((row) => ({
       id: row.id,
-      dateKey: row.publishedAt.slice(0, 10),
+      dateKey: formatLocalDay(row.publishedAt),
       title: row.contentTitle,
       projectId: row.projectId ?? null,
       platformLabel: row.platformLabel,

@@ -1,4 +1,5 @@
 "use client";
+import { formatLocalDay } from "@/lib/date-time";
 import {useSettingsReturn} from "@/components/shell/settings-return-context";
 import { OwnedDeviceConnection } from "./owned-device-connection";
 
@@ -910,13 +911,14 @@ function licenseModeLabel(
   return licenseMode; // 未知授权类型:透传原值,不臆造。
 }
 
-// ISO → 本地日期(YYYY-MM-DD)。SSR/CSR 一致:显式用 UTC 切片而非 toLocaleString
-// (避免 hydration 时区漂移)。脏值 → 原样透传(诚实,不吞)。
-function formatIsoDate(iso: string): string {
+// ISO → 本机时区日期(YYYY-MM-DD)。批次2-9:原先 UTC 切片会把北京时间 0~8 点到期显示成前一天;
+// 桌面端 Next 服务与界面同在用户电脑上,服务端渲染与水合的时区一致。脏值 → 原样透传(诚实,不吞)。
+export function formatLicenseDate(iso: string): string {
   const t = Date.parse(iso);
   if(Number.isNaN(t)) return iso;
-  return new Date(t).toISOString().slice(0, 10);
+  return formatLocalDay(new Date(t).toISOString());
 }
+const formatIsoDate = formatLicenseDate;
 
 // 到期展示:永久 → 「永久」;grace → 「离线宽限中」;否则显到期日期。
 function expiryLabel(

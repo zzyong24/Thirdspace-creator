@@ -1,12 +1,13 @@
 "use client";
 
+import { displayUserMessageText } from "./user-message-display";
 import { PositioningConversationStart, SCRATCH_POSITIONING_PROMPT } from "./positioning-conversation";
 import positioningStyles from "./positioning-conversation.module.css";
 import {useAssistantEngine} from "./use-assistant-engine";
 import {getLiveChatSession,acquireLiveChatSession} from "./live-chat-session";
 import { ChatToolTrace } from "./chat-tool-trace";
 import {readChatToolOutcome,ChatToolOutcomeNotice} from "./chat-tool-outcome";
-import {ChatSystemActionCard,appendCandidateReviewPrompt,rememberAssistantSourceScope,readAssistantSourceScope} from "./chat-system-action-card";
+import {ChatSystemActionCard,appendCandidateReviewPrompt,rememberAssistantSourceScope,isLiveAssistantTask,readAssistantSourceScope} from "./chat-system-action-card";
 import {CanvasChatResult} from "@/features/creative-canvas/canvas-chat-result";
 
 /**
@@ -2971,7 +2972,7 @@ export function AICopilotContent({
                     });
                     if (!text.trim()) return null;
                     return message.role === "user" ? (
-                      <CopilotUserMessageText text={text} />
+                      <CopilotUserMessageText text={displayUserMessageText(text)} />
                     ) : (
                       <div
                         data-slot="copilot-message-text"
@@ -3079,7 +3080,7 @@ export function AICopilotContent({
                     if(outcome.blocksData)return <React.Fragment key={key}>{traceRow}</React.Fragment>;
                     if((name==="system.action.propose"&&out.kind==="system.action.proposal")||(name==="canvas.create.propose"&&out.kind==="canvas.create.proposal")||(name==="canvas.generate.propose"&&out.kind==="canvas.generate.proposal")){
                       const source=(out as {source?:{taskId?:string}}).source;
-                      return <React.Fragment key={key}>{traceRow}<ChatSystemActionCard result={out} scope={source?.taskId?readAssistantSourceScope(source.taskId):null} onReviewCandidate={request=>{
+                      return <React.Fragment key={key}>{traceRow}<ChatSystemActionCard result={out} scope={source?.taskId?readAssistantSourceScope(source.taskId):null} autoEnter={isLiveAssistantTask(source?.taskId)} onReviewCandidate={request=>{
                         setPrompt(current=>appendCandidateReviewPrompt(current,request));
                         quickFunctionKeyRef.current=null;
                         textareaRef.current?.focus();
@@ -3521,6 +3522,7 @@ export function AICopilotContent({
                         <ChatLearningsCard
                           key={key}
                           items={o.items ?? []}
+                          autoAdoptKey={part.toolCallId}
                           projectId={o.projectId} observations={o.observations} hypotheses={o.hypotheses} nextExperiment={o.nextExperiment} insufficientReason={o.insufficientReason}
                           error={o.error ?? null}
                         />

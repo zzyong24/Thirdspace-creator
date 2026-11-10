@@ -303,7 +303,8 @@ function runResultText(run: {
     case "needs_reconnect":
       return "⚠️ 需重连账号 · 去扫码绑定";
     case "failed":
-      return "❌ 采集失败,请稍后重试;若一直失败,去账号管理重新扫码。";
+      // 失败原因各不相同（导出失败、超时、取消…），只有「需重连」才需要扫码；这里不再一律引导扫码，点开看具体原因。
+      return "❌ 采集失败 · 点开查看原因";
     default:
       return `新增 ${run.itemsNew} · 更新 ${run.itemsUpdated}`;
   }

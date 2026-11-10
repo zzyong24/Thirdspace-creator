@@ -1,3 +1,4 @@
+import { knowledgeTypeLabelZh } from "@/lib/knowledge-type-label";
 /**
  * Planning Workspace selector.
  *
@@ -278,5 +279,5 @@ function knowledgeTypeLabel(type: string): string {
     snippet: "片段",
     transcript: "访谈",
   };
-  return labels[type] ?? type;
+  return labels[type] ?? knowledgeTypeLabelZh(type);
 }

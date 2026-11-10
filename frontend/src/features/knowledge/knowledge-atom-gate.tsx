@@ -116,6 +116,13 @@ export interface KnowledgeAtomGateProps {
   originalText: string;
   /** 采纳成功回调(可选;卡片消费方用它收尾)。 */
   onAdopted?: (count: number) => void;
+  /** 默认采纳（月明 2026-11-10 批次2-1）：有持久来源且无回执时自动全收，逐条可撤销。 */
+  autoAdopt?: boolean;
+}
+
+const UNDONE_KEY = (knowledgeId: string) => `creatoros:distill-undone:${knowledgeId}`;
+function readUndone(knowledgeId: string): boolean {
+  try { return typeof window !== "undefined" && window.localStorage.getItem(UNDONE_KEY(knowledgeId)) === "1"; } catch { return false; }
 }
 
 export function KnowledgeAtomGate(props:KnowledgeAtomGateProps) {
@@ -133,6 +140,7 @@ function KnowledgeAtomGateSession({
   suggestedTags,
   originalText,
   onAdopted,
+  autoAdopt = false,
 }: KnowledgeAtomGateProps) {
   const router = useRouter();
   const [rows, setRows] = React.useState<AtomRow[]>(() =>
@@ -201,14 +209,81 @@ function KnowledgeAtomGateSession({
     loadingReceipt,
   ]);
 
+  // 默认采纳：回执读完且确认没有回执，才自动跑一次（服务端按来源幂等，重放不会重复写入）。
+  const autoTried = React.useRef(false);
+  const [autoAdopted, setAutoAdopted] = React.useState(false);
+  React.useEffect(() => {
+    if (!autoAdopt || autoTried.current || loadingReceipt || adoptedCount !== null || !source || error) return;
+    autoTried.current = true;
+    setAutoAdopted(true);
+    void handleAdopt();
+  }, [autoAdopt, loadingReceipt, adoptedCount, source, error, handleAdopt]);
+
+  const [undone, setUndone] = React.useState<Record<string, "pending" | "done">>({});
+  const [undoError, setUndoError] = React.useState<string | null>(null);
+  const handleUndo = React.useCallback(async (knowledgeId: string) => {
+    setUndoError(null);
+    setUndone((prev) => ({ ...prev, [knowledgeId]: "pending" }));
+    try {
+      await client.archiveKnowledge({ params: { knowledgeId }, query: undefined, body: undefined });
+      try { window.localStorage.setItem(UNDONE_KEY(knowledgeId), "1"); } catch { /* 仅影响刷新后的展示 */ }
+      setUndone((prev) => ({ ...prev, [knowledgeId]: "done" }));
+      router.refresh();
+    } catch (err) {
+      setUndone((prev) => { const next = { ...prev }; delete next[knowledgeId]; return next; });
+      setUndoError(describeUserError(err, "撤销失败，请稍后重试。"));
+    }
+  }, [router]);
+
   if (adoptedCount !== null) {
+    const ids = receipt?.knowledgeIds ?? [];
+    // 回执里的 id 与提交顺序一致；自动采纳=全收，所以与原子一一对应；数量对不上时用序号兜底。
+    const titleFor = (i: number) => (ids.length === atoms.length ? atoms[i]?.title : undefined) ?? `第 ${i + 1} 条`;
     return (
-      <p
+      <div
         data-slot="knowledge-atom-gate-done"
-        className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-[12px] text-success"
+        className="flex flex-col gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-[12px]"
       >
-        已采纳 {adoptedCount} 条进知识库
-        {receipt?.archiveKnowledgeId ? "(原文已同时存档)" : ""}。
+        <p className="text-success">
+          {autoAdopted ? "已自动采纳" : "已采纳"} {adoptedCount} 条进知识库
+          {receipt?.archiveKnowledgeId ? "(原文已同时存档)" : ""}。不需要的可逐条撤销。
+        </p>
+        {ids.length > 0 ? (
+          <ul className="flex flex-col gap-1" data-slot="knowledge-atom-adopted-list">
+            {ids.map((knowledgeId, i) => {
+              const state = undone[knowledgeId] ?? (readUndone(knowledgeId) ? "done" : undefined);
+              const title = titleFor(i);
+              return (
+                <li key={knowledgeId} className="flex min-w-0 items-center gap-2" data-slot="knowledge-atom-adopted">
+                  <span className={state === "done" ? "min-w-0 flex-1 truncate text-muted-foreground line-through" : "min-w-0 flex-1 truncate text-foreground"}>{title}</span>
+                  {state === "done" ? (
+                    <span className="shrink-0 text-muted-foreground">已撤销</span>
+                  ) : (
+                    <button
+                      type="button"
+                      data-slot="knowledge-atom-undo"
+                      aria-label={`撤销「${title}」`}
+                      disabled={state === "pending"}
+                      onClick={() => void handleUndo(knowledgeId)}
+                      className="shrink-0 rounded px-1.5 text-[12px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+                    >
+                      撤销
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+        {undoError ? <p role="alert" className="text-destructive">{undoError}</p> : null}
+      </div>
+    );
+  }
+
+  if (autoAdopt && source && (loadingReceipt || busy) && !error) {
+    return (
+      <p data-slot="knowledge-atom-gate-auto" className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-[12px] text-muted-foreground">
+        正在把 {atoms.length} 条知识原子收进知识库…
       </p>
     );
   }

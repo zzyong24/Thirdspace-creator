@@ -59,6 +59,11 @@ export interface ScriptRichEditorProps {
    */
   readonly artifactId?: string | null;
   /**
+   * B6：initialHtml 对应的当前版本 id。外部换版（如「恢复此版本」）灌入编辑器后，
+   * 审核/生成的版本锚点跟随它，而不是停在本编辑器上次保存的版本（否则误报并发更新）。
+   */
+  readonly currentVersionId?: string | null;
+  /**
    * [T-053 断点①] 项目 id —— artifactId 为 null 时保存路径用它 getOrCreate 脚本
    * artifact(消掉「显示已保存但什么都没存」的假保存)。缺省(测试)保持旧本地态行为。
    */
@@ -189,6 +194,7 @@ const INSERT_BUTTONS: ReadonlyArray<InsertButton> = [
 export function ScriptRichEditor({
   initialHtml,
   artifactId = null,
+  currentVersionId = null,
   projectId = null,
   onEditorReady,
 }: ScriptRichEditorProps) {
@@ -272,6 +278,8 @@ export function ScriptRichEditor({
     if (editor.getHTML() !== next) {
       generationRef.current++;
       editor.commands.setContent(next, { emitUpdate: false });
+      // 外部换版后，本编辑器上次保存的版本不再是当前稿的锚点。
+      savedVersionRef.current = currentVersionId;
     }
     // 已应用一个新的外部值 → 清掉 echo 守卫,让「保存后又被外部合法带回同一内容」(如版本回滚
     // 到刚存的版本)不被误吞;echo 守卫只覆盖紧邻保存的那次回流窗口。
@@ -279,7 +287,7 @@ export function ScriptRichEditor({
     // setContent(emitUpdate:false) 不触发 onUpdate,故在此显式同步派生态(刚载入 = 已保存)。
     setSaveStatus("saved");
     setWordCount(editor.getText().length);
-  }, [initialHtml, editor,scriptScopeKey,saveStatus]);
+  }, [initialHtml, editor,scriptScopeKey,saveStatus,currentVersionId]);
 
   // 把 editor 句柄交给可选回调(测试用;生产不传)。仅在实例创建后触发一次。
   React.useEffect(() => {

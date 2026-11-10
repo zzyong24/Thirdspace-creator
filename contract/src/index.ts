@@ -1,4 +1,5 @@
 export * from "./resources/production-script-markdown";
+export * from "./resources/draft-bundle";
 export * from './resources/knowledge-distill';
 export * from "./resources/work-source-select";
 export * from './internal/model-routing';
