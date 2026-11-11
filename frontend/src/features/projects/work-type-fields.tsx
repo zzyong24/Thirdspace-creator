@@ -10,6 +10,9 @@ export const WORK_CHOICES = [
   {id: "video", contentType: "video", label: "视频", description: "脚本、录制素材与可视剪辑"},
 ] as const;
 
+// 只收起新界面入口；完整类型表保留，历史创建会话仍按原顺序和参数恢复。
+export const CREATABLE_WORK_CHOICES = WORK_CHOICES.filter(choice => choice.id !== "video");
+
 export const WORK_PLATFORMS = [
   {id: "xiaohongshu", label: "小红书", types: ["image", "video"]},
   {id: "douyin", label: "抖音", types: ["video"]},
@@ -29,8 +32,8 @@ export function WorkTypeFields({value, onChange, platform, onPlatformChange, dis
   return <>
     <fieldset disabled={disabled}>
       <legend className="mb-2 text-sm font-medium">作品形式</legend>
-      <div className="grid grid-cols-3 gap-2">
-        {WORK_CHOICES.map(choice => <label key={choice.id} className={`cursor-pointer rounded-lg border p-3 focus-within:ring-2 focus-within:ring-ring ${value === choice.id ? "border-primary bg-primary/5" : "border-border"}`}>
+      <div className="grid grid-cols-2 gap-2">
+        {CREATABLE_WORK_CHOICES.map(choice => <label key={choice.id} className={`cursor-pointer rounded-lg border p-3 focus-within:ring-2 focus-within:ring-ring ${value === choice.id ? "border-primary bg-primary/5" : "border-border"}`}>
           <input type="radio" name={group} checked={value === choice.id} onChange={() => {
             onChange(choice.id);
             if (!WORK_PLATFORMS.some(item => item.id === platform && (item.types as readonly string[]).includes(choice.id))) onPlatformChange("");
@@ -66,15 +69,15 @@ export function WorkTypesFields({values, onChange, platform, onPlatformChange, d
 }) {
   const platforms = WORK_PLATFORMS.filter(item => values.some(type => supportsWorkPlatform(type, item.id)));
   function toggle(type: WorkType) {
-    const next = WORK_CHOICES.filter(choice => choice.id === type ? !values.includes(type) : values.includes(choice.id)).map(choice => choice.id);
+    const next = CREATABLE_WORK_CHOICES.filter(choice => choice.id === type ? !values.includes(type) : values.includes(choice.id)).map(choice => choice.id);
     onChange(next);
     if (platform && !next.some(value => supportsWorkPlatform(value, platform))) onPlatformChange("");
   }
   return <>
     <fieldset disabled={disabled}>
       <legend className="mb-2 text-sm font-medium">作品形式 <span className="font-normal text-muted-foreground">（可多选）</span></legend>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {WORK_CHOICES.map(choice => <label key={choice.id} className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 focus-within:ring-2 focus-within:ring-ring ${values.includes(choice.id) ? "border-primary bg-primary/5" : "border-border"}`}>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {CREATABLE_WORK_CHOICES.map(choice => <label key={choice.id} className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 focus-within:ring-2 focus-within:ring-ring ${values.includes(choice.id) ? "border-primary bg-primary/5" : "border-border"}`}>
           <input type="checkbox" checked={values.includes(choice.id)} onChange={() => toggle(choice.id)}
             onKeyDown={event => {if (event.key === "Enter") {event.preventDefault(); if (!disabled) toggle(choice.id);}}}
             className="mt-0.5 size-4 shrink-0 accent-primary" />

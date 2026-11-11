@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { isAccountRequiredError } from "@/lib/http-transport";
 import { cn } from "@/lib/utils";
-import { WorkTypeFields, WorkTypesFields, WORK_CHOICES, type WorkType, type WorkPlatform } from "./work-type-fields";
+import { WorkTypeFields, WorkTypesFields, CREATABLE_WORK_CHOICES, supportsWorkPlatform, type WorkType, type WorkPlatform } from "./work-type-fields";
 
 export interface NewProjectFormValues {
   readonly name: string;
@@ -32,13 +32,20 @@ export interface NewProjectFormProps {
   readonly className?: string;
 }
 
-const EMPTY_DEFAULTS: NewProjectFormValues = {name: "", brief: "", contentTypes: ["video"], enterAfterCreate: true};
+const EMPTY_DEFAULTS: NewProjectFormValues = {name: "", brief: "", contentTypes: ["article"], enterAfterCreate: true};
 
 /** 只收集真实创作输入，父层负责创建与路由。失败始终保留输入。 */
 export function NewProjectForm({includeWorkType = false, multipleWorkTypes = true, submitLabel, advancedOpen = false,
   defaultValues, onCreate, onCancel, className}: NewProjectFormProps) {
-  const initial = React.useMemo<NewProjectFormValues>(() => ({...EMPTY_DEFAULTS, ...defaultValues,
-    contentTypes: defaultValues?.contentTypes ?? [defaultValues?.contentType ?? "video"]}), [defaultValues]);
+  const initial = React.useMemo<NewProjectFormValues>(() => {
+    const requested = defaultValues?.contentTypes ?? [defaultValues?.contentType ?? "article"];
+    const visible = requested.filter(type => type !== "video");
+    const contentTypes: readonly WorkType[] = visible.length ? visible : ["article"];
+    const platform = defaultValues?.targetPlatform;
+    return {...EMPTY_DEFAULTS, ...defaultValues, contentTypes,
+      contentType: defaultValues?.contentType === "video" ? undefined : defaultValues?.contentType,
+      targetPlatform: platform && contentTypes.some(type => supportsWorkPlatform(type, platform)) ? platform : undefined};
+  }, [defaultValues]);
   const [values, setValues] = React.useState(initial);
   const [submitting, setSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
@@ -53,7 +60,7 @@ export function NewProjectForm({includeWorkType = false, multipleWorkTypes = tru
     setNeedsAccount(false);
     try {
       await onCreate({...values, name: values.name.trim(),
-        contentTypes: WORK_CHOICES.filter(choice => values.contentTypes.includes(choice.id)).map(choice => choice.id)});
+        contentTypes: CREATABLE_WORK_CHOICES.filter(choice => values.contentTypes.includes(choice.id)).map(choice => choice.id)});
       setValues({...EMPTY_DEFAULTS, contentTypes: values.contentTypes, contentType: values.contentType,
         targetPlatform: values.targetPlatform, enterAfterCreate: values.enterAfterCreate});
     } catch (error) {
@@ -72,7 +79,7 @@ export function NewProjectForm({includeWorkType = false, multipleWorkTypes = tru
       {includeWorkType && (multipleWorkTypes ? <WorkTypesFields values={values.contentTypes}
         onChange={contentTypes => setValues(prev => ({...prev, contentTypes}))} platform={values.targetPlatform ?? ""}
         onPlatformChange={targetPlatform => setValues(prev => ({...prev, targetPlatform: targetPlatform || undefined}))} disabled={submitting} />
-        : <WorkTypeFields value={values.contentType ?? values.contentTypes[0] ?? "video"}
+        : <WorkTypeFields value={values.contentType ?? values.contentTypes[0] ?? "article"}
           onChange={contentType => setValues(prev => ({...prev, contentType, contentTypes: [contentType]}))}
           platform={values.targetPlatform ?? ""} onPlatformChange={targetPlatform => setValues(prev => ({...prev, targetPlatform: targetPlatform || undefined}))} disabled={submitting} />)}
       <details open={includeWorkType ? advancedOpen || undefined : true}>

@@ -282,3 +282,15 @@ it.each(['真实保存失败','画布版本冲突'])('T1220 上传前%s留原dir
  fireEvent.click(screen.getByRole('button',{name:'素材库'}));const upload=screen.getByRole('link',{name:'去素材中心上传'});
  fireEvent.click(upload);await screen.findByText(error);expect(f.router.push).not.toHaveBeenCalled();expect(screen.getByLabelText('画布标题')).toHaveValue('保存失败保留标题');expect(upload).not.toHaveAttribute('aria-disabled','true');
 });
+
+it('T1464 隐藏画布视频生成入口，保留历史视频节点与原稿，不触发生成或保存',async()=>{
+ const old=canvas();const video={id:'old-video',type:'video_generation',label:'历史镜头',position:{x:0,y:0},prompt:'已保存的视频描述',mode:'text_to_video',durationSec:6,resolution:'768P'};
+ f.read.mockResolvedValue({...old,document:{...old.document,nodes:[video]}});f.capabilities.mockResolvedValue({modes:[{mode:'text_to_video',available:true,model:'原视频模型',reason:null}]});
+ render(<CanvasEditor canvasId="canvas-a"/>);await screen.findByLabelText('画布标题');
+ expect(screen.queryByRole('button',{name:/＋ 视频生成|^生成视频$/})).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:/图片生成/})).toBeVisible();
+ expect(screen.getByText('已保存的视频描述')).toBeVisible();
+ fireEvent.click(screen.getByRole('button',{name:'编导与详情'}));
+ await screen.findByText('节点设置');expect(screen.queryByRole('button',{name:'生成'})).not.toBeInTheDocument();
+ expect(f.generate).not.toHaveBeenCalled();expect(f.save).not.toHaveBeenCalled();
+});

@@ -13,7 +13,7 @@ import type {WorkAssetFile} from "@creatoros/contract";
 import {WorkReviewPanel} from "./work-review-panel";
 import {WorkSourcePicker,WorkSourceList} from "./work-source-picker";
 import type {ProjectWorkOutput} from "./project-output-home";
-const choices=[{kind:"video",label:"视频",detail:"脚本、粗剪与制作"},{kind:"article",label:"公众号",detail:"文章、封面与正文配图"},{kind:"image",label:"图文",detail:"图卡、简介与标签"},{kind:"moments",label:"朋友圈",detail:"短文与配图"}] as const;
+const choices=[{kind:"article",label:"公众号",detail:"文章、封面与正文配图"},{kind:"image",label:"图文",detail:"图卡、简介与标签"},{kind:"moments",label:"朋友圈",detail:"短文与配图"}] as const;
 type WorkSelection=WorkCompositionResource["current"]["selection"];
 type Command={compositionId:string|null;operation:"create"|"selection"|"basis"|"member"|"bind";body:unknown};
 function parseCommand(raw:unknown):Command|null{

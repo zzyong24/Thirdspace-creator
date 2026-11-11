@@ -499,7 +499,8 @@ describe("NewProjectDialog (intercepting route shell)", () => {
     expect(screen.getByLabelText(/作品主题/)).toHaveValue("已经填写的主题");
     expect(screen.getByLabelText("一句话描述")).toHaveValue("需要保留的资料");
     expect(screen.getByLabelText(/图文/)).toBeChecked();
-    expect(screen.getByLabelText(/视频/)).toBeChecked();
+    expect(screen.getByLabelText(/文章/)).toBeChecked();
+    expect(screen.queryByRole("checkbox",{name:/^视频/})).not.toBeInTheDocument();
     expect(screen.queryByText(/横屏|竖屏|创作模式/)).not.toBeInTheDocument();
   });
 
@@ -550,7 +551,7 @@ describe("NewProjectDialog (intercepting route shell)", () => {
       body: { source:"manual",title: "新选题",idempotencyKey:expect.any(String) },
     });
     expect(mockClient.createOutput).toHaveBeenCalledWith(expect.objectContaining({
-      params:{projectId:"project-mock-1"}, body:expect.objectContaining({title:"新选题",contentType:"video",clientRequestId:expect.any(String)}),
+      params:{projectId:"project-mock-1"}, body:expect.objectContaining({title:"新选题",contentType:"article",clientRequestId:expect.any(String)}),
     }));
     // [T-055a] Navigation lands on the *returned* project id's draft
     // workbench (stage routes retired), not a slug guess derived from the name.

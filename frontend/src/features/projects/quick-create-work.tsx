@@ -54,7 +54,7 @@ export function QuickCreateWork({ accountPlatform, sourceItemId, sourceTitle, so
       {sourceTitle && <p className="rounded-md bg-primary/5 p-3 text-sm">来自内容雷达：{sourceTitle}。原始来源会随项目保留；准备状态和候选在项目页查看。</p>}
       {sourceNotice && <div className="rounded-md bg-warning/10 p-3 text-sm text-muted-foreground"><p>{sourceNotice}</p>{sourceChoice===noticeKey?<p>已选择不附来源继续创作。</p>:<button type="button" className="mt-2 text-primary underline" onClick={()=>setSourceChoice(noticeKey)}>不附来源继续创作</button>}</div>}
       <NewProjectForm key={`${scopeKey}:${sourceKey}`} includeWorkType submitLabel="开始创作"
-        defaultValues={{name: sourceTitle ?? "", contentType: sourceType === "article" ? "article" : sourceType === "video" ? "video" : recommendedWorkChoice(accountPlatform)}}
+        defaultValues={{name: sourceTitle ?? "", contentType: recommendedWorkChoice(accountPlatform)}}
         onCreate={start} onCancel={()=>{dispose();router.push("/projects");}} />
       {createdWork?.scopeKey===scopeKey && <p role="status" className="text-sm">已创建作品：<Link href={createdWork.href} className="text-primary hover:underline">{createdWork.title} · 打开稿面</Link></p>}
       {createdProject?.scopeKey===scopeKey && <p className="text-xs text-muted-foreground">项目已建立；重试会补齐尚未完成的作品。<Link href={`/projects/${encodeURIComponent(createdProject.id)}`} className="ml-1 text-primary hover:underline">打开项目</Link></p>}

@@ -5,11 +5,11 @@ describe("T-1051 真实作品工作台导航", () => {
   it("文章项目不展示视频和图文", () => {
     expect(projectWorkspaces("project-a", "/projects/project-a/article", [{id: "article-a", contentType: "article"}]).map(item => item.id)).toEqual(["script", "article", "review"]);
   });
-  it("多选的真实作品同时出现，视频含脚本和剪辑", () => {
+  it("多选的文章图文同时出现，历史视频不引流制作", () => {
     const tabs = projectWorkspaces("project-a", "/projects/project-a/outputs/image-a/image", [
       {id: "article-a", contentType: "article"}, {id: "image-a", contentType: "image"}, {id: "video-a", contentType: "video"},
     ]);
-    expect(tabs.map(item => item.id)).toEqual(["script", "article", "image", "production", "review"]);
+    expect(tabs.map(item => item.id)).toEqual(["script", "article", "image", "review"]);
     expect(tabs.find(item => item.id === "image")?.href).toBe("/projects/project-a/outputs/image-a/image");
     expect(tabs.find(item => item.id === "script")?.href).toBe("/projects/project-a");
     expect(tabs.find(item => item.id === "image")?.status).toBe("in_progress");
@@ -19,8 +19,8 @@ describe("T-1051 真实作品工作台导航", () => {
     expect(tabs.filter(item => item.id === "image")).toHaveLength(1);
     expect(tabs.find(item => item.id === "image")?.href).toContain("image-b/image");
   });
-  it("空 output 旧项目保留既有视频入口", () => {
-    expect(projectWorkspaces("p", "/projects/p", []).map(item => item.id)).toEqual(["script", "production", "review"]);
+  it("空 output 旧项目只保留脚本与复盘", () => {
+    expect(projectWorkspaces("p", "/projects/p", []).map(item => item.id)).toEqual(["script", "review"]);
   });
   it("读取失败只显示公共入口和当前工作台", () => {
     expect(projectWorkspaces("p", "/projects/p/article", null).map(item => item.id)).toEqual(["script", "article", "review"]);

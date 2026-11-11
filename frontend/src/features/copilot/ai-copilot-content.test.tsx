@@ -383,12 +383,12 @@ describe("AI Copilot dialog (Task 24)", () => {
   it("renders the reference fixture counts", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog");
-    // [T-836] 原 5 个真入口旁增加按当前稿语义生成图片/视频素材两个入口。
+    // [T-836] 保留图片素材入口，隐藏视频素材入口。
     // [T-354] 次区计数断言随次区下架删除(recommended-command/recent-task/continuing-task/
     // quick-entry/smart-recommendation 均不再渲染)。
     expect(
       dialog.querySelectorAll('[data-slot="suggested-chip"]'),
-    ).toHaveLength(7);
+    ).toHaveLength(6);
     expect(
       dialog.querySelectorAll('[data-slot="recommended-command"]'),
     ).toHaveLength(0);
@@ -417,7 +417,7 @@ describe("AI Copilot dialog (Task 24)", () => {
     expect(cover?.prefill).toContain("直接生成");
   });
 
-  it("图片按稿件需要生成多段候选，视频默认只生成一个候选", () => {
+  it("图片素材仍按稿件需要生成候选，不显示视频生成快捷入口", () => {
     const viewModel = buildCopilotViewModel();
     const image = viewModel.chips.find(
       (chip) => chip.id === "generate-image-material",
@@ -430,22 +430,13 @@ describe("AI Copilot dialog (Task 24)", () => {
       label: "生成图片素材",
       functionKey: "material.generate.image",
     });
-    expect(video).toMatchObject({
-      label: "生成视频素材",
-      functionKey: "material.generate.video",
-    });
+    expect(video).toBeUndefined();
     expect(image?.prefill).toContain("先读取当前确认稿");
-    expect(video?.prefill).toContain("先读取当前确认稿");
     expect(image?.prefill).toContain("根据稿件篇幅");
     expect(image?.prefill).toContain("选择多个");
     expect(image?.prefill).toContain("每个段落各生成一张");
     expect(image?.prefill).not.toContain("唯一服务段落");
-    expect(video?.prefill).toContain("默认只生成一个");
-    expect(video?.prefill).toContain("控制生成成本");
-    expect(video?.prefill).toContain("除非我明确要求");
     expect(image?.prefill).not.toContain("context.artifact.text");
-    expect(video?.prefill).not.toContain("material.generate");
-    expect(video?.prefill).toContain("连续短镜头");
   });
 
   it("renders the close button with data-overlay-close so the controller's delegated click handler closes the dialog", () => {
@@ -1175,10 +1166,10 @@ describe("T1302 当前真实宿主的精简输入区",()=>{
   let value=state(),host:any={...embed,request:{nonce:0,prefill:'旧文章指令',selection:{kind:'content_output',id:'current-output'}}};
   if(mode==='global')host=undefined;if(mode==='no-preparation')delete value.preparation;if(mode==='no-editor'||mode==='script')value=null;if(mode==='video')value.preparation.owner='production';if(mode==='project')value.preparation.projectId='other-project';if(mode==='output')value.outputId='other-output';if(mode==='empty-output')value.outputId='';if(mode==='scope')value.preparation.scopeKey='group:other-group';if(mode==='selection-kind')host.selection={kind:'content_output',id:'current-project'};
   // global显式不传embed，避免测试组件default值代替undefined。
-  render(mode==='global'?<DraftChatRequestProvider><Registry value={value}/><AICopilotContent/></DraftChatRequestProvider>:<Composer value={value} host={host}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(7));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveAttribute('placeholder',commonPlaceholder);expect(protocol.send).not.toHaveBeenCalled();
+  render(mode==='global'?<DraftChatRequestProvider><Registry value={value}/><AICopilotContent/></DraftChatRequestProvider>:<Composer value={value} host={host}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveAttribute('placeholder',commonPlaceholder);expect(protocol.send).not.toHaveBeenCalled();
  });
  it('T1302 registry注册/注销及当前scope切换立即重新判定，保停止控件',async()=>{
-  const view=render(<Composer value={null}/>);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(7);const current=state();view.rerender(<Composer value={current}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0));protocol.status='streaming';view.rerender(<Composer value={current}/>);expect(screen.getByRole('button',{name:'停止生成'})).toBeVisible();expect(document.querySelector('[data-slot="prompt-send-hint"]')).not.toBeNull();protocol.status='ready';const {writeCurrentGroupId}=await import('@/lib/http-transport');await act(async()=>writeCurrentGroupId('next-group'));await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(7));view.rerender(<Composer value={null}/>);expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveAttribute('placeholder',commonPlaceholder);expect(coordinator.readEditorState()).toBeNull();
+  const view=render(<Composer value={null}/>);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);const current=state();view.rerender(<Composer value={current}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0));protocol.status='streaming';view.rerender(<Composer value={current}/>);expect(screen.getByRole('button',{name:'停止生成'})).toBeVisible();expect(document.querySelector('[data-slot="prompt-send-hint"]')).not.toBeNull();protocol.status='ready';const {writeCurrentGroupId}=await import('@/lib/http-transport');await act(async()=>writeCurrentGroupId('next-group'));await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6));view.rerender(<Composer value={null}/>);expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveAttribute('placeholder',commonPlaceholder);expect(coordinator.readEditorState()).toBeNull();
  });
 });
 
@@ -1341,7 +1332,7 @@ describe("T1340 文章异步就绪的真实助手消费",()=>{
   render(<DraftChatRequestProvider><ArticleWorkbench projectId={project} projectTitle="文章测试" initialOutputs={[{id:output,title:"公众号文章"}]}/><Witness/><AICopilotContent embed={{surface:"project",selection:{kind:"project",id:project,title:"文章测试"},persistKey:"project:"+project}}/></DraftChatRequestProvider>);
   await waitFor(()=>expect(requests.filter(row=>row.id==="articles.get")).toHaveLength(1),{timeout:120000});
   expect(screen.getByTestId("t1340-preparation")).toHaveTextContent("not-ready");
-  expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(7);
+  expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);
   await act(async()=>{resolveArticle(Response.json({data:resource,meta:{requestId:"t1340-article"}}));});
   await waitFor(()=>expect(document.querySelector('[aria-label="T1340原生成稿宿主"] p')?.textContent).toBe(body),{timeout:120000});
   expect(current!.readEditorState()?.dirty).toBe(true);
@@ -1391,7 +1382,7 @@ describe("T1340 文章异步就绪的真实助手消费",()=>{
   }else{
    if(mode==="unmount")view.rerender(<Scene show={false}/>);
    await act(async()=>{if(mode==="reject")rejectOld(Error("原文章读取失败"));else resolveOld(Response.json({data:resource,meta:{requestId:"t1340-unmounted"}}));});
-   expect(current!.readEditorState()?.preparation).toBeUndefined();expect(screen.getByTestId("t1340-current-owner")).toHaveTextContent("not-ready");expect(document.body.textContent).not.toContain(body);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(7);
+   expect(current!.readEditorState()?.preparation).toBeUndefined();expect(screen.getByTestId("t1340-current-owner")).toHaveTextContent("not-ready");expect(document.body.textContent).not.toContain(body);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);
    expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).toHaveAttribute("placeholder",expect.stringContaining("描述目标"));if(mode==="reject")expect(screen.getByRole("alert")).toHaveTextContent("原文章读取失败");
   }
   for(const row of requests)expect(Object.values(ENDPOINTS).find(endpoint=>endpoint.id===row.id)?.method,`未知或非只读端点：${row.id}`).toBe("GET");expect(protocol.send).not.toHaveBeenCalled();expect(protocol.fetch).not.toHaveBeenCalled();

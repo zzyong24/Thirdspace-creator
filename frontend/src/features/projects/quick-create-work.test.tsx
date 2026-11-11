@@ -26,25 +26,35 @@ beforeEach(() => {
 afterEach(() => {cleanup();window.localStorage.clear();});
 
 describe("T-1050 直接创作入口", () => {
-  it("三类多选创建真实作品，进入主脚本，不启动其他形式的模型", async () => {
+  it("T1464 视频来源仍建档转写，但新作品只默认文章，不创建视频", async () => {
+    render(<QuickCreateWork sourceItemId="source-video-real" sourceType="video" sourceTitle="视频参考主题" />);
+    expect(screen.queryByRole("checkbox", {name: /^视频/})).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", {name: /^文章/})).toBeChecked();
+    await userEvent.click(screen.getByRole("button", {name: "开始创作"}));
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/projects/project-a"));
+    expect(mocks.ensureProject.mock.calls[0]![0].body).toMatchObject({source:"quick_create",sourceItemId:"source-video-real"});
+    expect(mocks.createOutput.mock.calls.map(([input]) => input.body.contentType)).toEqual(["article"]);
+    expect(mocks.graphic).not.toHaveBeenCalled();expect(mocks.video).not.toHaveBeenCalled();
+  });
+
+  it("文章图文多选创建真实作品，进入主脚本，不启动其他形式的模型", async () => {
     render(<QuickCreateWork accountId="account-a" />);
     await userEvent.type(screen.getByRole("textbox", {name: "作品主题"}), "主题");
-    await userEvent.click(screen.getByRole("checkbox", {name: /^文章/}));
     await userEvent.click(screen.getByRole("checkbox", {name: /^图文/}));
     await userEvent.click(screen.getByRole("button", {name: "开始创作"}));
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/projects/project-a"));
     expect(mocks.ensureProject).toHaveBeenCalledOnce();expect(mocks.createProject).not.toHaveBeenCalled();
-    expect(mocks.createOutput.mock.calls.map(([input]) => input.body.contentType)).toEqual(["article", "image", "video"]);
+    expect(mocks.createOutput.mock.calls.map(([input]) => input.body.contentType)).toEqual(["article", "image"]);
     expect(mocks.graphic).not.toHaveBeenCalled();
     expect(mocks.video).not.toHaveBeenCalled();
   });
-  it("图文和视频部分失败保留成功作品，重试后进入主脚本并保留选定来源", async () => {
+  it("文章和图文部分失败保留成功作品，重试后进入主脚本并保留选定来源", async () => {
     mocks.createOutput.mockRejectedValueOnce(new TypeError("Failed to fetch"));
     render(<QuickCreateWork accountId="account-a" />);
     await userEvent.type(screen.getByRole("textbox", {name: "作品主题"}), "主题");
     await userEvent.click(screen.getByRole("checkbox", {name: /^图文/}));
     await userEvent.click(screen.getByRole("button", {name: "开始创作"}));
-    expect(await screen.findByRole("alert")).toHaveTextContent("图文未完成");
+    expect(await screen.findByRole("alert")).toHaveTextContent("文章未完成");
     expect(mocks.push).not.toHaveBeenCalled();
     const pendingBody = mocks.createOutput.mock.calls[0]![0].body;
     await userEvent.click(screen.getByRole("button", {name: "开始创作"}));

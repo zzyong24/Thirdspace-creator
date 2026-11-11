@@ -24,7 +24,7 @@ describe("T-1050 新建表单", () => {
     expect(submit).toBeDisabled();
     await userEvent.type(screen.getByRole("textbox", {name: "作品主题"}), "主题");
     expect(submit).toBeEnabled();
-    await userEvent.click(screen.getByRole("checkbox", {name: /^视频/}));
+    await userEvent.click(screen.getByRole("checkbox", {name: /^文章/}));
     expect(submit).toBeDisabled();
     expect(onCreate).not.toHaveBeenCalled();
   });
@@ -32,9 +32,8 @@ describe("T-1050 新建表单", () => {
     const {onCreate} = setup();
     await userEvent.type(screen.getByRole("textbox", {name: "作品主题"}), "  主题  ");
     await userEvent.click(screen.getByRole("checkbox", {name: /^图文/}));
-    await userEvent.click(screen.getByRole("checkbox", {name: /^文章/}));
     await userEvent.click(screen.getByRole("button", {name: "创建"}));
-    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({name: "主题", contentTypes: ["article", "image", "video"], enterAfterCreate: true}));
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({name: "主题", contentTypes: ["article", "image"], enterAfterCreate: true}));
     expect(onCreate.mock.calls[0]![0]).not.toHaveProperty("orientation");
     expect(onCreate.mock.calls[0]![0]).not.toHaveProperty("creationMode");
   });
@@ -43,14 +42,13 @@ describe("T-1050 新建表单", () => {
     const article = screen.getByRole("checkbox", {name: /^文章/});
     article.focus();
     await userEvent.keyboard("{Enter}");
-    expect(article).toBeChecked();
-    await userEvent.keyboard(" ");
     expect(article).not.toBeChecked();
+    await userEvent.keyboard(" ");
+    expect(article).toBeChecked();
     expect(onCreate).not.toHaveBeenCalled();
   });
   it("兼容平台取已选形式的并集，取消最后兼容形式时清空平台", async () => {
     setup();
-    await userEvent.click(screen.getByRole("checkbox", {name: /^文章/}));
     const platform = screen.getByRole("combobox", {name: "发布目标"});
     await userEvent.selectOptions(platform, "wechatOfficialAccount");
     await userEvent.click(screen.getByRole("checkbox", {name: /^文章/}));
@@ -72,7 +70,6 @@ describe("T-1050 新建表单", () => {
   it("428 显示可操作账号引导并保留输入和勾选", async () => {
     setup(vi.fn().mockRejectedValue({code: "AccountRequiredError", status: 428}));
     await userEvent.type(screen.getByRole("textbox", {name: "作品主题"}), "保留主题");
-    await userEvent.click(screen.getByRole("checkbox", {name: /^文章/}));
     await userEvent.click(screen.getByRole("button", {name: "创建"}));
     expect(await screen.findByRole("alert")).toHaveTextContent(/创作账号/);
     expect(screen.getByRole("link", {name: /添加或选择账号/})).toHaveAttribute("href", "/accounts");

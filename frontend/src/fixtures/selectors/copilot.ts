@@ -60,13 +60,6 @@ const SUGGESTED_ACTIONS: CopilotContentViewModel["chips"] = [
     prefill: IMAGE_MATERIAL_PREFILL,
   },
   {
-    id: "generate-video-material",
-    label: "生成视频素材",
-    icon: "video",
-    functionKey: "material.generate.video",
-    prefill: VIDEO_MATERIAL_PREFILL,
-  },
-  {
     id: "cover",
     label: "生成封面",
     icon: "image",

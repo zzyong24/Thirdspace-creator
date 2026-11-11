@@ -17,11 +17,11 @@ export interface ProjectWorkOutput {
 }
 
 export { WORK_CHOICES } from "./work-type-fields";
-import { WORK_CHOICES, type WorkType } from "./work-type-fields";
+import { CREATABLE_WORK_CHOICES, type WorkType } from "./work-type-fields";
 
 /** 形式由用户选择；平台只影响可选设置。 */
 export function recommendedWorkChoice(_platform: string | null | undefined): WorkType {
-  return "video";
+  return "article";
 }
 
 export async function submitInitialGraphicBody(accountId: string | null | undefined, outputId: string, sourceItemId?: string,operation?:CreationOperation): Promise<"submitted" | "unavailable" | "source-unavailable" | "unknown"> {
@@ -71,12 +71,12 @@ export function workDestination(projectId: string, output: ProjectWorkOutput): s
   const base = `/projects/${encodeURIComponent(projectId)}`;
   if (output.contentType === "image") return `${base}/outputs/${encodeURIComponent(output.id)}/image`;
   if (output.contentType === "article") return `${base}/article?outputId=${encodeURIComponent(output.id)}`;
-  if (output.contentType === "video") return `${base}/outputs/${encodeURIComponent(output.id)}/video`;
+  if (output.contentType === "video") return base;
   return base;
 }
 
 function outputLabel(output: ProjectWorkOutput): string {
-  const kind = output.contentType === "image" ? "图文" : output.contentType === "article" ? "长文" : "视频";
+  const kind = output.contentType === "image" ? "图文" : output.contentType === "article" ? "长文" : "历史视频";
   const platform = ({xiaohongshu: "小红书", douyin: "抖音", kuaishou: "快手", wechatOfficialAccount: "公众号"} as Record<string,string>)[output.targetPlatform ?? ""];
   return platform ? `${platform} · ${kind}` : kind;
 }
@@ -105,7 +105,8 @@ function ProjectOutputHomeSession({ projectId, projectTitle, initialOutputs, acc
 
   async function createWork(values: NewProjectFormValues) {
     const operation=workspace.capture(),client=operation.client;const check=()=>{operation.assertCurrent();if(!alive.current)throw new DOMException("页面已离开","AbortError");};check();
-    const choice = WORK_CHOICES.find(item => item.id === (values.contentType ?? "video"))!;
+    const choice = CREATABLE_WORK_CHOICES.find(item => item.id === (values.contentType ?? "article"));
+    if (!choice) throw new Error("请选择文章或图文。");
     const targetPlatform = values.targetPlatform;
     const trimmedTitle = values.name.trim();
     if (!trimmedTitle) return;

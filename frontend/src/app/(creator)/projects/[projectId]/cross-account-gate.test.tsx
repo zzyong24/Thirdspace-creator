@@ -16,6 +16,8 @@ import * as React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("next/navigation", () => ({redirect:(href:string)=>{throw Error(`REDIRECT:${href}`);},notFound:()=>{throw Error("NOT_FOUND");}}));
+
 // --- session:恒有 ctx(带当前号)。 ---
 vi.mock("@/lib/session.server", () => ({
   resolveSession: async () => ({
@@ -134,13 +136,13 @@ describe("[T-373] 跨号项目整页门(不再半渲染)", () => {
     expect(screen.queryByTestId("production-workbench")).toBeNull();
   });
 
-  it("production 路由:同号项目 → 照常渲制作工作台(零回归)", async () => {
+  it("production 路由:同号项目回脚本，制作工作台已隐藏", async () => {
     getProject.mockResolvedValue({ id: "project-old-acct" });
-    await renderProductionRoute();
-    expect(screen.getByTestId("production-workbench")).toBeInTheDocument();
+    await expect(renderProductionRoute()).rejects.toThrow("REDIRECT:/projects/project-old-acct");
+    expect(screen.queryByTestId("production-workbench")).toBeNull();
   });
 
-  it("production 路由:尚无正式脚本时复用内容雷达改写稿作为口播稿", async () => {
+  it("production 路由:原雷达改写稿不用于初始化隐藏制作工作台", async () => {
     getProject.mockResolvedValue({
       id: "project-old-acct",
       briefDetail: {
@@ -150,11 +152,8 @@ describe("[T-373] 跨号项目整页门(不再半渲染)", () => {
       },
     });
 
-    await renderProductionRoute();
-
-    expect(productionProps.current?.scriptText).toBe(
-      "已经从内容雷达带入的口播稿",
-    );
+    await expect(renderProductionRoute()).rejects.toThrow("REDIRECT:/projects/project-old-acct");
+    expect(productionProps.current).toBeNull();
   });
 
   it("非所有权读失败(transport 等)→ 维持原降级路径,不误判成跨号", async () => {
