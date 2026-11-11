@@ -28,7 +28,8 @@
   <link rel="stylesheet" href="/assets/screenshots.css?v=20261101-real">
   <script src="/assets/store.js?v=20261017-t237-1" defer></script>
   <script src="/assets/screenshots.js?v=20261101-real" defer></script>
-  <link rel="stylesheet" href="/assets/rights.css?v=20261111-video-1">
+  <link rel="stylesheet" href="/assets/rights.css?v=20261111-guidance-1">
+  <script src="/assets/creatoros-onboarding.js?v=20261111-guidance-1" defer></script>
 </head>
 <body class="loading">
   <div class="stage" aria-hidden="true"></div>
@@ -267,11 +268,21 @@
 
   <dialog class="checkout-reminder" id="checkout-reminder" aria-labelledby="checkout-reminder-title" aria-describedby="checkout-reminder-copy">
     <span class="eyebrow">付款前请记住</span>
-    <h2 id="checkout-reminder-title">购买后还要回来兑换</h2>
-    <p id="checkout-reminder-copy">付款后，链动小铺会交付购买码。请回到本页，在“提交链动小铺购买码”处兑换正式激活码，再到软件中激活。</p>
+    <h2 id="checkout-reminder-title">付款后，记得复制购买码回来</h2>
+    <p id="checkout-reminder-copy">在链动小铺付款后，请复制它交付的购买码，再回到本页，粘贴到“链动小铺购买码”输入框，兑换正式激活码。请保留本页，不要付款后就直接关闭。</p>
     <div class="checkout-reminder-actions">
       <button class="button button-secondary" id="checkout-reminder-cancel" type="button">先不购买</button>
       <button class="button button-primary" id="checkout-reminder-continue" type="button">记住了，前往付款</button>
+    </div>
+  </dialog>
+
+  <dialog class="checkout-reminder onboarding-dialog" id="redemption-download-reminder" aria-labelledby="redemption-download-title" aria-describedby="redemption-download-copy">
+    <span class="eyebrow">兑换成功 · 下一步</span>
+    <h2 id="redemption-download-title">保存激活码，再下载软件</h2>
+    <p id="redemption-download-copy">请先复制并妥善保存本页的正式激活码，再前往飞书指引下载 CreatorOS。安装后，在软件中输入正式激活码即可激活。</p>
+    <div class="checkout-reminder-actions">
+      <button class="button button-secondary" id="redemption-download-close" type="button">先保存激活码</button>
+      <a class="button button-primary" href="https://my.feishu.cn/wiki/QY1owmFUjit7VgkpmQ1chGPCnTR" target="_blank" rel="noopener noreferrer">前往飞书下载</a>
     </div>
   </dialog>
 
