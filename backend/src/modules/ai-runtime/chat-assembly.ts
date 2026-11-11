@@ -82,7 +82,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     const resolved=options.resolvedWritingContext??(writingSelection?await deps.resolveWritingContext?.(ctx,chatContext.projectId!,writingSelection):undefined);
     if(writingSelection&&!resolved)throw new Error('写作选择缺少真实只读解析端口');
     if(resolved){const {validateResolvedWritingContext}=await import('../../application/generation/work-writing-context');validateResolvedWritingContext(resolved);if(resolved.projectId!==chatContext.projectId||canonicalJson(resolved.selection)!==canonicalJson(writingSelection))throw new Error('写作资料与目标不符');}
-    options.toolDefinitionOptions={...options.toolDefinitionOptions,workWritingContext:Boolean(writingSelection),...(chatContext.editorTarget?{workEditorOwner:chatContext.editorTarget.owner}:{})};
+    options.toolDefinitionOptions={...options.toolDefinitionOptions,workCreationMetadataOwned:options.toolDefinitionOptions?.workCreationMetadataOwned??Boolean(chatContext.creationTarget),workWritingContext:Boolean(writingSelection),...(chatContext.editorTarget?{workEditorOwner:chatContext.editorTarget.owner}:{})};
     // 1) 页面层:surface → 基础 skill。
     const skillId = resolveSkillForSurface(chatContext.surface);
     // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
@@ -281,7 +281,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     if(resolved){context.positioningBrief=resolved.brand?.guidance??'';context.userMaterialHardBrief='';context.userMaterialRefBrief='';}
     const searchConfigured = Boolean(deps.searchWeb);
     const toolDeps = createChatAssemblyToolDeps(ctx, chatContext, deps, { mediaRoute, forcedMaterialKind, creatorOsGuideSnapshot, verbatimSources: options.verbatimSources, latestUserInstruction: options.latestUserInstruction, searchConfigured });
-    const prototypes=buildChatTools(toolWhitelist,{...toolDeps,workEditorOwner:options.toolDefinitionOptions.workEditorOwner,skillLibrary,assistantSystem:deps.assistantSystem,
+    const prototypes=buildChatTools(toolWhitelist,{...toolDeps,workCreationMetadataOwned:options.toolDefinitionOptions.workCreationMetadataOwned,workEditorOwner:options.toolDefinitionOptions.workEditorOwner,skillLibrary,assistantSystem:deps.assistantSystem,
       ...(resolved?{readWorkEditor:async(input:any)=>({...await toolDeps.readWorkEditor!(input),resolvedWritingContext:structuredClone(resolved)}),readWorkCreation:async(input:any)=>({...await toolDeps.readWorkCreation!(input),resolvedWritingContext:structuredClone(resolved)})}:{}),
     });
     const actualDefinitions=(await prepareChatToolDefinitions(prototypes,options.toolDefinitionOptions)).definitions;

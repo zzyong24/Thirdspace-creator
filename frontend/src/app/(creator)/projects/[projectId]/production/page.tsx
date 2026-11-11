@@ -82,6 +82,8 @@ export default async function ProductionRoute({ params,searchParams }: Productio
   if(!selection.output && outputs.length>0)return <main data-page="production-output-selection" className="space-y-4"><h1 className="text-xl font-semibold">选择要制作的视频</h1>
     <p className="text-sm text-muted-foreground">{selection.videos.length?"每条视频独立保存素材、剪辑方案和成片。":"该项目还没有视频作品，请先创建视频。"}</p>
     <ul className="space-y-2">{selection.videos.map(output=><li key={output.id}><Link className="text-primary hover:underline" href={`/projects/${encodeURIComponent(projectId)}/production?outputId=${encodeURIComponent(output.id)}`}>{output.title || "未命名视频"}</Link></li>)}</ul>
+    <ul className="space-y-2">{outputs.filter(output=>output.contentType==='article'||output.contentType==='image').map(output=><li key={output.id}><Link className="text-primary hover:underline" href={output.contentType==='article'?`/projects/${encodeURIComponent(projectId)}/article?outputId=${encodeURIComponent(output.id)}`:`/projects/${encodeURIComponent(projectId)}/outputs/${encodeURIComponent(output.id)}/image`}>查看{output.contentType==='article'?'文章':'图文'}：{output.title||'未命名作品'}</Link></li>)}</ul>
+    <Link href={`/projects/${encodeURIComponent(projectId)}?view=works`} className="inline-flex rounded-md border border-border px-3 py-2 text-primary hover:bg-surface-subtle">选择或创建作品</Link>
     <Link href={`/projects/${encodeURIComponent(projectId)}`} className="text-primary hover:underline">回项目</Link></main>;
   const selectedOutput=selection.output;
   const outputId=selectedOutput?.id??null;

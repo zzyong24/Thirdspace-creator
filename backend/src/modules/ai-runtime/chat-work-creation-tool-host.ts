@@ -1,4 +1,4 @@
-import type {RequestContext,WorkCreationTarget,WorkCreationReadResult,WorkCreationProposalInput,WorkCreationProposalResult} from '@creatoros/contract';
+import type {RequestContext,WorkCreationDraftProposalInput,WorkCreationTarget,WorkCreationReadResult,WorkCreationProposalInput,WorkCreationProposalResult} from '@creatoros/contract';
 import {workCreationTarget} from '@creatoros/contract';
 import type {ExecutionRef} from '@creatoros/contract/execution-worker';
 import {workspaceKey} from '../../workspace-scope';
@@ -13,6 +13,7 @@ import {resolveWorkCreationProtocol} from './chat-work-creation-protocol';
 export interface ChatWorkCreationToolPorts {
  read(ctx:RequestContext,target:WorkCreationTarget):Promise<WorkCreationReadResult>;
  propose(ctx:RequestContext,target:WorkCreationTarget,input:WorkCreationProposalInput):Promise<WorkCreationProposalResult>;
+ proposeDraft?(ctx:RequestContext,target:WorkCreationTarget,input:WorkCreationDraftProposalInput):Promise<WorkCreationProposalResult>;
 }
 /** 当前原任务的短读取/提案；不持有正式写端口或模型调用权。 */
 export function createChatWorkCreationToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,'read'>,ports:ChatWorkCreationToolPorts):NonNullable<ChatWorkerDispatcherDeps['resolveTools']>{
@@ -30,13 +31,14 @@ export function createChatWorkCreationToolHost(reader:Pick<ReturnType<typeof cre
   const definitionOptions=resolveWorkCreationProtocol(definitions,target,frozen.hostContext.resolvedWritingContext);
   const tools=buildChatTools(definitions.map(tool=>tool.name),{
    humanizeError:()=>null,
-   creationTarget:target,
+   creationTarget:target,workCreationMetadataOwned:definitionOptions.workCreationMetadataOwned,
    readWorkCreation:async(input?:{targetDigest?:string})=>{
     const result=await ports.read(frozen.context,target);
     if(input?.targetDigest&&input.targetDigest!==result.targetDigest)throw new Error('联合创作目标摘要不符。');
     return {...result,...(frozen.hostContext.resolvedWritingContext?{resolvedWritingContext:structuredClone(frozen.hostContext.resolvedWritingContext)}:{})};
    },
    proposeWorkCreation:(input:WorkCreationProposalInput)=>ports.propose(frozen.context,target,input),
+   proposeWorkCreationDraft:(input:WorkCreationDraftProposalInput)=>{if(!ports.proposeDraft)throw new Error('联合创作元数据端口未装配');return ports.proposeDraft(frozen.context,target,input);},
   } as unknown as ChatToolDeps);
   const current=(await prepareChatToolDefinitions(tools,definitionOptions)).definitions;
   if(canonicalJson(current)!==canonicalJson(definitions))throw new Error('联合创作工具定义已变化，不能沿用旧任务执行。');

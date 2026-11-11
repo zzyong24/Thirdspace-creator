@@ -3468,7 +3468,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }));
   articleOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
   graphicOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
-  const workCandidateSource=createWorkCandidateSourceService(db);
+  const workCandidateSource=createWorkCandidateSourceService(db,{readGraphicVersion:(c,id,versionId,store)=>workGraphicFor(store).getVersion(c,id,versionId)});
   const workCandidateAdoption=createWorkCandidateAdoption(db,{source:workCandidateSource,articles:workArticlesFor,graphic:workGraphicFor,lockArtifact:(c,id,tx)=>workArtifactsFor(tx).getArtifact(c,id,true)});
   const workWritingContext=createWorkWritingContext({assertProject:(c,id)=>projectsService.getProject(c,id),readDocument:articleOwnerPorts.resolveDocumentSource!,readCenter:c=>positioningService.readPositioningCenter(c),readStatement:(c,id)=>positioningService.getStatement(c,id)});
   const workCreationRoot=createWorkCreationRoot({compositions:workCompositionsFor(db),articles:articlesService,graphicPosts:graphicPostsService,script:projectScriptSource});

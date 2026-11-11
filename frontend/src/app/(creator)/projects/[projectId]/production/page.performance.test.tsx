@@ -1,3 +1,4 @@
+import {render,screen} from '@testing-library/react';
 import * as React from 'react';
 import {beforeEach,expect,it,vi} from 'vitest';
 const m=vi.hoisted(()=>({getProject:vi.fn(),listProjects:vi.fn(),listOutputs:vi.fn(),getOutputProduction:vi.fn(),listSegments:vi.fn(),resolveScript:vi.fn(),loadScript:vi.fn()}));
@@ -39,4 +40,14 @@ it('多个视频保留选择页；无作品继续空工作台，读取失败保�
  m.listOutputs.mockResolvedValue([]);const empty=await Page({params:Promise.resolve({projectId:'p'})}) as React.ReactElement<EntryProps>;expect(empty.props.outputId).toBeNull();expect(m.getOutputProduction).not.toHaveBeenCalled();
  m.listOutputs.mockResolvedValue([{id:'o',title:'视频',contentType:'video'}]);m.getOutputProduction.mockRejectedValue(Error('暂不可读'));
  const degraded=await Page({params:Promise.resolve({projectId:'p'})}) as React.ReactElement<EntryProps>;expect(degraded.props).toMatchObject({scriptText:'口播稿',initialStatus:null,initialSegmentCount:0});
+});
+
+
+it('T1463只有文章和图文时提供真实作品入口，不创建或读取视频制作状态',async()=>{
+ m.listOutputs.mockResolvedValue([{id:'a',title:'公众号文章',contentType:'article'},{id:'g',title:'小红书图文',contentType:'image'}]);
+ render(await Page({params:Promise.resolve({projectId:'p'})}));
+ expect(screen.getByRole('link',{name:'查看文章：公众号文章'})).toHaveAttribute('href','/projects/p/article?outputId=a');
+ expect(screen.getByRole('link',{name:'查看图文：小红书图文'})).toHaveAttribute('href','/projects/p/outputs/g/image');
+ expect(screen.getByRole('link',{name:'选择或创建作品'})).toHaveAttribute('href','/projects/p?view=works');
+ expect(m.getOutputProduction).not.toHaveBeenCalled();expect(m.resolveScript).not.toHaveBeenCalled();
 });

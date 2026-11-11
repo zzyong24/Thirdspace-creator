@@ -12,7 +12,7 @@ import type { WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 /** 新执行入口共用既有上下文、白名单、可信来源和历史转换；此步骤不取主模型凭据。 */
 export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,deps:AssembleChatDeps,options:NonNullable<Parameters<typeof prepareChatToolDefinitions>[1]>={}){
  const writingSelection=input.chatContext.editorTarget?.owner==='wechat_article'?input.chatContext.editorTarget.writingContext:input.chatContext.creationTarget?.writingContext;
- const frozenOptions={...options,workWritingContext:Boolean(writingSelection),...(input.chatContext.editorTarget?{workEditorOwner:input.chatContext.editorTarget.owner}:{})};
+ const frozenOptions={...options,workCreationMetadataOwned:options.workCreationMetadataOwned??Boolean(input.chatContext.creationTarget),workWritingContext:Boolean(writingSelection),...(input.chatContext.editorTarget?{workEditorOwner:input.chatContext.editorTarget.owner}:{})};
  const context=structuredClone(ctx),frozenInput={...input,messages:structuredClone(input.messages),chatContext:structuredClone(input.chatContext),trustedScriptSources:structuredClone(input.trustedScriptSources??[])};
  const assembly=await prepareChatAssembly(context,frozenInput.chatContext,deps,detectCopilotMediaRoute(frozenInput.messages),{
   resolvedWritingContext:structuredClone((input as ChatTurnInput&{resolvedWritingContext?:ChatHostContext["resolvedWritingContext"]}).resolvedWritingContext),

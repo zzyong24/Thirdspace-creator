@@ -3,7 +3,7 @@ import { render, screen, fireEvent,waitFor,act } from "@testing-library/react";
 import { CreationFlowCtas, WorkCreationCta } from "./creation-flow-ctas";
 
 // T-730:论点入口恢复为可选辅助，不替代上传与联网找资料。
-const openChat = vi.fn();
+const openChat = vi.fn(),refresh=vi.fn();
 const prepareScriptForCreation=vi.fn(),preparePair=vi.fn(),readWritingContext=vi.fn();
 vi.mock("./draft-chat-request", () => ({
   useDraftChatRequest: () => ({ openChat,prepareScriptForCreation,readWritingContext }),
@@ -12,7 +12,7 @@ vi.mock('./work-creation-request',()=>({prepareWorkCreationRequest:(...args:unkn
 
 // [T-146] CreationFlowCtas 现用 useRouter()(上传成功后 refresh 让弹药卡出现)。
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ refresh, push: vi.fn() }),
 }));
 
 describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
@@ -137,4 +137,26 @@ describe("批次2-7：每个阶段只亮一个主按钮", () => {
     render(<WorkCreationCta projectId="p" primary={false} />);
     expect(screen.getByRole("button", { name: /一键生成文章和图文/ }).getAttribute("data-variant")).toBe("outline");
   });
+});
+
+
+describe('T1463联合预约后的真实作品导航',()=>{
+ beforeEach(()=>{openChat.mockClear();refresh.mockClear();prepareScriptForCreation.mockReset();preparePair.mockReset();sessionStorage.clear();});
+ it('原组合成员准备成功后刷新导航，并提供既有作品列表入口',async()=>{
+  prepareScriptForCreation.mockResolvedValue({kind:'project_script',id:'s',versionId:'v'});preparePair.mockResolvedValue({clientRequestId:'same-creation'});
+  render(<WorkCreationCta projectId="p"/>);fireEvent.click(screen.getByRole('button',{name:'一键生成文章和图文'}));
+  await waitFor(()=>expect(openChat).toHaveBeenCalledOnce());expect(refresh).toHaveBeenCalledOnce();
+  expect(screen.getByRole('link',{name:'查看本项目作品'})).toHaveAttribute('href','/projects/p?view=works');
+  expect(preparePair).toHaveBeenCalledOnce();
+ });
+ it('部分成员创建后失败也刷新导航，保留原请求，不发送第二次生成',async()=>{
+  prepareScriptForCreation.mockResolvedValue({kind:'project_script',id:'s',versionId:'v'});preparePair.mockImplementation(async(_client:unknown,state:any)=>{state.compositionId='original';throw Error('图文预约未完成');});
+  render(<WorkCreationCta projectId="p"/>);fireEvent.click(screen.getByRole('button',{name:'一键生成文章和图文'}));
+  await waitFor(()=>expect(screen.getByRole('alert')).toHaveTextContent('图文预约未完成'));expect(refresh).toHaveBeenCalledOnce();expect(openChat).not.toHaveBeenCalled();
+ });
+ it('脚本准备尚未通过时不刷新导航或预约作品',async()=>{
+  prepareScriptForCreation.mockRejectedValue(Error('稿件仍在保存'));
+  render(<WorkCreationCta projectId="p"/>);fireEvent.click(screen.getByRole('button',{name:'一键生成文章和图文'}));
+  await waitFor(()=>expect(screen.getByRole('alert')).toHaveTextContent('稿件仍在保存'));expect(refresh).not.toHaveBeenCalled();expect(preparePair).not.toHaveBeenCalled();
+ });
 });

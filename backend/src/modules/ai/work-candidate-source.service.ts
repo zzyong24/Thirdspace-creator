@@ -8,7 +8,7 @@ import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
 import {and,asc,eq,aiMessages,aiTasks,executionTasks,executionCalls,type Db} from "@creatoros/backend";
-import {workAssistantSource as assistantProposalSourceSchema,workEditorCandidate,workCreationProposalResult,workEditorProposeInput,workCreationProposalInput,type WorkAssistantSource as AssistantProposalSource,type RequestContext} from "@creatoros/contract";
+import {workAssistantSource as assistantProposalSourceSchema,workEditorCandidate,workCreationProposalResult,workEditorProposeInput,workCreationProposalInput,workCreationDraftProposalInput,bindWorkCreationDraftMetadata,type GraphicPostDocument,type WorkAssistantSource as AssistantProposalSource,type RequestContext} from "@creatoros/contract";
 import {externalToolInputProofSchema,agenticToolOutcomeSchema,chatWorkerInputSchema,externalTaskToolCallSchema,externalChatStartSchema,externalChatReceiptSchema,workerToolResultReceiptSchema} from "@creatoros/contract/execution-worker";
 import {workspaceFilter,requireWorkspace} from "../../workspace-scope";
 import {createAgenticToolBinding,type AgenticBackendTool} from "../execution/agentic-tool-binding";
@@ -25,7 +25,7 @@ const proposalTools=new Set(["work.editor.propose","work.creation.propose"]);
 // SEMANTIC_BOUNDARY_ALLOW:仅核对来源与候选字节的身份，不选择内容或动作。
 const proposalDigest=(source:SourceIdentity,candidate:unknown)=>`sha256:${createHash("sha256").update(canonicalJson({source,candidate})).digest("hex")}`;
 /** 人的采纳读取已结算账本，不伪造活跃租约，不从聊天文字恢复证明。 */
-export function createWorkCandidateSourceService(db:Db){
+export function createWorkCandidateSourceService(db:Db,ports:{readGraphicVersion?:(ctx:RequestContext,outputId:string,versionId:string,store:Db)=>Promise<{versionId:string;document:GraphicPostDocument}>}={}){
  async function readSource(ctx:RequestContext,raw:unknown,store:Db=db){
   requireWorkspace(ctx);
   const requested=assistantProposalSourceSchema.parse(raw);
@@ -53,7 +53,7 @@ export function createWorkCandidateSourceService(db:Db){
   for(const definition of prepared.definitions){tools[definition.name]={version:definition.version,effect:'proposal',execution:'host',parameters:prepared.parameters[definition.name]!.parameters,parameterSchema:definition.parameters};}
   const binding=createAgenticToolBinding(tools);
   const calls=await store.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
-  function decode(call:typeof executionCalls.$inferSelect){
+  async function decode(call:typeof executionCalls.$inferSelect){
    if(call.status!=="settled"||!call.resultText)throw new ConflictError("候选调用尚未确认，不能采纳或重新提交");
    let value:unknown;try{value=JSON.parse(call.resultText);}catch{throw new ConflictError("候选调用回执损坏");}
    const receipt=call.kind==="tool"?workerToolResultReceiptSchema.parse(value):null;
@@ -76,7 +76,15 @@ export function createWorkCandidateSourceService(db:Db){
     if(candidate.target.savedBase.kind!=='artifact'||candidate.candidate?.kind!=='article'||candidate.candidateDigest!==workEditorContentDigest(candidate.candidate.document)||candidate.apply?.operation!=='createArticleVersion'||candidate.apply.outputId!==candidate.target.outputId||candidate.apply.body.expectedCurrentVersionId!==candidate.target.savedBase.versionId||!isDeepStrictEqual(candidate.apply.body.document,candidate.candidate.document))throw new ConflictError('文章候选正文与原采用摘要不符');
     if(!isDeepStrictEqual(candidate.target,verifiedHost.chatContext.editorTarget)||!isDeepStrictEqual(candidate.base,original.base)||candidate.baseDigest!==original.baseDigest||candidate.summary!==original.summary)throw new ConflictError('文章候选与原参数或目标不符');
    }else{
-    const original=workCreationProposalInput.parse(input);
+    let original;
+    if(creationOptions.workCreationMetadataOwned){
+     if(!isDeepStrictEqual(candidate.target,verifiedHost.chatContext.creationTarget))throw new ConflictError('联合候选目标与原冻结参数不符');
+     if(!ports.readGraphicVersion)throw new ConflictError('候选来源缺少原图文版本读取端口');
+     const member=candidate.target.graphicMember,base=await ports.readGraphicVersion(ctx,member.outputId,member.baseVersionId,store);
+     if(base.versionId!==member.baseVersionId)throw new ConflictError('候选原图文版本读回不符');
+     try{original=bindWorkCreationDraftMetadata(workCreationDraftProposalInput.parse(input),base.document);}
+     catch{throw new ConflictError('候选技术字段与原保存版本不符');}
+    }else original=workCreationProposalInput.parse(input);
     if(candidate.articleDigest!==workEditorContentDigest(candidate.article).slice(7)||candidate.graphicDigest!==workEditorContentDigest(candidate.graphic).slice(7)||!isDeepStrictEqual(candidate.scriptSourceRef,candidate.target.scriptSourceRef))throw new ConflictError('联合候选正文摘要或原脚本不符');
     if(!isDeepStrictEqual(candidate.target,verifiedHost.chatContext.creationTarget)||candidate.targetDigest!==original.targetDigest||!isDeepStrictEqual(candidate.article,original.article)||!isDeepStrictEqual(candidate.graphic,original.graphic))throw new ConflictError('联合候选与原参数或目标不符');
    }
@@ -105,14 +113,14 @@ export function createWorkCandidateSourceService(db:Db){
   }
   const requestedCall=calls.find(c=>c.id===requested.callId);
   if(!requestedCall)throw new ConflictError("本任务没有该候选调用");
-  let current=decode(requestedCall);
+  let current=await decode(requestedCall);
   if(current.toolCallId!==requested.toolCallId)throw new ConflictError("候选工具调用ID不符");
   const seen=new Set<string>();
   while(current.receipt?.reusedCallId){
    if(seen.has(current.call.id))throw new ConflictError("候选重用来源循环");seen.add(current.call.id);
    const original=calls.find(c=>c.id===current.receipt!.reusedCallId);
    if(!original||original.sequence>=current.call.sequence)throw new ConflictError("候选重用来源无效");
-   const prior=decode(original);
+   const prior=await decode(original);
    if(prior.toolName!==current.toolName||!isDeepStrictEqual(prior.input,current.input)||!isDeepStrictEqual(prior.outcome,current.outcome))throw new ConflictError("候选重用结果与原调用不符");
    current=prior;
   }
@@ -132,7 +140,7 @@ export function createWorkCandidateSourceService(db:Db){
   if(!task)throw new ConflictError('原执行任务不存在');
   const calls=await store.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
   const frozen=chatWorkerInputSchema.parse(object(task.payload).modelInput);
-  const tools=Object.fromEntries(frozen.tools.filter(t=>proposalTools.has(t.name)).map(t=>[t.name,{version:t.version,effect:'proposal' as const,parameters:t.name==='work.editor.propose'?workEditorProposeInput:workCreationProposalInput}]));
+  const tools=Object.fromEntries(frozen.tools.filter(t=>proposalTools.has(t.name)).map(t=>[t.name,{version:t.version,effect:'proposal' as const,parameters:t.name==='work.editor.propose'?workEditorProposeInput:t.version.startsWith('chat-tools-work-director-v3:')?workCreationDraftProposalInput:workCreationProposalInput}]));
   const binding=createAgenticToolBinding(tools);
   const selected=calls.filter(call=>{
    if(call.kind==='external_tool'){const proof=externalTaskToolCallSchema.safeParse(call.providerResult);return proof.success&&proof.data.toolCallId===input.toolCallId&&proposalTools.has(proof.data.toolName);}

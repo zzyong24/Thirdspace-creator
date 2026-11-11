@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {workCreationTarget,workCreationProposalInput,workCreationReadResult,workCreationProposalResult,type RequestContext,type WorkCreationTarget,type WorkCreationProposalInput} from '@creatoros/contract';
+import {workCreationTarget,workCreationProposalInput,workCreationDraftProposalInput,bindWorkCreationDraftMetadata,WorkCreationMetadataConflictError,workCreationReadResult,workCreationProposalResult,type RequestContext,type WorkCreationTarget,type WorkCreationProposalInput,type WorkCreationDraftProposalInput} from '@creatoros/contract';
 import type {WorkCompositionsService} from '../../modules/work-compositions';
 import type {ArticlesService} from '../../modules/articles';
 import type {GraphicPostsService} from '../../modules/graphic-posts';
@@ -57,5 +57,11 @@ export function createWorkCreationRoot(ports:WorkCreationPorts){
   for(const file of files)if(!current.images.some(image=>image.assetId===file.assetId&&image.assetFileId===file.assetFileId))conflict('候选包含未在当前素材目录核验的图片文件。');
   return workCreationProposalResult.parse({kind:'work.creation.propose',schemaVersion:1,target:current.target,targetDigest:current.targetDigest,article:proposal.article,graphic:proposal.graphic,articleDigest:fingerprint(proposal.article),graphicDigest:fingerprint(proposal.graphic),scriptSourceRef:current.scriptSourceRef,error:null});
  }
- return {read,propose};
+ async function proposeDraft(ctx:RequestContext,target:WorkCreationTarget,raw:WorkCreationDraftProposalInput){
+  const draft=workCreationDraftProposalInput.parse(raw),current=await read(ctx,target);
+  if(draft.targetDigest!==current.targetDigest)conflict('候选对应的确认脚本或成员不符。');
+  try{return await propose(ctx,target,bindWorkCreationDraftMetadata(draft,current.graphic));}
+  catch(error){if(error instanceof WorkCreationMetadataConflictError)throw new ChatToolUserError(error.message);throw error;}
+ }
+ return {read,propose,proposeDraft};
 }

@@ -1,5 +1,5 @@
 import {ChatHostKnownReadFailure} from "./chat-host-tool-adapter";
-import {workEditorOwnerSchemas,workEditorReadInput,workEditorReadInputV1,workEditorProposeInputV1,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput} from "@creatoros/contract";
+import {workEditorOwnerSchemas,workEditorReadInput,workEditorReadInputV1,workEditorProposeInputV1,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,workCreationDraftProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput,type WorkCreationDraftProposalInput} from "@creatoros/contract";
 import {buildRedfoxTool} from "./chat-redfox-tool";
 import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
@@ -79,6 +79,8 @@ export interface ChatToolDeps {
   creationTarget?:WorkCreationTarget;
   readWorkCreation?:(input?:{targetDigest?:string})=>Promise<WorkCreationReadResult>;
   proposeWorkCreation?:(input:WorkCreationProposalInput)=>Promise<WorkCreationProposalResult>;
+  workCreationMetadataOwned?:boolean;
+  proposeWorkCreationDraft?:(input:WorkCreationDraftProposalInput)=>Promise<WorkCreationProposalResult>;
   boundCanvasId?:string;
   /** 仅恢复已知旧冻结合同；当前任务仍使用严格operations schema。 */
   legacyCanvasProposalParameters?:boolean;
@@ -4102,9 +4104,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute:async(input)=>{if(!deps.creationTarget||!deps.readWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.readWorkCreation(input);},
     },deps.humanizeError),
     "work.creation.propose":defineChatTool("work.creation.propose",{
-      description:"参数只有{targetDigest,article,graphic}。targetDigest逐字复制work.creation.read返回值（裸64hex，无sha256前缀）。先克隆read的完整article和graphic，仅填写本次创作字段，保留来源、metadataSource、图片和布局等原稿字段。article必有schemaVersion:1、title、summary、sections、factItems、visualBriefs、imageUses；sections每项严格为{sectionId,order,heading,headingLevel,body,sourceRefs}，sectionId是明确唯一非空ID，order从0按顺序，headingLevel为1至6整数，正文在body。graphic必有schemaVersion:1、title、body、summary、tags、imageUses、sourceRefs、ruleSnapshotRef；cardBriefs每项严格为{cardId,title,body,sourceRefs,visualBrief?}，cardId是明确唯一非空ID，数组顺序就是页顺序。不要造id/page/type/text或proposedSections等替代字段。sourceRefs引用read的共同scriptSourceRef，不编ID。metadataSource保持read原值；原稿没有就不要新增，不能把titleSourceRefs/summarySourceRefs包进metadataSource。它只接受原project或publication_revision discriminator结构。没有事实、视觉建议或图片时使用对应空数组，不能省略必填根字段。当前引擎亲自联合创作完整可编辑候选，纯文字图文可预览；不写正式稿、不调用第二模型、不提交视频或生图任务。",
-      inputSchema:workCreationProposalInput,
-      execute:async(input)=>{if(!deps.creationTarget||!deps.proposeWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.proposeWorkCreation(input);},
+      description:deps.workCreationMetadataOwned?"参数严格为{targetDigest,article,graphic}，先读取work.creation.read并使用同一确认脚本及原组合成员。article和graphic沿各自typed文档字段创作完整正文；标题/摘要/段落/图卡的sourceRefs逐字使用read.scriptSourceRef，targetDigest复制裸64hex。规则快照是宿主技术字段：graphic.ruleSnapshotRef可省略或为{}以继承当前已确认值；若传null或versionId则必须与read原值一致，禁止编造。graphic.imageUses可省略以保留已有图片；纯文字可传[]，显式图片必须从read.images选真实文件。图卡严格为{cardId,title,body,sourceRefs,visualBrief?}，文章段落严格为{sectionId,order,heading,headingLevel,body,sourceRefs}。不造替代字段或元数据结构。模型只写创作内容，宿主补齐原规则快照和遗漏的图片数组后再按原领域契约、项目/版本/来源守卫验证，生成两份完整可预览候选；不写正式稿、不生成视频、语音或图片。":"参数只有{targetDigest,article,graphic}。targetDigest逐字复制work.creation.read返回值（裸64hex，无sha256前缀）。先克隆read的完整article和graphic，仅填写本次创作字段，保留来源、metadataSource、图片和布局等原稿字段。article必有schemaVersion:1、title、summary、sections、factItems、visualBriefs、imageUses；sections每项严格为{sectionId,order,heading,headingLevel,body,sourceRefs}，sectionId是明确唯一非空ID，order从0按顺序，headingLevel为1至6整数，正文在body。graphic必有schemaVersion:1、title、body、summary、tags、imageUses、sourceRefs、ruleSnapshotRef；cardBriefs每项严格为{cardId,title,body,sourceRefs,visualBrief?}，cardId是明确唯一非空ID，数组顺序就是页顺序。不要造id/page/type/text或proposedSections等替代字段。sourceRefs引用read的共同scriptSourceRef，不编ID。metadataSource保持read原值；原稿没有就不要新增，不能把titleSourceRefs/summarySourceRefs包进metadataSource。它只接受原project或publication_revision discriminator结构。没有事实、视觉建议或图片时使用对应空数组，不能省略必填根字段。当前引擎亲自联合创作完整可编辑候选，纯文字图文可预览；不写正式稿、不调用第二模型、不提交视频或生图任务。",
+      inputSchema:deps.workCreationMetadataOwned?workCreationDraftProposalInput:workCreationProposalInput,
+      execute:async(input)=>{if(!deps.creationTarget)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');if(deps.workCreationMetadataOwned){if(!deps.proposeWorkCreationDraft)throw new ChatToolUserError('联合创作缺少元数据核验端口');return deps.proposeWorkCreationDraft(workCreationDraftProposalInput.parse(input));}if(!deps.proposeWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.proposeWorkCreation(workCreationProposalInput.parse(input));},
     },deps.humanizeError),
     "canvas.read":defineChatTool("canvas.read",{
       description:"只读当前账号已选创作画布。先读取真实节点 ID、连接与 revision，再提出操作建议；不要猜测画布内容。",

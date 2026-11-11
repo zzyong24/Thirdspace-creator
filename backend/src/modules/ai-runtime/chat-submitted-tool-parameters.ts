@@ -72,8 +72,9 @@ const historicalDefinitions=immutable([
 
 /** 原生产解析顺序是旧调用摘要的一部分；恢复时先核对完整定义，不能由 JSONB 键序重建。 */
 export async function resolveSubmittedChatToolParameters(frozen:z.infer<typeof chatWorkerInputSchema>["tools"][number]) {
- const tools=buildChatTools([frozen.name],{} as ChatToolDeps);
- const prepared=await prepareChatToolDefinitions(tools,{
+ const workCreationMetadataOwned=['work.creation.read','work.creation.propose'].includes(frozen.name)&&/^chat-tools-work-director-v3:/.test(frozen.version);
+ const tools=buildChatTools([frozen.name],{workCreationMetadataOwned} as ChatToolDeps);
+ const prepared=await prepareChatToolDefinitions(tools,{workCreationMetadataOwned,
   workerScriptDraft:frozen.execution==="worker.script-draft",
   atomicCoverGenerate:true,atomicAgenticResearch:true,atomicPlanningThesis:true,
   atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,

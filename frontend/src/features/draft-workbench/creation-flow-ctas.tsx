@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { GitBranch, Search, Upload, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ const CREATION_PREFILL="请使用已确认脚本与同一创作方法，一起�
 /** primary（批次2-7）：未发布时它是脚本阶段唯一主按钮；已发布后主按钮让位给「看复盘」。 */
 export function WorkCreationCta({ projectId, primary = true }: { projectId: string; primary?: boolean }) {
   const { openChat,prepareScriptForCreation,readWritingContext } = useDraftChatRequest();
+  const router=useRouter();
   const client=useCreationClient(),scope=useCreationScope(),scopeKey=creationScopeKey(scope);
   const storageKey=`creatoros:t1070:creation:${scopeKey}:${projectId}`;
   const intent=React.useRef<WorkCreationRequestState|null>(null),currentScope=React.useRef(scopeKey),mounted=React.useRef(true);
@@ -38,23 +40,23 @@ export function WorkCreationCta({ projectId, primary = true }: { projectId: stri
     // A remounted rail can still own the original live SDK request. An interrupted
     // preparing marker is UNKNOWN until that request explicitly reports no fetch.
     const latest=sessionStorage.getItem(storageKey);if(latest){const stored:WorkCreationRequestState=JSON.parse(latest);if(stored.clientRequestId===intent.current.clientRequestId&&stored.submission==='not-submitted')intent.current=stored;}
-    const frozen=intent.current;if(frozen.submission==='not-submitted'){sendFrozen(frozen,scopeKey);return;}openChat({prefill:"",autoSend:false,creationTarget:frozen.creationTarget,onCreationSettled:settledCallback(frozen,scopeKey),onCreationSubmission:submissionCallback(frozen,scopeKey)});setCreationError("原生成结果尚未确认，正在编导中读取原任务结果。请保留原请求，不要重复生成。");return;}setCreating(true);setCreationError(null);const frozenScope=scopeKey;try{
+    const frozen=intent.current;if(frozen.submission==='not-submitted'){sendFrozen(frozen,scopeKey);return;}openChat({prefill:"",autoSend:false,creationTarget:frozen.creationTarget,onCreationSettled:settledCallback(frozen,scopeKey),onCreationSubmission:submissionCallback(frozen,scopeKey)});setCreationError("原生成结果尚未确认，正在编导中读取原任务结果。请保留原请求，不要重复生成。");return;}setCreating(true);setCreationError(null);const frozenScope=scopeKey;let reservationStarted=false;try{
     const source=await prepareScriptForCreation();
     if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，请回原项目恢复。");
     if(!intent.current){const previous=sessionStorage.getItem(storageKey);if(previous)intent.current=JSON.parse(previous);}
     if(intent.current&&JSON.stringify(intent.current.source)!==JSON.stringify(source)){
       const original=intent.current;
-      await prepareWorkCreationRequest(client,original,()=>sessionStorage.setItem(storageKey,JSON.stringify(original)));
+      reservationStarted=true;await prepareWorkCreationRequest(client,original,()=>sessionStorage.setItem(storageKey,JSON.stringify(original)));
       if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，原组合已保留。");
       sessionStorage.removeItem(storageKey);intent.current=null;
       throw Error("原组合预约已恢复，原作品保留。当前脚本已有新版本，本次未生成；请再次点击确认当前脚本。");
     }
     intent.current??={clientRequestId:crypto.randomUUID(),projectId,source,writingContext:readWritingContext(scopeKey,projectId)??{schemaVersion:1,brandProfileVersionId:null,sourceAssets:[]}};
     const frozen=intent.current,persist=()=>sessionStorage.setItem(storageKey,JSON.stringify(frozen));persist();
-    const creationTarget=await prepareWorkCreationRequest(client,frozen,persist);
+    reservationStarted=true;const creationTarget=await prepareWorkCreationRequest(client,frozen,persist);
     if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，原组合已保留。");
     frozen.completed=true;frozen.creationTarget=creationTarget;persist();sendFrozen(frozen,frozenScope);
-  }catch(cause){if(mounted.current)setCreationError(cause instanceof Error?cause.message:"准备未完成，原预约已保留。");}finally{if(mounted.current)setCreating(false);}}
+  }catch(cause){if(mounted.current)setCreationError(cause instanceof Error?cause.message:"准备未完成，原预约已保留。");}finally{if(mounted.current){setCreating(false);if(reservationStarted&&currentScope.current===frozenScope)router.refresh();}}}
 
   return (
     <section
@@ -64,6 +66,7 @@ export function WorkCreationCta({ projectId, primary = true }: { projectId: stri
     >
       <Button type="button" variant={primary?"default":"outline"} disabled={creating||submission==='preparing'} onClick={()=>void createPair()} className="min-h-11 gap-2"><Sparkles className="size-4"/>{creating||submission==='preparing'?"正在保存并准备…":submitted?"查看原文章和图文生成":creationError||submission==='not-submitted'?"恢复原请求 · 一键生成文章和图文":"一键生成文章和图文"}</Button>
       <span className="text-[11px] text-text-subtle">使用上方已保存的脚本，分别生成文章和图文候选，预览后再采纳</span>
+      <Link href={`/projects/${encodeURIComponent(projectId)}?view=works`} className="text-sm text-primary hover:underline">查看本项目作品</Link>
       {creationError?<p role="alert" className="w-full text-sm text-destructive">{creationError}</p>:null}
     </section>
   );

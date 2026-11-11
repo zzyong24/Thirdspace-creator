@@ -1,10 +1,15 @@
+import {createServer} from 'node:http';
+import {resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import {canonicalJson} from '../ai/canonical-json';
+import {createChatWorkerDispatcher} from '../execution/model-worker-dispatcher';
 import {createWorkCandidateSourceService} from '../ai/work-candidate-source.service';
 import {createWorkCandidateAdoption} from '../../application/generation/work-candidate-adoption';
 import {createChatTaskToolHost} from './chat-task-tool-host';
 import {createExecutionChatToolPorts} from '../execution/execution-chat-tool-ports.service';
 import {createWorkWritingContext} from '../../application/generation/work-writing-context';
 import {afterEach,expect,it} from 'vitest';
-import {createDb,eq,executionCalls,aiTasks,type Db} from '@creatoros/backend';
+import {createDb,eq,executionCalls,executionTasks,aiTasks,type Db} from '@creatoros/backend';
 import {ENDPOINTS,type RequestContext,type WorkCreationTarget,type WorkCreationProposalInput,workCreationProposalResult} from '@creatoros/contract';
 import {createProjectRepository,createProjectsService} from '../projects';
 import {createArtifactsService} from '../artifacts';
@@ -65,11 +70,11 @@ function candidate(f:Awaited<ReturnType<typeof fixture>>,read:Awaited<ReturnType
  const refs=[f.target.scriptSourceRef];
  return {targetDigest:read.targetDigest,article:{...read.article,title:'先展示操作',titleSourceRefs:refs,summary:'从真实操作说明方法',summarySourceRefs:refs,sections:[{sectionId:'neutral-section',order:0,heading:'先做再解释',headingLevel:2,body:long?'完整原稿。'.repeat(18000):'预算200元，先展示操作，再说明方法。',sourceRefs:refs}]},graphic:{...read.graphic,title:'先做再解释',body:'预算200元。',summary:'一步步说明',sourceRefs:refs,cardBriefs:[{cardId:'neutral-card-1',title:'操作',body:'先展示操作',sourceRefs:refs},{cardId:'neutral-card-2',title:'方法',body:'再说明方法',sourceRefs:refs}]}};
 }
-async function frozen(f:Awaited<ReturnType<typeof fixture>>,v2=false){
- const definitionOptions={workWritingContext:v2};
+async function frozen(f:Awaited<ReturnType<typeof fixture>>,v2=false,metadataOwned=false){
+ const definitionOptions={workWritingContext:v2,workCreationMetadataOwned:metadataOwned};
  const resolvedWritingContext=v2?await createWorkWritingContext({assertProject:(c,id)=>f.owned.projects.getProject(c,id),readDocument:unavailable,readCenter:unavailable,readStatement:unavailable}).resolve(f.ctx,f.project.id,{schemaVersion:1,brandProfileVersionId:null,sourceAssets:[]}):undefined;
  if(resolvedWritingContext)f.target.writingContext=resolvedWritingContext.selection;
- const prototypes=buildChatTools(['work.creation.read','work.creation.propose'],{humanizeError:()=>null,creationTarget:f.target,readWorkCreation:()=>f.root.read(f.ctx,f.target),proposeWorkCreation:(input:WorkCreationProposalInput)=>f.root.propose(f.ctx,f.target,input)} as unknown as ChatToolDeps);
+ const prototypes=buildChatTools(['work.creation.read','work.creation.propose'],{humanizeError:()=>null,creationTarget:f.target,workCreationMetadataOwned:metadataOwned,readWorkCreation:()=>f.root.read(f.ctx,f.target),proposeWorkCreation:(input:WorkCreationProposalInput)=>f.root.propose(f.ctx,f.target,input),proposeWorkCreationDraft:(input:unknown)=>(f.root as unknown as {proposeDraft(ctx:RequestContext,target:WorkCreationTarget,input:unknown):Promise<unknown>}).proposeDraft(f.ctx,f.target,input)} as unknown as ChatToolDeps);
  const definitions=(await prepareChatToolDefinitions(prototypes,definitionOptions)).definitions;
  const ai=createAiService({db:f.db,now:f.now,nextId:f.nextId,artifacts:{createVersion:unavailable},knowledge:{createKnowledge:unavailable},positioning:{upsertProfile:unavailable,createStatementVersion:unavailable},candidate:{createFromAIResult:unavailable,enrichCard:unavailable},learnings:{createLearning:unavailable},publishing:{createPublicationFromDraft:unavailable},materialLinks:{link:unavailable},calibration:{createDraftPrediction:unavailable}});
  const conversation=await ai.createConversation(f.ctx,{title:'共同脚本编导',projectId:f.project.id,scope:`project:${f.project.id}`});
@@ -100,8 +105,8 @@ it('v2 公开提交/真实lease/生产组合Host通过原validateTask准入',asy
  await expect(ports.validateTask(chat.ref)).resolves.toMatchObject({tools:chat.definitions});
 });
 
-it.each([false,true])('写作v2=%s 原submit/lease/生产组合准入/终态/source/两owner采纳与隔离',async v2=>{
- const f=await fixture(),chat=await frozen(f,v2);
+it.each([1,2,3] as const)('协议v%s 原submit/lease/生产组合准入/终态/source/两owner采纳与隔离',async version=>{
+ const f=await fixture(),chat=await frozen(f,version>=2,version===3);
  const beforeScript=await f.artifactsFor(f.db).listVersions(f.ctx,f.target.scriptSourceRef.id);
  const ports=createExecutionChatToolPorts(f.db,{now:f.now,budget:{maxCalls:12,maxTokens:1000000,deadlineMs:120000},tools:chat.tools});
  await ports.validateTask(chat.ref);
@@ -119,7 +124,7 @@ it.each([false,true])('写作v2=%s 原submit/lease/生产组合准入/终态/sou
  await chat.turns.commit(chat.ref,{callId:chat.turn.callId});
  const messages=await chat.ai.listMessages(f.ctx,chat.conversation.id);
  expect(messages).toHaveLength(2);expect((messages[1]!.parts as Array<{type:string}>).some(part=>part.type==='tool-work.creation.propose')).toBe(true);
- const source=createWorkCandidateSourceService(f.db),preview=await source.read(f.ctx,{conversationId:chat.conversation.id,sourceMessageId:chat.input.sourceMessageId,toolCallId:request.toolCallId});
+ const source=createWorkCandidateSourceService(f.db,{readGraphicVersion:(c,id,versionId,store)=>f.ownersFor(store).graphicPosts.getVersion(c,id,versionId)}),preview=await source.read(f.ctx,{conversationId:chat.conversation.id,sourceMessageId:chat.input.sourceMessageId,toolCallId:request.toolCallId});
  expect(preview.candidate).toMatchObject({kind:'work.creation.propose',article:proposal.article,graphic:proposal.graphic});
  expect((await source.readSource(f.ctx,preview.assistantSource)).candidate).toEqual(preview.candidate);
  const adapter=createWorkCandidateAdoption(f.db,{source,articles:store=>f.ownersFor(store).articles,graphic:store=>f.ownersFor(store).graphicPosts,lockArtifact:(ctx,id,store)=>f.artifactsFor(store).getArtifact(ctx,id,true)});
@@ -141,3 +146,78 @@ it.each([false,true])('写作v2=%s 原submit/lease/生产组合准入/终态/sou
  expect(await f.artifactsFor(f.db).listVersions(f.ctx,f.target.scriptSourceRef.id)).toEqual(beforeScript);
  const calls=await f.db.select().from(executionCalls);expect(calls.filter(call=>call.kind==='model')).toEqual([]);expect(calls.filter(call=>call.kind==='external_tool')).toHaveLength(2);
 });
+
+
+it.each(['empty-object','omitted'] as const)('T1463 v3真实公开提案及预览：%s规则占位与遗漏图片数组由原属主继承',async mode=>{
+ const f=await fixture(),chat=await frozen(f,true,true),truth=await f.root.read(f.ctx,f.target),proposal=candidate(f,truth);
+ const raw=structuredClone(proposal) as unknown as {targetDigest:string;article:unknown;graphic:Record<string,unknown>};
+ if(mode==='empty-object')raw.graphic.ruleSnapshotRef={};else delete raw.graphic.ruleSnapshotRef;
+ delete raw.graphic.imageUses;
+ const request={turnCallId:chat.turn.callId,toolCallId:'owned-metadata-proposal',toolName:'work.creation.propose',input:raw};
+ const result=await chat.external.execute(chat.ref,request,chat.tools,chat.signal);
+ expect(result).toMatchObject({status:'settled',outcome:{status:'ok',sideEffect:'proposal'}});
+ const parsed=workCreationProposalResult.parse((result as any).outcome.data);
+ expect(parsed.graphic.ruleSnapshotRef).toBeNull();expect(parsed.graphic.imageUses).toEqual([]);
+ expect(parsed.article.sections).toEqual(proposal.article.sections);expect(parsed.graphic.cardBriefs).toEqual(proposal.graphic.cardBriefs);
+ expect(await chat.external.execute(chat.ref,request,chat.tools,chat.signal)).toEqual(result);
+ await chat.turns.settle(chat.ref,{callId:chat.turn.callId,status:'settled',receipt:{schemaVersion:1,engine:'codex',protocolKind:'acp',protocolVersion:1,sessionId:'creation-session',turnId:chat.turn.callId,providerTurnId:'creation-provider-turn',stopReason:'end_turn',text:'两份候选已准备，尚未采纳',usage:null}});
+ await chat.turns.commit(chat.ref,{callId:chat.turn.callId});
+ const source=createWorkCandidateSourceService(f.db,{readGraphicVersion:(c,id,versionId,store)=>f.ownersFor(store).graphicPosts.getVersion(c,id,versionId)}),preview=await source.read(f.ctx,{conversationId:chat.conversation.id,sourceMessageId:chat.input.sourceMessageId,toolCallId:request.toolCallId});
+ const previewCandidate=workCreationProposalResult.parse(preview.candidate);expect(previewCandidate.article).toEqual(parsed.article);expect(previewCandidate.graphic).toEqual(parsed.graphic);
+ expect((await source.readSource(f.ctx,preview.assistantSource)).candidate).toEqual(preview.candidate);
+ expect((await f.owned.articles.getArticle(f.ctx,f.target.articleMember.outputId)).current).toEqual(truth.article);
+ expect((await f.owned.graphicPosts.getGraphicPost(f.ctx,f.target.graphicMember.outputId)).current).toEqual(truth.graphic);
+ await expect(createWorkCandidateSourceService(f.db).read(f.ctx,{conversationId:chat.conversation.id,sourceMessageId:chat.input.sourceMessageId,toolCallId:request.toolCallId})).rejects.toThrow('读取端口');
+ const [saved]=await f.db.select().from(executionCalls).where(eq(executionCalls.id,result.callId));const tampered=JSON.parse(saved!.resultText!);
+ tampered.data.graphic.ruleSnapshotRef={versionId:'invented-in-result'};tampered.data.graphicDigest=createHash('sha256').update(canonicalJson(tampered.data.graphic)).digest('hex');
+ await f.db.update(executionCalls).set({resultText:JSON.stringify(tampered)}).where(eq(executionCalls.id,result.callId));
+ await expect(source.read(f.ctx,{conversationId:chat.conversation.id,sourceMessageId:chat.input.sourceMessageId,toolCallId:request.toolCallId})).rejects.toThrow('原参数或目标');
+ expect(chat.definitions.every(def=>def.version.startsWith('chat-tools-work-director-v3:'))).toBe(true);
+});
+
+it('T1463真实Pi Worker从冻结schema经宿主生成两份可独立预览候选，保留原稿',async()=>{
+ const f=await fixture();const stamp=f.now();
+ const resolved=await createWorkWritingContext({assertProject:(c,id)=>f.owned.projects.getProject(c,id),readDocument:unavailable,readCenter:unavailable,readStatement:unavailable}).resolve(f.ctx,f.project.id,{schemaVersion:1,brandProfileVersionId:null,sourceAssets:[]});
+ f.target.writingContext=resolved.selection;
+ const before=await f.root.read(f.ctx,f.target);
+ const tools=buildChatTools(['work.creation.read','work.creation.propose'],{humanizeError:()=>null,workCreationMetadataOwned:true,creationTarget:f.target,readWorkCreation:()=>f.root.read(f.ctx,f.target),proposeWorkCreationDraft:(input:unknown)=>f.root.proposeDraft(f.ctx,f.target,input as never)} as unknown as ChatToolDeps);
+ const definitions=(await prepareChatToolDefinitions(tools,{workWritingContext:true,workCreationMetadataOwned:true})).definitions;
+ const ai=createAiService({db:f.db,nextId:f.nextId,now:f.now,artifacts:{createVersion:unavailable},knowledge:{createKnowledge:unavailable},positioning:{upsertProfile:unavailable,createStatementVersion:unavailable},candidate:{createFromAIResult:unavailable,enrichCard:unavailable},learnings:{createLearning:unavailable},publishing:{createPublicationFromDraft:unavailable},materialLinks:{link:unavailable},calibration:{createDraftPrediction:unavailable}});
+ const conversation=await ai.createConversation(f.ctx,{title:'真实Worker技术元数据验收',projectId:f.project.id,scope:`project:${f.project.id}`}),source=await ai.createMessage(f.ctx,conversation.id,{content:'从已确认脚本生成文章和图文候选，不生成视频或图片',attachments:[]});
+ const hostContext={schemaVersion:1,chatContext:{surface:'project',projectId:f.project.id,creationTarget:f.target},resolvedWritingContext:resolved,mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1,userId:f.ctx.userId,accountId:null,groupId:f.ctx.groupId,resolvedAt:stamp,platformPolicyVersion:'1',platformPolicy:'只生成候选',skills:[{skillId:resolveSkillForSurface('project'),baseVersion:'test',overlayRevision:null,overlayVersion:null,effective:{methodSystem:'共同脚本，两份候选',template:'',tools:['work.creation.read','work.creation.propose'],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
+ const submitter=createChatTurnSubmissionService(f.db,{assertProject:(c,id)=>f.owned.projects.getProject(c,id),assemble:async()=>({capability:'copilot.assist',system:'读取后提出两份候选',messages:[{role:'user',content:source.content}],tools:definitions,maxSteps:5,maxOutputTokens:4096,hostContext} as never)});
+ const submitted=await submitter.submit(f.ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ let count=0;const errors:string[]=[];let expected:ReturnType<typeof candidate>|undefined;
+ const server=createServer(async(req,res)=>{try{
+  let body='';for await(const chunk of req)body+=chunk;const request=JSON.parse(body);const ordinal=++count;
+  let delta:unknown,finish='tool_calls';
+  if(ordinal===1){
+   expect(request.tools.find((t:any)=>t.function.name==='work_creation_propose').function.parameters.properties.graphic.required).not.toContain('ruleSnapshotRef');
+   delta={tool_calls:[{index:0,id:'owned-read',type:'function',function:{name:'work_creation_read',arguments:'{}'}}]};
+  }else if(ordinal===2){
+   let read:Awaited<ReturnType<typeof f.root.read>>|undefined;
+   for(const message of request.messages.filter((m:any)=>m.role==='tool').reverse()){
+    let value=message.content;if(typeof value==='string'){if(value.startsWith('[原工具调用 ID: '))value=value.slice(value.indexOf('\n')+1);try{value=JSON.parse(value);}catch{continue;}}
+    if(value?.kind==='work.creation.read')read=value;else if(value?.data?.kind==='work.creation.read')read=value.data;
+    if(read)break;
+   }
+   if(!read)throw Error('模型未取得真实联合读取回执');
+   expected=candidate(f,read);const input=structuredClone(expected) as unknown as {graphic:Record<string,unknown>};input.graphic.ruleSnapshotRef={};delete input.graphic.imageUses;
+   delta={tool_calls:[{index:0,id:'owned-propose',type:'function',function:{name:'work_creation_propose',arguments:JSON.stringify(input)}}]};
+  }else{if(ordinal!==3)throw Error('模型不应重复调用');finish='stop';delta={content:'文章和图文候选已完成，请分别预览后采纳。'};}
+  const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:finish}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{'content-type':'text/event-stream'});res.end(chunks.map(c=>`data: ${JSON.stringify({id:'owned-fixture',object:'chat.completion.chunk',created:1,model:'fixture',...c})}\n\n`).join('')+'data: [DONE]\n\n');
+ }catch(error){errors.push(String(error));res.writeHead(500);res.end('隔离模型协议失败');}});
+ await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+ const worker=createChatWorkerDispatcher(f.db,{entryPath:resolve('../ai-worker/dist/execution-worker.cjs'),workerId:'owned-metadata-worker',budget:{maxCalls:10,maxTokens:100000,deadlineMs:120000},pollMs:100,modelConcurrency:1,resolveTools:createChatTaskToolHost(createChatHostContextReader(f.db),{} as never,{creation:f.root}),resolveModelCredential:async()=>({apiFormat:'openai_chat',baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:'fixture',token:'fixture'})});
+ try{
+  worker.start();await expect.poll(async()=>(await f.db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]?.status,{timeout:120000}).toBe('succeeded');
+  expect(errors).toEqual([]);expect(count).toBe(3);expect(expected).toBeDefined();
+  const reader=createWorkCandidateSourceService(f.db,{readGraphicVersion:(c,id,versionId,store)=>f.ownersFor(store).graphicPosts.getVersion(c,id,versionId)});
+  const preview=await reader.read(f.ctx,{conversationId:conversation.id,sourceMessageId:source.id,toolCallId:'owned-propose'});
+  expect(preview.candidate).toMatchObject({kind:'work.creation.propose',article:expected!.article,graphic:expected!.graphic});
+  expect((await f.owned.articles.getArticle(f.ctx,f.target.articleMember.outputId)).current).toEqual(before.article);
+  expect((await f.owned.graphicPosts.getGraphicPost(f.ctx,f.target.graphicMember.outputId)).current).toEqual(before.graphic);
+  await expect(reader.read({...f.ctx,groupId:'other-group'},{conversationId:conversation.id,sourceMessageId:source.id,toolCallId:'owned-propose'})).rejects.toThrow();
+ }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+},180000);

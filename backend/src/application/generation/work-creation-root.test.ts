@@ -7,9 +7,10 @@ const ref={kind:'project_script' as const,id:'script-1',versionId:'script-versio
 const article={schemaVersion:1 as const,title:'主题',titleSourceRefs:[ref],summary:'说明',summarySourceRefs:[ref],sections:[{sectionId:'s1',order:0,heading:'主题',headingLevel:2,body:'已确认事实',sourceRefs:[ref]}],factItems:[],visualBriefs:[],imageUses:[]};
 const graphic={schemaVersion:1 as const,title:'主题',body:'正文',summary:'说明',tags:[],imageUses:[],cardBriefs:[{cardId:'c1',title:'第一张',body:'已确认事实',sourceRefs:[ref]}],sourceRefs:[ref],ruleSnapshotRef:null};
 const target={schemaVersion:1 as const,clientRequestId:'neutral-creation-request',projectId:'project-1',compositionId:'composition-1',compositionRevision:3,scriptSourceRef:ref,scriptConfirmation:{confirmedBy:'user' as const,source:'current-click' as const},articleMember:{kind:'article' as const,outputId:'article-1',artifactId:'article-artifact',baseVersionId:'article-version'},graphicMember:{kind:'image' as const,outputId:'graphic-1',artifactId:'graphic-artifact',baseVersionId:'graphic-version'}};
-function fixture(){
+function fixture(ruleSnapshotRef:import('@creatoros/contract').GraphicPostDocument['ruleSnapshotRef']=null,imageUses:import('@creatoros/contract').GraphicPostDocument['imageUses']=[]){
+ const savedGraphic={...graphic,ruleSnapshotRef,imageUses};
  const composition={compositionId:target.compositionId,projectId:target.projectId,currentRevision:3,current:{members:[{member:{kind:'article',outputId:'article-1'}},{member:{kind:'image',outputId:'graphic-1'}}]},memberCurrent:[{availability:'available',member:{kind:'article',outputId:'article-1'},currentVersion:{kind:'artifact',artifactId:'article-artifact',versionId:'article-version'}},{availability:'available',member:{kind:'image',outputId:'graphic-1'},currentVersion:{kind:'artifact',artifactId:'graphic-artifact',versionId:'graphic-version'}}]};
- const ports={compositions:{get:vi.fn(async()=>composition)},articles:{getArticle:vi.fn(async()=>({projectId:'project-1',outputId:'article-1',artifactId:'article-artifact',currentVersionId:'article-version',current:article})),getVersion:vi.fn(async()=>({versionId:'article-version',document:article}))},graphicPosts:{getGraphicPost:vi.fn(async()=>({projectId:'project-1',outputId:'graphic-1',artifactId:'graphic-artifact',currentVersionId:'graphic-version',current:graphic})),getVersion:vi.fn(async()=>({versionId:'graphic-version',document:graphic}))},script:{readVersion:vi.fn(async(_ctx,source)=>{if(source.id!==ref.id||source.versionId!==ref.versionId)throw Error('原脚本版本不存在');return {ref,label:'已保存主脚本',text:'这一份确认脚本'};}),readImages:vi.fn(async()=>({state:'empty' as const,images:[]}))}};
+ const ports={compositions:{get:vi.fn(async()=>composition)},articles:{getArticle:vi.fn(async()=>({projectId:'project-1',outputId:'article-1',artifactId:'article-artifact',currentVersionId:'article-version',current:article})),getVersion:vi.fn(async()=>({versionId:'article-version',document:article}))},graphicPosts:{getGraphicPost:vi.fn(async()=>({projectId:'project-1',outputId:'graphic-1',artifactId:'graphic-artifact',currentVersionId:'graphic-version',current:savedGraphic})),getVersion:vi.fn(async()=>({versionId:'graphic-version',document:savedGraphic}))},script:{readVersion:vi.fn(async(_ctx,source)=>{if(source.id!==ref.id||source.versionId!==ref.versionId)throw Error('原脚本版本不存在');return {ref,label:'已保存主脚本',text:'这一份确认脚本'};}),readImages:vi.fn(async()=>({state:'empty' as const,images:[]}))}};
  return {ports,composition,service:createWorkCreationRoot(ports as never)};
 }
 it('只读取显式共同脚本与两个真实成员，经各属主核当前版本，proposal不写正式稿',async()=>{
@@ -59,4 +60,25 @@ it('T1099 原目标和图片冲突不被错误归类为可纠正来源',async()=
  for(const proposal of [{targetDigest:'0'.repeat(64),article,graphic},{targetDigest:read.targetDigest,article,graphic:{...graphic,imageUses:[{assetId:'fake',assetFileId:'fake-file',order:0,role:'cover' as const}]}}]){
   const caught=await f.service.propose(ctx,target,proposal).catch(error=>error);expect(caught).toBeInstanceOf(Error);expect(caught).not.toBeInstanceOf(ChatToolUserError);
  }
+});
+
+
+it.each([null,{versionId:'real-rule-version'}])('T1463继承原快照%j与已有图片，不改内容或编造ID',async rule=>{
+ const images=[{assetId:'real-asset',assetFileId:'real-file',order:0,role:'card' as const}],f=fixture(rule,images);
+ f.ports.script.readImages.mockResolvedValue({state:'ready',images:[{assetId:'real-asset',assetFileId:'real-file',name:'已有图片',description:'真实图片'}]} as never);
+ const truth=await f.service.read(ctx,target),raw={targetDigest:truth.targetDigest,article,graphic:{...graphic,ruleSnapshotRef:{}}} as Record<string,any>;delete raw.graphic.imageUses;
+ const proposal=await f.service.proposeDraft(ctx,target,raw as never);
+ expect(proposal.graphic.ruleSnapshotRef).toEqual(rule);expect(proposal.graphic.imageUses).toEqual(images);expect(proposal.graphic.body).toBe(graphic.body);
+ expect((await f.ports.graphicPosts.getGraphicPost()).current).toEqual({...graphic,ruleSnapshotRef:rule,imageUses:images});
+ await expect(f.service.proposeDraft(ctx,target,{...raw,graphic:{...raw.graphic,ruleSnapshotRef:{versionId:'invented-rule'}}} as never)).rejects.toThrow('规则快照');
+ if(rule)await expect(f.service.proposeDraft(ctx,target,{...raw,graphic:{...raw.graphic,ruleSnapshotRef:null}} as never)).rejects.toThrow('规则快照');
+ const explicit=await f.service.proposeDraft(ctx,target,{...raw,graphic:{...raw.graphic,ruleSnapshotRef:rule,imageUses:[]}} as never);
+ expect(explicit.graphic.ruleSnapshotRef).toEqual(rule);expect(explicit.graphic.imageUses).toEqual([]);
+});
+it('T1463继承字段不能修补外组、并发版本、伪图片或错误摘要',async()=>{
+ const f=fixture(),truth=await f.service.read(ctx,target),raw={targetDigest:truth.targetDigest,article,graphic:{...graphic,ruleSnapshotRef:{}}};
+ await expect(f.service.proposeDraft(ctx,target,{...raw,targetDigest:'0'.repeat(64)})).rejects.toThrow();
+ await expect(f.service.proposeDraft(ctx,target,{...raw,graphic:{...raw.graphic,imageUses:[{assetId:'fake',assetFileId:'fake',order:0,role:'cover'}]}} as never)).rejects.toThrow('图片');
+ f.composition.currentRevision++;await expect(f.service.proposeDraft(ctx,target,raw)).rejects.toThrow('组合');
+ f.ports.compositions.get.mockRejectedValue(Error('跨组拒绝'));await expect(f.service.proposeDraft({...ctx,groupId:'other'},target,raw)).rejects.toThrow('跨组');
 });
