@@ -79,7 +79,7 @@ export function stripTimecodePrefix(heading: string): string {
  * 的 body 包一层 `<strong>`(对应旧紫色强调,保留语义)。无段落 → 空文档占位 `<p></p>`。
  */
 export function sectionsToHtml(
-  sections: ReadonlyArray<ScriptSectionView>,
+  sections: ReadonlyArray<Pick<ScriptSectionView, "heading" | "body" | "emphasis" | "type" | "startSeconds" | "endSeconds">>,
 ): string {
   if (sections.length === 0) return "<p></p>";
   const parts: string[] = [];
@@ -113,6 +113,35 @@ export function sectionsToHtml(
     if (!headingWithTimecode && !pushedBody) parts.push("<p></p>");
   }
   return parts.length > 0 ? parts.join("") : "<p></p>";
+}
+
+/**
+ * SEMANTIC_BOUNDARY_ALLOW: 保存格式到编辑器格式的机械投影；不改正文、不做相似度判断。
+ * 页面和生成前读回共用它，纯文本/历史 sections 不能被误当成缺少 HTML 的未保存稿。
+ * sections 的技术 ID 不参与 HTML；保存侧的真实 ID 仍由既有后端规则拥有。
+ */
+export function scriptVersionToEditorHtml(version: {contentText?: unknown; contentData?: unknown}): string | null {
+  const data = version.contentData && typeof version.contentData === "object" && !Array.isArray(version.contentData)
+    ? version.contentData as Record<string, unknown> : {};
+  if (typeof data.html === "string" && data.html.trim()) return data.html;
+  const sections = (Array.isArray(data.sections) ? data.sections : []).flatMap(raw => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+    const section = raw as Record<string, unknown>;
+    if (!["heading", "body", "narration", "text", "content"].some(key => typeof section[key] === "string" && (section[key] as string).trim())) return [];
+    const heading = typeof section.heading === "string" ? section.heading : "";
+    const body = typeof section.body === "string" ? section.body : "";
+    if (!heading && !body) return [];
+    const emphasis = typeof section.emphasis === "boolean" ? section.emphasis : false;
+    return [{heading: heading || "脚本段落", body, emphasis,
+      type: (typeof section.type === "string" && section.type ? section.type : emphasis ? "golden_quote" : "body") as ScriptSectionView["type"],
+      startSeconds: typeof section.startSeconds === "number" && Number.isFinite(section.startSeconds) ? section.startSeconds : null,
+      endSeconds: typeof section.endSeconds === "number" && Number.isFinite(section.endSeconds) ? section.endSeconds : null}];
+  });
+  if (sections.length) return sectionsToHtml(sections);
+  if (typeof version.contentText === "string" && version.contentText.trim()) {
+    return sectionsToHtml([{heading: "脚本正文", body: version.contentText, type: "body", emphasis: false, startSeconds: null, endSeconds: null}]);
+  }
+  return null;
 }
 
 interface ParsedSection {

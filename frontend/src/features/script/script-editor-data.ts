@@ -2,7 +2,7 @@ import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { canonicalizeScriptSectionRecords } from "@creatoros/backend/modules/artifacts";
-import { sectionsToHtml } from "./script-editor-bridge";
+import { scriptVersionToEditorHtml } from "./script-editor-bridge";
 import type {
   ScriptSectionView,
   ScriptViewModel,
@@ -245,14 +245,7 @@ export async function loadScriptEditorData(
     const sections = sectionsFromVersion(current);
 
     // TipTap 初值:当前版本的 contentData.html 优先(富文本忠实往返);否则从 sections 拼。
-    const savedHtml = (current.contentData as { html?: unknown } | undefined)
-      ?.html;
-    const editorHtml =
-      typeof savedHtml === "string" && savedHtml.trim().length > 0
-        ? savedHtml
-        : sections && sections.length > 0
-          ? sectionsToHtml(sections)
-          : null;
+    const editorHtml = scriptVersionToEditorHtml(current);
 
     const versions = rows
       .slice()

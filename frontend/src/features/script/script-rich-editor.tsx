@@ -23,7 +23,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { EditorContent, useEditor, createDocument, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
@@ -42,7 +42,7 @@ import { client } from "@/lib/contract-client";
 import {useCreationScope,creationScopeKey,readCreationScope} from "@/lib/creation-workspace-scope";
 import { useDraftChatRequest,editorCanonical } from "@/features/draft-workbench/draft-chat-request";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
-import { htmlToSections } from "./script-editor-bridge";
+import { htmlToSections, scriptVersionToEditorHtml } from "./script-editor-bridge";
 import { subscribeScriptWrite } from "./script-write-signal";
 import {useForegroundActivity} from "@/lib/foreground-activity";
 
@@ -205,7 +205,7 @@ export function ScriptRichEditor({
   const { registerFlush,registerScript } = useDraftChatRequest();
   const artifactIdRef=React.useRef<string|null>(artifactId);
   const generationRef=React.useRef(0);
-  const savedVersionRef=React.useRef<string|null>(null);
+  const savedVersionRef=React.useRef<string|null>(currentVersionId);
   const [pending, startTransition] = React.useTransition();
   const [saveStatus, setSaveStatus] = React.useState<SaveStatus>("saved");
   useForegroundActivity(saveStatus==="saving"?"脚本正在保存":"脚本有未保存的修改",saveStatus!=="saved");
@@ -259,28 +259,34 @@ export function ScriptRichEditor({
   // 系统,这正是 effect 该做的「向外部系统推最新 state」。用 ref 记住已应用的值,仅在真正变化时
   // setContent + 重置派生 UI(回「已保存」、刷字数),避免每次渲染都跑、也避免打断本地编辑。
   const appliedHtmlRef = React.useRef<string | null>(null);
+  const appliedVersionRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (!editor) return;
     const next = initialHtml || "<p></p>";
-    if (appliedHtmlRef.current === next) return;
+    if (appliedHtmlRef.current === next && appliedVersionRef.current === currentVersionId) return;
     // 保存在途,或这是刚存内容的 refresh echo:吞掉(标记已消费但不 setContent),防丢在途键入。
     // 仅当编辑器当前内容已与 echo 不同(用户在途改过)才需保护;相同则放行照常应用。
     const isSaveEcho =
       lastSavedHtmlRef.current === next && editor.getHTML() !== next;
     if (savePendingRef.current || isSaveEcho) {
       appliedHtmlRef.current = next;
+      appliedVersionRef.current = currentVersionId;
       return;
     }
     // 准备候选采纳后的读回也必须保留在途输入；不能用外部已保存版本覆盖脏稿。
     if(creationScopeKey(readCreationScope())!==scriptScopeKey)return;
-    if(saveStatusRef.current!=="saved") { appliedHtmlRef.current=next; return; }
+    if(saveStatusRef.current!=="saved") { appliedHtmlRef.current=next; appliedVersionRef.current=currentVersionId; return; }
     appliedHtmlRef.current = next;
+    appliedVersionRef.current = currentVersionId;
     if (editor.getHTML() !== next) {
       generationRef.current++;
       editor.commands.setContent(next, { emitUpdate: false });
       // 外部换版后，本编辑器上次保存的版本不再是当前稿的锚点。
-      savedVersionRef.current = currentVersionId;
+    } else if (savedVersionRef.current !== currentVersionId) {
+      generationRef.current++;
     }
+    // 同一正文也可能有新版本；只有已应用且没有本地在途输入时才更新版本锚点。
+    savedVersionRef.current = currentVersionId;
     // 已应用一个新的外部值 → 清掉 echo 守卫,让「保存后又被外部合法带回同一内容」(如版本回滚
     // 到刚存的版本)不被误吞;echo 守卫只覆盖紧邻保存的那次回流窗口。
     lastSavedHtmlRef.current = null;
@@ -312,6 +318,9 @@ export function ScriptRichEditor({
       }
       const next = detail.html || "<p></p>";
       appliedHtmlRef.current = next;
+      // 信号没有版本回执，后续按真实当前版本读回文档，不能沿用旧版本或再追加一版。
+      savedVersionRef.current = null;
+      generationRef.current++;
       lastSavedHtmlRef.current = null;
       editor.commands.setContent(next, { emitUpdate: false });
       setSaveStatus("saved");
@@ -396,10 +405,10 @@ export function ScriptRichEditor({
   React.useLayoutEffect(()=>{artifactIdRef.current=artifactId??artifactIdRef.current;prepareScriptRef.current=async()=>{
     if(!editor||!projectId)throw Error("请先打开项目脚本。");
     const frozenScope=scriptScopeKey;const check=()=>{if(creationScopeKey(readCreationScope())!==frozenScope)throw Error("工作区已切换，原脚本保存回执保留。");};check();
-    const html=editor.getHTML(),text=editor.getText();
+    const html=editor.getHTML(),text=editor.getText(),frozenDocument=editor.state.doc,frozenGeneration=generationRef.current;
     if(!text.trim())throw Error("请先填写并确认脚本。");
     if(pendingSaveRef.current)await pendingSaveRef.current;
-    if(!artifactIdRef.current||saveStatusRef.current!=="saved"||!savedVersionRef.current)await performSave();
+    if(!artifactIdRef.current||saveStatusRef.current!=="saved")await performSave();
     check();const id=artifactIdRef.current;if(!id)throw Error("脚本尚未保存。");
     const artifact=await client.getArtifact({params:{artifactId:id},query:undefined,body:undefined});
     if(artifact.projectId!==projectId||artifact.id!==id)throw Error("脚本保存目标不属于当前项目。");
@@ -407,8 +416,13 @@ export function ScriptRichEditor({
     if(artifact.currentVersionId!==versionId)throw Error("脚本已被并发更新，请核对后重试。");
     let exact:{id:string;artifactId:string;contentText:string;contentData:Record<string,unknown>}|undefined;
     for(let page=1;page<=20&&!exact;page++){const response=await client.listArtifactVersions({params:{artifactId:id},query:{page,pageSize:100},body:undefined});const rows=(Array.isArray(response)?response:[]) as Array<{id:string;artifactId:string;contentText:string;contentData:Record<string,unknown>}>;exact=rows.find(row=>row.id===versionId);if(rows.length<100)break;}
-    if(!exact||exact.artifactId!==id||exact.contentText!==text||exact.contentData.html!==html)throw Error("当前脚本与保存版本读回不一致，请先保存并核对。");
-    check();if(editor.getHTML()!==html||saveStatusRef.current!=="saved")throw Error("脚本在保存期间已改变，本次未生成。");
+    const savedHtml=exact&&scriptVersionToEditorHtml(exact);
+    const hasNativeHtml=typeof exact?.contentData?.html==="string"&&exact.contentData.html.trim().length>0;
+    if(!exact||exact.artifactId!==id||!savedHtml||
+      !createDocument(savedHtml,editor.schema,editor.options.parseOptions).eq(frozenDocument)||
+      (hasNativeHtml&&exact.contentText!==text))throw Error("当前脚本与保存版本读回不一致，请先保存并核对。");
+    check();if(editor.getHTML()!==html||saveStatusRef.current!=="saved"||generationRef.current!==frozenGeneration)throw Error("脚本在保存期间已改变，本次未生成。");
+    savedVersionRef.current=versionId;
     return {kind:"project_script",id,versionId};
   };},[artifactId,editor,projectId,performSave,scriptScopeKey]);
   React.useEffect(()=>registerScript({readState:()=>({generation:generationRef.current,projectId,scopeKey:scriptScopeKey,dirty:saveStatusRef.current!=="saved",saving:savePendingRef.current,artifactId:artifactIdRef.current}),prepareForCreation:()=>prepareScriptRef.current()}),[registerScript,editor,projectId,scriptScopeKey]);
