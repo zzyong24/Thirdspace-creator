@@ -28,15 +28,24 @@ for(const [path,canonical] of [['website/index.html',sites[0].canonical],['websi
 const script=`
 const task=await taskSpace(13), page=task.page('p1');
 const fs=await import('node:fs/promises');
+// Ego原生指针动作会恢复实际窗口尺寸；用同一Page的CDP输入保持声明的视口。
+const click=async selector=>{
+ const point=await page.evaluate(async selector=>{const [css,nth]=selector.replace('loc=css:','').split(' >> nth=');const e=document.querySelectorAll(css)[Number(nth||0)];if(!e)throw Error('目标不存在 '+selector);e.scrollIntoView({block:'center',inline:'center',behavior:'instant'});await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));const b=e.getBoundingClientRect();return {x:b.x+b.width/2,y:b.y+b.height/2}},selector);
+ await page.cdp('Input.dispatchMouseEvent',{type:'mouseMoved',...point});await page.cdp('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,...point});await page.cdp('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,...point});
+};
+const key=async name=>{const codes={Escape:27,Enter:13,ArrowRight:39,ArrowLeft:37};for(const type of ['keyDown','keyUp'])await page.cdp('Input.dispatchKeyEvent',{type,key:name,code:name,windowsVirtualKeyCode:codes[name],nativeVirtualKeyCode:codes[name]});};
+const focus=async selector=>page.evaluate(selector=>{const [css,nth]=selector.replace('loc=css:','').split(' >> nth=');const e=document.querySelectorAll(css)[Number(nth||0)];e.scrollIntoView({block:'center',behavior:'instant'});e.focus()},selector);
+const press=async(selector,name)=>{await focus(selector);await key(name);};
 const sites=${JSON.stringify(sites)}, viewports=[{width:1440,height:1000},{width:390,height:844}], checks=${JSON.stringify(checkIds)};
 const captures=[], observations=[];
 for(const site of sites)for(const viewport of viewports){
+ console.log('验证 '+site.name+' '+viewport.width);
  await page.goto(site.url);
  if(site.name==='购买页')await page.waitForSelector('#app[aria-busy="false"]');
  await page.cdp('Emulation.setDeviceMetricsOverride',{...viewport,deviceScaleFactor:1,mobile:false});
  await page.waitForFunction(w=>innerWidth===w,viewport.width);
  if(site.name==='官网'){
-  await page.click('loc=css:.hero-version a');
+  await click('loc=css:.hero-version a');
   await page.waitForFunction(()=>Math.abs(document.querySelector('#changelog').getBoundingClientRect().top)<180);
   if(await page.evaluate(()=>document.querySelectorAll('img[loading="lazy"]').length)===0)throw Error('导航不应提前加载所有原图');
  }
@@ -48,35 +57,35 @@ for(const site of sites)for(const viewport of viewports){
  if(distorted)throw Error('截图显示比例失真 '+site.name);
  const selector=site.name==='官网'?'.real-gallery img':'#gallery img';
  await page.evaluate(sel=>document.querySelector(sel).closest('section').scrollIntoView({behavior:'instant',block:'start'}),selector);
- await page.click('loc=css:'+selector+' >> nth=0');
+ await click('loc=css:'+selector+' >> nth=0');
  const modal=site.name==='官网'?'#imageViewer.open':'#lightbox.open';
  await page.waitForSelector(modal,{state:'visible'});
- await page.keyboard.press('Escape');
+ await key('Escape');
  await page.waitForFunction(sel=>!document.querySelector(sel),modal);
- await page.focus('loc=css:'+selector+' >> nth=1');
- await page.keyboard.press('Enter');
+ await focus('loc=css:'+selector+' >> nth=1');
+ await key('Enter');
  await page.waitForSelector(modal,{state:'visible'});
- await page.keyboard.press('Escape');
+ await key('Escape');
  await page.waitForFunction(sel=>!document.querySelector(sel),modal);
  if(site.name==='官网'){
   await page.evaluate(()=>document.querySelector('#changelog').scrollIntoView({behavior:'instant',block:'start'}));
   const ids=['130','120','110','100','030','020','010'];
   for(const id of ids){
-   await page.click('loc=css:#release-tab-'+id);
+   await click('loc=css:#release-tab-'+id);
    if(await page.evaluate(()=>document.querySelectorAll('.release-panel:not([hidden])').length)!==1||await page.evaluate(()=>document.querySelector('.release-panel:not([hidden])').id)!=='release-'+id)throw Error('版本切换失配 '+id);
   }
-  await page.click('loc=css:#release-tab-130');
-  await page.press('loc=css:#release-tab-130','ArrowRight');
+  await click('loc=css:#release-tab-130');
+  await press('loc=css:#release-tab-130','ArrowRight');
   if(await page.evaluate(()=>document.activeElement.id)!=='release-tab-120')throw Error('版本方向键失败');
-  await page.press('loc=css:#release-tab-120','ArrowLeft');
+  await press('loc=css:#release-tab-120','ArrowLeft');
   if(await page.evaluate(()=>!!document.querySelector('[download],#creatoros-manual-download-e315')))throw Error('恢复了旧下载区');
  }else{
   await page.evaluate(()=>document.querySelector('#buy').scrollIntoView({behavior:'instant',block:'start'}));
-  await page.click('loc=css:button[data-retail-sku="creatoros_lifetime"]');
+  await click('loc=css:button[data-retail-sku="creatoros_lifetime"]');
   if(await page.evaluate(()=>document.querySelector('#retail-sku').value)!=='creatoros_lifetime')throw Error('永久版选择失败');
-  await page.click('loc=css:button[data-retail-sku="creatoros_monthly_30d"]');
+  await click('loc=css:button[data-retail-sku="creatoros_monthly_30d"]');
   if(await page.evaluate(()=>document.querySelector('#retail-sku').value)!=='creatoros_monthly_30d')throw Error('月卡选择失败');
-  await page.click('loc=css:#show-redeem');
+  await click('loc=css:#show-redeem');
   await page.waitForSelector('#redeem-panel',{state:'visible'});
  }
  captures.push({checkpoint:site.name,check_ids:checks,viewport,text:initial.copy});
