@@ -34,7 +34,12 @@ export const catalogQueries={
  triggers:"SELECT t.relname AS table_name,g.tgname AS name,pg_get_triggerdef(g.oid,true) AS definition FROM pg_trigger g JOIN pg_class t ON t.oid=g.tgrelid JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='public' AND NOT g.tgisinternal ORDER BY t.relname,g.tgname",
  sequences:"SELECT s.sequencename AS name,s.data_type,s.start_value::text,s.min_value::text,s.max_value::text,s.increment_by::text,s.cycle,s.cache_size::text,t.relname AS owner_table,a.attname AS owner_column FROM pg_sequences s JOIN pg_class seq ON seq.relname=s.sequencename JOIN pg_namespace ns ON ns.oid=seq.relnamespace AND ns.nspname=s.schemaname LEFT JOIN pg_depend d ON d.objid=seq.oid AND d.classid='pg_class'::regclass AND d.refclassid='pg_class'::regclass AND d.deptype IN ('a','i') LEFT JOIN pg_class t ON t.oid=d.refobjid LEFT JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=d.refobjsubid WHERE s.schemaname='public' ORDER BY s.sequencename",
 };
-const id=(i:Identity)=>`${i.hash}:${i.when}`;
+const rawId=(i:Identity)=>`${i.hash}:${i.when}`;
+// 只由通过冻结校验的原 SQL 生成；不改写用户账本，也不按结构相似猜测历史。
+const windowsIdentities=new Map<string,string>();
+const id=(i:Identity)=>windowsIdentities.get(rawId(i))??rawId(i);
+const windowsSQL=(raw:string)=>raw.replace(/\r?\n/g,'\r\n');
+const receiptSQL=(raw:string,receipt:Identity)=>windowsIdentities.has(rawId(receipt))?windowsSQL(raw):raw;
 const fail=(detail:string):never=>{throw new Error(`CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: ${detail}`);};
 const incompatible=(detail:string):never=>{throw new Error(`CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: ${detail}`);};
 const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
@@ -53,7 +58,7 @@ async function readLedger(db:QueryDb):Promise<Identity[]>{
  for(const [name,type] of [['id','int4'],['hash','text'],['created_at','int8']])if(!cols.some(r=>r.column_name===name&&r.udt_name===type))fail('账本结构未知');
  return(await rows(db,'SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id')).map(r=>{const when=Number(r.created_at);if(typeof r.hash!=='string'||!Number.isSafeInteger(when)||when<0)fail('账本身份类型无效');return{hash:r.hash as string,when};});
 }
-function sourceSQL(folder:string,item:Identity){for(const known of [WORKBENCH_CONVERGENCE,LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP,ASSISTANT_EXECUTION_ENGINE,CLIENT_OBSERVABILITY,MODEL_ROUTING,EMBEDDING_IDENTITY,OBSERVABILITY_ROUTING_BRIDGE,SCRIPT_TARGET_RESERVATION,UNIFIED_PROJECT_INTAKE,INTAKE_RETIREMENT_TIMESTAMPS,REVIEW_RULE_GROUP_SCOPE])if(id(item)===id(known)){const raw=readFileSync(join(folder,known.tag+".sql"),"utf8");if(sha(raw)!==known.hash)fail(`${known.tag} SQL校验失败`);return raw;}for(const [name,lineage]of Object.entries(allLineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
+function sourceSQL(folder:string,item:Identity){for(const known of [WORKBENCH_CONVERGENCE,LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP,ASSISTANT_EXECUTION_ENGINE,CLIENT_OBSERVABILITY,MODEL_ROUTING,EMBEDDING_IDENTITY,OBSERVABILITY_ROUTING_BRIDGE,SCRIPT_TARGET_RESERVATION,UNIFIED_PROJECT_INTAKE,INTAKE_RETIREMENT_TIMESTAMPS,REVIEW_RULE_GROUP_SCOPE])if(id(item)===id(known)){const raw=readFileSync(join(folder,known.tag+".sql"),"utf8");if(sha(raw)!==known.hash)fail(`${known.tag} SQL校验失败`);return receiptSQL(raw,item);}for(const [name,lineage]of Object.entries(allLineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==entry.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return receiptSQL(raw,item);}}return fail('没有冻结SQL来源');}
 const validatedFolders=new Set<string>();
 function validateSources(folder:string){
  if(validatedFolders.has(folder))return;
@@ -65,13 +70,31 @@ function validateSources(folder:string){
  const tail=[{idx:101,tag:'0101_workbench_artifact_lineage',when:1789963200000,hash:WORKBENCH_CONVERGENCE.hash},{idx:102,tag:'0128_workspace_convergence',when:CONVERGENCE_WHEN,hash:'60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713'},{idx:103,...WORKBENCH_CONVERGENCE},{idx:104,...LEGACY_SOURCE_OWNERSHIP},{idx:105,...NATIVE_REPORTS},{idx:106,...LEGACY_SCHEDULED_MEMBERSHIP},{idx:107,...ASSISTANT_EXECUTION_ENGINE},{idx:108,...MODEL_ROUTING},{idx:109,...EMBEDDING_IDENTITY},{idx:110,...OBSERVABILITY_ROUTING_BRIDGE},{idx:111,...SCRIPT_TARGET_RESERVATION},{idx:112,...UNIFIED_PROJECT_INTAKE},{idx:113,...INTAKE_RETIREMENT_TIMESTAMPS},{idx:114,...REVIEW_RULE_GROUP_SCOPE}];
  if(normal.entries.length!==115||tail.some(expected=>{const actual=normal.entries[expected.idx];return !actual||actual.idx!==expected.idx||actual.tag!==expected.tag||actual.when!==expected.when||(expected.hash&&sha(readFileSync(join(folder,expected.tag+'.sql'),'utf8'))!==expected.hash);}))fail('当前主journal不符合共同前缀+真实收敛及固定工作台/来源闭包');
  for(let i=0;i<common.length;i++){const entry=normal.entries[i];if(entry.tag!==common[i]!.tag||entry.when!==common[i]!.when||sha(readFileSync(join(folder,entry.tag+'.sql'),'utf8'))!==common[i]!.hash)fail('共同旧迁移tag/SQL/时间漂移');}
+ // Drizzle 对原文件文本直接散列。旧 Windows checkout 的 CRLF 也有真实执行回执。
+ // 时间必须完全一致，SQL 除确定的换行变体外不允许任何字节变化。
+ const convergence=convergenceIdentity(folder);
+ for(const original of [...entries.values(),convergence]){
+  const raw=rawId(original)===rawId(convergence)?convergenceSQL(folder):sourceSQL(folder,original);
+  const alias={hash:sha(windowsSQL(raw)),when:original.when},aliasKey=rawId(alias),canonicalKey=rawId(original);
+  if(aliasKey===canonicalKey)continue;
+  if(entries.has(aliasKey)||(windowsIdentities.has(aliasKey)&&windowsIdentities.get(aliasKey)!==canonicalKey))fail('冻结SQL换行身份有歧义');
+  windowsIdentities.set(aliasKey,canonicalKey);
+ }
  validatedFolders.add(folder);
 }
 function convergenceSQL(folder:string){return readFileSync(join(folder,'0128_workspace_convergence.sql'),'utf8');}
 function convergenceIdentity(folder:string){return{hash:sha(convergenceSQL(folder)),when:CONVERGENCE_WHEN};}
 function assertKnownPrefixes(history:Identity[],folder:string){
  const newIdentity=convergenceIdentity(folder),seen=new Set(history.map(id));
- for(const item of history)if(!entries.has(id(item))&&id(item)!==id(newIdentity))fail('未知hash/时间或未来迁移，原库保留');
+ const unknown=history.filter(item=>!entries.has(id(item))&&id(item)!==id(newIdentity));
+ if(unknown.length)fail(`未知hash/时间或未来迁移，原库保留；unknownCount=${unknown.length}；identities=${JSON.stringify(unknown.slice(0,8).map(item=>({hash:/^[a-f0-9]{64}$/.test(item.hash)?item.hash:'invalid-hash',created_at:item.when})))}`);
+ const variants=new Map<string,string>();
+ for(const item of history){
+  const key=id(item),previous=variants.get(key);
+  // 0128 的修复会真正重跑当前 LF DDL 并追加回执；参考库按最后一次真实执行字节还原。
+  if(previous&&previous!==rawId(item)&&key!==id(newIdentity))fail('同一迁移身份存在冲突的换行回执，原库保留');
+  variants.set(key,rawId(item));
+ }
  if(seen.has(id(LEGACY_SOURCE_OWNERSHIP))&&(!seen.has(id(newIdentity))||!seen.has(id(WORKBENCH_CONVERGENCE))))fail('0130来源归属修复缺真实0128/0129前置回执');
  if(seen.has(id(NATIVE_REPORTS))&&(!seen.has(id(newIdentity))||!seen.has(id(WORKBENCH_CONVERGENCE))||!seen.has(id(LEGACY_SOURCE_OWNERSHIP))))fail('0131微信报表缺真实0128/0129/0130前置回执');
  if(seen.has(id(LEGACY_SCHEDULED_MEMBERSHIP))&&!seen.has(id(NATIVE_REPORTS)))fail('0132旧计划归属版本修复缺真实0131前置回执');
@@ -86,7 +109,11 @@ function assertKnownPrefixes(history:Identity[],folder:string){
  if(seen.has(id(INTAKE_RETIREMENT_TIMESTAMPS))&&!seen.has(id(UNIFIED_PROJECT_INTAKE)))fail("0140退役时间修复缺真实0139前置回执");
  const common=lineages.root.entries.slice(0,101);let commonCount=0;for(const item of common){if(seen.has(id(item)))commonCount++;else break;}
  for(const item of common.slice(commonCount))if(seen.has(id(item)))fail('共同历史不是完整前缀');
- if(history.some(i=>!common.some(c=>id(c)===id(i)))&&commonCount!==101)fail('分支历史缺少共同0000–0100前缀');
+ // 早期已安装分支在共同0068出现之前已发布。只有整个历史精确等于单一原来源
+ // 的连续前缀才允许较短共同历史；不能将不同来源的短前缀任意拼接。
+ const uniqueHistory=Array.from(new Map(history.map(item=>[id(item),item])).values());
+ const installedPrefix=!seen.has(id(newIdentity))&&Object.values(installedLineages).some(lineage=>uniqueHistory.length<=lineage.entries.length&&uniqueHistory.every((item,index)=>id(item)===id(lineage.entries[index]!)));
+ if(history.some(i=>!common.some(c=>id(c)===id(i)))&&commonCount!==101&&!installedPrefix)fail('分支历史缺少共同0000–0100前缀');
  for(const lineage of Object.values(lineages)){let gap=false;for(const item of lineage.entries.slice(101)){if(seen.has(id(item))){if(gap)fail('已知分支历史不是完整前缀');}else gap=true;}}
  // 补充来源保留完整真实journal；只检查相对于原三源新增的真实顺序，不按数组位置假定共同前缀长度。
  for(const lineage of Object.values(installedLineages)){let gap=false;for(const item of lineage.entries.filter(e=>!canonicalEntries.has(id(e)))){if(seen.has(id(item))){if(gap)fail('已知补充历史不是完整前缀');}else gap=true;}}
@@ -95,13 +122,15 @@ function assertKnownPrefixes(history:Identity[],folder:string){
 function normalize(c:Catalog){const result={} as Catalog;for(const [key,values]of Object.entries(c) as Array<[keyof Catalog,Record<string,unknown>[]]>)result[key]=values.map(({ordinal_position,...r})=>r).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));return result;}
 function expectedCatalog(history:Identity[],folder:string,converged:boolean){
  // 已执行的补充身份才参与该库的参考catalog；fresh不启用历史keyring等协议。缓存摘要绑定实际subset。
- const identities=converged?Array.from(new Map([...canonicalEntries.values(),...history.filter(i=>entries.has(id(i))&&!canonicalEntries.has(id(i)))].map(i=>[id(i),{hash:i.hash,when:i.when}])).values()):Array.from(new Map(history.filter(i=>entries.has(id(i))).map(i=>[id(i),i])).values());
- const key=sha(JSON.stringify(identities.map(id).sort())+String(converged)+convergenceIdentity(folder).hash+LEGACY_SOURCE_OWNERSHIP.hash+SCRIPT_TARGET_RESERVATION.hash+UNIFIED_PROJECT_INTAKE.hash+INTAKE_RETIREMENT_TIMESTAMPS.hash+REVIEW_RULE_GROUP_SCOPE.hash);
+ const identities=converged?Array.from(new Map([...canonicalEntries.values(),...history.filter(i=>entries.has(id(i)))].map(i=>[id(i),{hash:i.hash,when:i.when}])).values()):Array.from(new Map(history.filter(i=>entries.has(id(i))).map(i=>[id(i),i])).values());
+ const convergenceReceipt=history.findLast(i=>id(i)===id(convergenceIdentity(folder)))??convergenceIdentity(folder);
+ // 不能共用 LF/CRLF 缓存：PostgreSQL 函数体可以保留原换行字节。
+ const key=sha(JSON.stringify(identities.map(rawId).sort())+String(converged)+rawId(convergenceReceipt)+LEGACY_SOURCE_OWNERSHIP.hash+SCRIPT_TARGET_RESERVATION.hash+UNIFIED_PROJECT_INTAKE.hash+INTAKE_RETIREMENT_TIMESTAMPS.hash+REVIEW_RULE_GROUP_SCOPE.hash);
  let expected=cache.get(key);if(!expected){expected=(async()=>{// 只在全新隔离内存参考库执行原SQL；绝不在用户原库重放旧分组INSERT。
  const c=new PGlite();try{
   for(const item of identities.filter(i=>id(i)!==id(LEGACY_SOURCE_OWNERSHIP)&&id(i)!==id(NATIVE_REPORTS)&&id(i)!==id(LEGACY_SCHEDULED_MEMBERSHIP)&&id(i)!==id(ASSISTANT_EXECUTION_ENGINE)&&id(i)!==id(MODEL_ROUTING)&&id(i)!==id(EMBEDDING_IDENTITY)&&id(i)!==id(CLIENT_OBSERVABILITY)&&id(i)!==id(OBSERVABILITY_ROUTING_BRIDGE)&&id(i)!==id(SCRIPT_TARGET_RESERVATION)&&id(i)!==id(UNIFIED_PROJECT_INTAKE)&&id(i)!==id(INTAKE_RETIREMENT_TIMESTAMPS)&&id(i)!==id(REVIEW_RULE_GROUP_SCOPE)).sort((a,b)=>a.when-b.when))await c.exec(sourceSQL(folder,item));
-  if(converged)await c.exec(`BEGIN;\n${convergenceSQL(folder)}\nCOMMIT;`);
-  for(const tail of [LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP,ASSISTANT_EXECUTION_ENGINE,CLIENT_OBSERVABILITY,MODEL_ROUTING,EMBEDDING_IDENTITY,OBSERVABILITY_ROUTING_BRIDGE,SCRIPT_TARGET_RESERVATION,UNIFIED_PROJECT_INTAKE,INTAKE_RETIREMENT_TIMESTAMPS,REVIEW_RULE_GROUP_SCOPE])if(identities.some(i=>id(i)===id(tail)))await c.exec(sourceSQL(folder,tail));
+  if(converged)await c.exec(`BEGIN;\n${receiptSQL(convergenceSQL(folder),convergenceReceipt)}\nCOMMIT;`);
+  for(const tail of [LEGACY_SOURCE_OWNERSHIP,NATIVE_REPORTS,LEGACY_SCHEDULED_MEMBERSHIP,ASSISTANT_EXECUTION_ENGINE,CLIENT_OBSERVABILITY,MODEL_ROUTING,EMBEDDING_IDENTITY,OBSERVABILITY_ROUTING_BRIDGE,SCRIPT_TARGET_RESERVATION,UNIFIED_PROJECT_INTAKE,INTAKE_RETIREMENT_TIMESTAMPS,REVIEW_RULE_GROUP_SCOPE]){const receipt=identities.find(i=>id(i)===id(tail));if(receipt)await c.exec(sourceSQL(folder,receipt));}
   const cat={} as Catalog;for(const [key,query]of Object.entries(catalogQueries) as Array<[keyof Catalog,string]>)cat[key]=(await c.query<Record<string,unknown>>(query)).rows;return normalize(cat);
  }finally{await c.close();}})();cache.set(key,expected);}return expected;
 }
