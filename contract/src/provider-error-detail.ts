@@ -31,3 +31,21 @@ export function providerErrorDetail(status: number, raw: string, secrets: readon
   const safe = redactProviderErrorDetail(detail, secrets);
   return `http_${status}${safe ? ": " + safe : ""}`.slice(0, 512);
 }
+
+/** SEMANTIC_BOUNDARY_ALLOW: 只翻译内部白名单阶段/HTTP分类，不解释供应商正文或推断扣费。 */
+export function assetGenerationFailureMessage(code: string | null | undefined): string | null {
+  if (code != null && code.trim() !== code) return null;
+  if (code === 'ASSET_RESULT_UNKNOWN' || code === 'ASSET_ORIGINAL_RESULT_UNKNOWN' || code === 'ASSET_SUBMIT_RESULT_UNKNOWN')
+    return '生成请求没有取得确认结果，已暂停。请先核对原结果和扣费，暂勿重新生成。';
+  if (code === 'ASSET_SUBMIT_NETWORK_UNKNOWN')
+    return '提交生成请求时连接中断，结果尚未确认。已停止自动提交，请先核对原结果和扣费。';
+  if (code === 'ASSET_RESPONSE_INVALID_UNKNOWN')
+    return '生成服务返回的内容无法识别为图片，已暂停。请核对原调用结果或联系官方处理。';
+  if (code === 'ASSET_SAVE_RESULT_UNKNOWN')
+    return '已收到图片，但本地保存结果尚未确认。请先核对原结果，暂勿重新生成。';
+  if (code === 'ASSET_DOWNLOAD_NETWORK_UNKNOWN' || /^ASSET_DOWNLOAD_HTTP_[45]\d{2}_UNKNOWN$/.test(code ?? ''))
+    return '图片结果下载失败，尚未保存。请核对原结果或联系官方处理，暂勿重新生成。';
+  if (/^ASSET_SUBMIT_HTTP_[45]\d{2}_UNKNOWN$/.test(code ?? ''))
+    return '生成服务返回异常，未取得确认结果。已暂停自动提交，请核对原结果后处理。';
+  return null;
+}

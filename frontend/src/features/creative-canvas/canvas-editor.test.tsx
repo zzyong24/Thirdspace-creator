@@ -294,3 +294,22 @@ it('T1464 隐藏画布视频生成入口，保留历史视频节点与原稿，�
  await screen.findByText('节点设置');expect(screen.queryByRole('button',{name:'生成'})).not.toBeInTheDocument();
  expect(f.generate).not.toHaveBeenCalled();expect(f.save).not.toHaveBeenCalled();
 });
+
+it('T1477未知生图在节点直接解释暂停，核对只读原任务和精确素材而不重新生成',async()=>{
+ f.tasks.mockResolvedValue([runningLink()]);f.getTask.mockResolvedValue({status:'running',runtimeStatus:'unknown_result',errorCode:'ASSET_RESULT_UNKNOWN',errorMessage:'旧通用错误',inputData:{}});
+ f.selector.mockResolvedValue({status:'not_ready',reason:'原生成任务尚无素材结果',...origin});render(<CanvasEditor canvasId='canvas-a'/>);
+ await screen.findByText('生成请求没有取得确认结果，已暂停。请先核对原结果和扣费，暂勿重新生成。');expect(screen.getByRole('button',{name:'生成已暂停'})).toBeDisabled();
+ const before=f.getTask.mock.calls.length;f.getTask.mockResolvedValue({status:'awaiting_confirmation',runtimeStatus:'awaiting_confirmation',inputData:{}});f.selector.mockResolvedValue({status:'available',phase:'candidate',origin,file:{assetId:'asset-a',assetFileId:'original-file'},checksum:'a'.repeat(64),assetType:'image',name:'原结果',assetStatus:'pending',taskStatus:'awaiting_confirmation'});
+ fireEvent.click(screen.getByRole('button',{name:'核对原结果'}));await screen.findByText('最近结果 · 画布版本 2');expect(f.getTask.mock.calls.length).toBeGreaterThan(before);expect(f.generate).not.toHaveBeenCalled();expect(f.confirm).not.toHaveBeenCalled();expect(f.save).not.toHaveBeenCalled();
+});
+it('T1477节点展示确定性服务端错误，原始异常文本不进入提示',async()=>{
+ f.tasks.mockResolvedValue([runningLink()]);f.getTask.mockResolvedValue({status:'running',runtimeStatus:'unknown_result',errorCode:'ASSET_SUBMIT_HTTP_503_UNKNOWN',errorMessage:'https://private.invalid sk-secret',inputData:{}});f.selector.mockResolvedValue({status:'not_ready',reason:'原生成任务尚无素材结果',...origin});render(<CanvasEditor canvasId='canvas-a'/>);
+ await screen.findByText('生成服务返回异常，未取得确认结果。已暂停自动提交，请核对原结果后处理。');expect(screen.queryByText(/sk-secret/)).toBeNull();expect(f.generate).not.toHaveBeenCalled();
+});
+
+it('T1477当前额度拒绝在节点展示真实原因而非普通对象回退',async()=>{
+ f.tasks.mockResolvedValue([runningLink()]);f.getTask.mockResolvedValue({status:'running',runtimeStatus:'waiting_user',errorCode:'AI_CREDIT_EXHAUSTED',errorMessage:'AI 额度不足，请充值后再试。',inputData:{}});f.selector.mockResolvedValue({status:'not_ready',reason:'原任务等待处理',...origin});render(<CanvasEditor canvasId='canvas-a'/>);await screen.findByText('AI 额度不足，请充值后再试。');expect(f.generate).not.toHaveBeenCalled();
+});
+it.each(['running','awaiting_confirmation'])('T1477最新%s不显示先前已知失败为当前状态',async status=>{
+ f.tasks.mockResolvedValue([{...runningLink(),id:'new-link',taskId:'new-task',createdAt:'2026-10-03T00:00:00Z'},runningLink()]);f.getTask.mockImplementation(async request=>request.params.taskId==='new-task'?{status,inputData:{}}:{status:'failed',errorCode:'http_400',errorMessage:'旧请求被拒绝',inputData:{}});f.selector.mockRejectedValue(Error('暂未读取'));render(<CanvasEditor canvasId='canvas-a'/>);await waitFor(()=>expect(f.getTask).toHaveBeenCalledTimes(2));expect(screen.queryByRole('button',{name:'核对原结果'})).toBeNull();expect(f.generate).not.toHaveBeenCalled();
+});

@@ -367,3 +367,9 @@ it('T1413真实保存回读保留服务原文、画面职责、AI来源，恢复
  expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(1);
  expect(await read()).toMatchObject({name:original.name,description:original.description,status:'active'});
 });
+
+it('T1477原图片未知的HTTP诊断经过后端状态投影仍可读，输入异常不泄露且不获重发资格',async()=>{
+ const f=await fixture('image');await f.service.start(f.ref,f.call.id);await f.ledger.settle(f.ref,f.call.id,{status:'unknown'});
+ const result=await createExecutionWorkerOutcomeService(db,{now:f.now}).recordFailure(f.ref,{outcome:'unknown_result',errorCode:'ASSET_SUBMIT_HTTP_503_UNKNOWN',errorMessage:'https://private.invalid sk-secret'});
+ expect(result).toMatchObject({status:'unknown_result',retryAt:null});const task=await f.tasks.get(f.ctx,f.ref.executionTaskId);expect(task.errorMessage).toBe('生成服务返回异常，未取得确认结果。已暂停自动提交，请核对原结果后处理。');expect(task.errorCode).toBe('ASSET_SUBMIT_HTTP_503_UNKNOWN');expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'duplicate'})).toBeNull();
+});

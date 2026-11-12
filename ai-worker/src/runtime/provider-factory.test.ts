@@ -358,3 +358,10 @@ describe("embeddingModelFor", () => {
     }
   });
 });
+
+it.each([400,402,503])('T1477额度封装仅保留原HTTP %s与阶段，不携带原正文',status=>{
+ const error=toChannelManagedError({stage:'submit',status,responseBody:'insufficient balance synthetic-private',token:'private',cause:Error('private')});expect(error).toBeInstanceOf(ManagedAiCreditExhaustedError);expect(error).toMatchObject({stage:'submit',status,code:'AI_CREDIT_EXHAUSTED'});expect(error.cause).toBeUndefined();expect(JSON.stringify(error)).not.toContain('private');
+});
+it.each([{},{status:NaN,stage:'private'},{status:999,stage:'submit'},{status:402.5,stage:'submit'}])('T1477余额语义不编造可重试拒绝证据 %j',details=>{
+ const error=toChannelManagedError({...details,code:'AI_CREDIT_EXHAUSTED'});expect((error as ManagedAiCreditExhaustedError).status).toBeUndefined();
+});

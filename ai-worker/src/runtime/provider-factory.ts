@@ -179,9 +179,17 @@ export { MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE } from "@creatoros/contract/provide
 export class ManagedAiCreditExhaustedError extends Error {
   readonly code = "AI_CREDIT_EXHAUSTED";
 
-  constructor() {
+  readonly stage?: ChannelManagedFailureStage;
+  readonly status?: number;
+
+  constructor(details: {stage?: unknown; status?: unknown} = {}) {
     super(MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE);
     this.name = "ManagedAiCreditExhaustedError";
+    // 只保留原错误的机械证据；余额语义本身不能证明HTTP拒绝或提交阶段。
+    if(typeof details.stage==='string'&&['submit','poll','download','local_persist','model_call'].includes(details.stage))
+      this.stage=details.stage as ChannelManagedFailureStage;
+    if(typeof details.status==='number'&&Number.isInteger(details.status)&&details.status>=100&&details.status<=599)
+      this.status=details.status;
   }
 }
 
@@ -248,7 +256,8 @@ export function toChannelManagedError(error: unknown): Error {
     return error;
   }
   if (isManagedAiCreditExhaustedError(error)) {
-    return new ManagedAiCreditExhaustedError();
+    const row=error&&typeof error==='object'?error as Record<string,unknown>:{};
+    return new ManagedAiCreditExhaustedError({stage:row.stage,status:row.status??row.statusCode});
   }
   const row =
     error && typeof error === "object"

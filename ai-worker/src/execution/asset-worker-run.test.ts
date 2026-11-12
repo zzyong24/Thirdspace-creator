@@ -1,5 +1,5 @@
 import {it,expect,vi} from "vitest";
-import {runAssetInWorker} from "./asset-worker-run";
+import {runAssetInWorker,generateAssetInWorkerRuntime} from "./asset-worker-run";
 const input={kind:"asset.generate" as const,mediaKind:"image" as const,capability:"image.generate" as const,operationKey:"original",prompt:"画面",provider:"openai",model:"image",baseUrl:null};
 const receipt={assetId:"asset",fileId:"file",assetType:"image",name:"原图",checksum:"sum",byteLength:3,committedAt:"now"};
 it("原结果恢复优先于凭据和供应商调用",async()=>{
@@ -105,4 +105,27 @@ it.each([true,false])('T1413未证明幂等资格的同步图片网络未知不�
  await expect(runAssetInWorker(input,new AbortController().signal,call,generate)).rejects.toMatchObject({outcome:'unknown_result'});
  await expect(runAssetInWorker(input,new AbortController().signal,call,generate)).rejects.toMatchObject({outcome:'unknown_result'});
  expect(generate).toHaveBeenCalledOnce();expect(settlements).toEqual([{callId:'original-call',status:'unknown'},{callId:'original-call',status:'unknown'}]);
+});
+
+// T1477:真实适配器经worker/受管包装仍保留错误分类；fetch只使用本地夹具。
+it.each([true,false].flatMap(managed=>[false,true].flatMap(reference=>['network','http503','invalid','download','save'].map(scenario=>({managed,reference,scenario})))))('生图诊断 $scenario managed=$managed reference=$reference 不丢原阶段也不重发',async({managed,reference,scenario})=>{
+ const diagnosticInput={...input,baseUrl:'https://fixture.invalid',...(reference?{mode:'image_to_image' as const,capability:'image.edit' as const,reference:{assetId:'ref',fileId:'ref-file',checksum:'a'.repeat(64),mimeType:'image/png'}}:{})};
+ const fetcher=vi.fn(async()=>{if(scenario==='network')throw Error('synthetic private transport');if(scenario==='http503')return new Response('synthetic secret upstream',{status:503});if(scenario==='invalid')return Response.json({data:[]});if(scenario==='download')return fetcher.mock.calls.length===1?Response.json({data:[{url:'https://fixture.invalid/private-output'}]}):new Response('private download',{status:503});return Response.json({data:[{b64_json:'AQID'}]});});
+ vi.stubGlobal('fetch',fetcher);let failure:unknown;const settlements:unknown[]=[];
+ try{await runAssetInWorker(diagnosticInput,new AbortController().signal,async(port,data)=>{if(port==='reserveAssetCall')return {callId:'original',status:'reserved'};if(port==='resolveAssetCredential')return {provider:'openai',model:'image',baseUrl:'https://fixture.invalid',kind:'image',token:'synthetic-token',...(managed?{displayModelKey:'channel-managed'}:{})};if(port==='readAssetReference')return {bytes:new Uint8Array([1,2,3]),mimeType:'image/png'};if(port==='startAssetCall')return {callId:'original',status:'started'};if(port==='saveAssetResult')throw Error('private storage');if(port==='recoverAssetResult')return {status:'missing'};if(port==='settleAssetCall'){settlements.push(data);return {};}throw Error('unexpected');},generateAssetInWorkerRuntime);}catch(e){failure=e;}finally{vi.unstubAllGlobals();}
+ const codes={network:'ASSET_SUBMIT_NETWORK_UNKNOWN',http503:'ASSET_SUBMIT_HTTP_503_UNKNOWN',invalid:'ASSET_RESPONSE_INVALID_UNKNOWN',download:'ASSET_DOWNLOAD_HTTP_503_UNKNOWN',save:'ASSET_SAVE_RESULT_UNKNOWN'};
+ expect(failure).toMatchObject({outcome:'unknown_result',errorCode:codes[scenario as keyof typeof codes]});
+ expect(String(failure)).not.toMatch(/synthetic|private|https:|token/);expect(settlements).toEqual([{callId:'original',status:'unknown'}]);expect(fetcher.mock.calls).toHaveLength(scenario==='download'?2:1);
+});
+
+it.each([400,401,402,403,404,408,429,500])('T1477真实适配器提交HTTP %s保持拒绝/未知边界且只发一次',async status=>{
+ const fetcher=vi.fn(async()=>new Response('synthetic private error',{status})),settlements:unknown[]=[];vi.stubGlobal('fetch',fetcher);let failure:unknown;
+ try{await runAssetInWorker({...input,baseUrl:'https://fixture.invalid'},new AbortController().signal,async(port,data)=>{if(port==='reserveAssetCall')return {callId:'one-call',status:'reserved'};if(port==='resolveAssetCredential')return {provider:'openai',model:'image',kind:'image',baseUrl:'https://fixture.invalid',token:'synthetic'};if(port==='startAssetCall')return {callId:'one-call',status:'started'};if(port==='settleAssetCall'){settlements.push(data);return {};}throw Error('unexpected');},generateAssetInWorkerRuntime);}catch(e){failure=e;}finally{vi.unstubAllGlobals();}
+ expect((failure as {outcome:string}).outcome==='unknown_result').toBe(status===408||status>=500);expect(settlements).toEqual([{callId:'one-call',status:status===408||status>=500?'unknown':'rejected'}]);expect(fetcher).toHaveBeenCalledOnce();expect(String(failure)).not.toContain('synthetic private');
+});
+
+it.each([400,402,503])('T1477受管额度错误保留真实提交HTTP %s，仅明确4xx拒绝可继续原任务',async status=>{
+ const fetcher=vi.fn(async()=>Response.json({error:{message:'insufficient balance',token:'synthetic-private-token'}},{status})),settlements:unknown[]=[];vi.stubGlobal('fetch',fetcher);let failure:unknown;
+ try{await runAssetInWorker({...input,baseUrl:'https://fixture.invalid'},new AbortController().signal,async(port,data)=>{if(port==='reserveAssetCall')return {callId:'credit-call',status:'reserved'};if(port==='resolveAssetCredential')return {provider:'openai',model:'image',kind:'image',baseUrl:'https://fixture.invalid',token:'synthetic',displayModelKey:'channel-managed'};if(port==='startAssetCall')return {callId:'credit-call',status:'started'};if(port==='settleAssetCall'){settlements.push(data);return {};}throw Error('unexpected');},generateAssetInWorkerRuntime);}catch(e){failure=e;}finally{vi.unstubAllGlobals();}
+ expect(failure).toMatchObject(status<500?{outcome:'waiting_user',errorCode:'AI_CREDIT_EXHAUSTED'}:{outcome:'unknown_result'});expect(settlements).toEqual([{callId:'credit-call',status:status<500?'rejected':'unknown'}]);expect(fetcher).toHaveBeenCalledOnce();expect(String(failure)).not.toContain('synthetic-private-token');
 });

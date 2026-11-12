@@ -1,3 +1,4 @@
+import {assetGenerationFailureMessage} from '@creatoros/contract/provider-error-detail';
 import {generateCodexImage} from './codex-image-generation';
 import {codexAssetCredentialSchema} from '@creatoros/contract/execution-worker';
 import {setTimeout as delay} from "node:timers/promises";
@@ -51,6 +52,7 @@ export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,
   }catch(error){await call('settleAssetCall',{callId,status:'unknown'}).catch(()=>{});throw error;}
  }
  let started=false,jobKnown=false;
+ let savingResult=false;
  try{
   let job:z.infer<typeof providerJobSchema>|null=null;
   if(["started","unknown","settled"].includes(reservation.status)){
@@ -79,6 +81,7 @@ export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,
    await call("recordAssetProviderJob",{callId,job:{schemaVersion:1,provider:input.provider,model:input.model,baseUrl:input.baseUrl,...(input.serviceId?{serviceId:input.serviceId}:{}),jobId}});
   }});
   signal.throwIfAborted();
+  savingResult=true;
   try{
    const receipt=assetResultReceiptSchema.parse(await call("saveAssetResult",{callId,bytes:result.assetBytes},signal));
    return {callId,text:JSON.stringify(receipt)};
@@ -96,7 +99,17 @@ export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,
   const classification=classifyLlmError(error);
   const recoverable=jobKnown && !signal.aborted && (e?.stage==="poll" || e?.stage==="download") && (classification.retryable || (typeof e.status!=="number" && (e.reason==="network" || e.reason==="timeout")));
   const retryAfterMs=typeof e?.retryAfterMs==="number" && Number.isFinite(e.retryAfterMs) && e.retryAfterMs>=0?e.retryAfterMs:getRetryAfterMs(error,Date.now,Infinity)??undefined;
-  const failure=rejected?generationFailure(error,false):new GenerationFailure("unknown_result",recoverable?"ASSET_RECONCILE_RETRYABLE":"ASSET_RESULT_UNKNOWN",recoverable?retryAfterMs:undefined);
+  // 已发生提交的请求仍保持unknown；只保留机械诊断，不把上游正文或URL写回任务。
+  const http=typeof e?.status==='number'&&Number.isInteger(e.status)&&e.status>=400&&e.status<=599?e.status:undefined;
+  let diagnosticCode='ASSET_SUBMIT_RESULT_UNKNOWN';
+  if(savingResult)diagnosticCode='ASSET_SAVE_RESULT_UNKNOWN';
+  else if(e?.stage==='submit'&&http)diagnosticCode=`ASSET_SUBMIT_HTTP_${http}_UNKNOWN`;
+  else if(e?.stage==='download'&&http)diagnosticCode=`ASSET_DOWNLOAD_HTTP_${http}_UNKNOWN`;
+  else if(e?.reason==='response_contract')diagnosticCode='ASSET_RESPONSE_INVALID_UNKNOWN';
+  else if(e?.reason==='network'&&e.stage==='submit')diagnosticCode='ASSET_SUBMIT_NETWORK_UNKNOWN';
+  else if(e?.reason==='network'&&e.stage==='download')diagnosticCode='ASSET_DOWNLOAD_NETWORK_UNKNOWN';
+  const code=recoverable?'ASSET_RECONCILE_RETRYABLE':input.mediaKind==='image'?diagnosticCode:'ASSET_RESULT_UNKNOWN';
+  const failure=error instanceof GenerationFailure?error:rejected?generationFailure(error,false):new GenerationFailure('unknown_result',code,recoverable?retryAfterMs:undefined,assetGenerationFailureMessage(code)??undefined);
   try{await call("settleAssetCall",{callId,status:rejected?"rejected":"unknown"});}catch{throw new GenerationFailure("unknown_result","ASSET_SETTLEMENT_UNKNOWN");}
   throw failure;
  }
