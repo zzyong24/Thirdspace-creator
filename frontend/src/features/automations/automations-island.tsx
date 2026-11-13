@@ -284,22 +284,22 @@ function RunProgressBar({ progress }: { readonly progress: RunProgress }) {
   );
 }
 
-// 一次运行的结果文案(T-032b ③):按 status + itemsNew 分档,替死板的「新增 N · 更新 M」。
-// 核心是区分 succeeded-0(已完成·无新数据,别显得像失败)vs needs_reconnect(去扫码)vs failed(显真因)。
+// 原生报表没有作品差分计数；只在已知计数来源上把双零解释成无新数据。
 function runResultText(run: {
   status: string;
   itemsNew: number;
   itemsUpdated: number;
   error: string | null;
-}): string {
+}, resultMode: "native_reports" | "reported" | "unknown"): string {
   switch (run.status) {
     case "running":
       return "采集进行中…";
     case "succeeded":
-      // 已登录、跑完:有新数据报新增;0 条是正常结果(作品本就可能没新增/无新评论),不显得像失败。
+      if (resultMode === "native_reports") return "✅ 已完成 · 后台报表已同步";
       return run.itemsNew > 0
         ? `✅ 新增 ${run.itemsNew} 条${run.itemsUpdated > 0 ? ` · 更新 ${run.itemsUpdated} 条` : ""}`
-        : run.itemsUpdated > 0 ? `✅ 更新 ${run.itemsUpdated} 条` : "✅ 已完成 · 无新数据";
+        : run.itemsUpdated > 0 ? `✅ 更新 ${run.itemsUpdated} 条`
+          : resultMode === "reported" ? "✅ 已完成 · 无新数据" : "✅ 已完成";
     case "needs_reconnect":
       return "⚠️ 需重连账号 · 去扫码绑定";
     case "failed":
@@ -1300,8 +1300,9 @@ export function CreateJobDialog({
 
 // ── 运行详情抽屉(读 jobRuns.listByJob + 选中 run 的 ai_task_steps)───────────────
 
-export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pending=false,requestError=null,reuseNotice=null,contractClient=client}: {
+export function RunDetailDialog({job,accountPlatform=null,open,onOpenChange,preferredRunId=null,pending=false,requestError=null,reuseNotice=null,contractClient=client}: {
  readonly job: ScheduledJobResource|null;
+ readonly accountPlatform?: string|null;
  readonly open: boolean;
  readonly onOpenChange:(v:boolean)=>void;
  readonly reuseNotice?:string|null;
@@ -1310,6 +1311,10 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
  readonly requestError?:string|null;
  readonly contractClient?: typeof client;
 }) {
+ const nativeReports=job?.sourceKind==='self.metrics'&&(accountPlatform==='wechatVideo'||accountPlatform==='wechatOfficial');
+ const resultMode=nativeReports?'native_reports':job?.sourceKind==='self.metrics'
+  ? accountPlatform==='douyin'?'reported':'unknown'
+  : job?'reported':'unknown';
  const [runs,setRuns]=React.useState<JobRunResource[]>([]);
  const [loading,setLoading]=React.useState(false);
  const [selectedRunId,setSelectedRunId]=React.useState<string|null>(null);
@@ -1430,7 +1435,7 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
                                 : "text-muted-foreground",
                           )}
                         >
-                          {waiting ? "到时自动继续，已保存进度保留" : runResultText(run)}
+                          {waiting ? "到时自动继续，已保存进度保留" : runResultText(run,resultMode)}
                         </span>
                       </div>
                       {/* [T-152] running 态:实时采集进度条(阶段 + 累计条数)。轮询 2s 刷新。
@@ -1480,7 +1485,9 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
                                 </span>
                                 <span className="leading-snug text-text-subtle">
                                   {s.kind === "tool_call" ? "调工具 · " : ""}
-                                  {s.text || "（无描述）"}
+                                  {nativeReports&&run.status==='succeeded'&&s.kind==='collect'
+                                    ? "后台报表已同步，可在该账号的数据页查看日期和原始字段。"
+                                    : s.text || "（无描述）"}
                                 </span>
                               </li>
                             ))}
@@ -2107,6 +2114,7 @@ export function AutomationsIsland({
       />
       <RunDetailDialog
         job={detailJob}
+        accountPlatform={accounts.find(account=>account.id===detailJob?.accountId)?.platform??null}
         open={detailOpen}
         onOpenChange={changeDetailOpen}
         preferredRunId={detailRunId}

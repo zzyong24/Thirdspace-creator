@@ -21,3 +21,15 @@ it('T1362组读取失败不假装没有组或自动读旧账号',async()=>{mocks
 
 
 it('T1362原生报表保同组真实账号与版本，读取失败仍局部面板',async()=>{mocks.group.mockResolvedValue({...group(),members:[member('a',{platform:'wechatVideo'})]});mocks.account.mockResolvedValue({id:'a',platform:'wechatVideo',accountHandle:'视频号账号'});mocks.reports.mockRejectedValue(Error('read_failed'));mocks.capabilities.mockResolvedValue({items:[]});render(await Page({searchParams:Promise.resolve({accountId:'a'})}));expect(screen.getByTestId('native-report')).toBeVisible();expect(mocks.reports).toHaveBeenCalledWith({params:{accountId:'a'},query:{pageSize:20,cursor:null},body:undefined});expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({groupId:'g',accountId:'a',groupVersion:2,membershipVersion:4}));expect(mocks.works).not.toHaveBeenCalled();});
+
+it('T1479只有视频号的组可直接读作品原生报表，不依赖抖音或旧指标',async()=>{
+ mocks.group.mockResolvedValue({...group(),members:[member('wechat-only',{platform:'wechatVideo',accountHandle:'仅视频号'})]});
+ mocks.account.mockResolvedValue({id:'wechat-only',platform:'wechatVideo',accountHandle:'仅视频号'});
+ mocks.reports.mockResolvedValue({items:[],nextCursor:null,total:0});mocks.capabilities.mockResolvedValue({items:[{platform:'wechatVideo',capability:'nativeReports',supported:true,runtimeState:'ready'}]});
+ render(await Page({searchParams:Promise.resolve({accountId:'wechat-only'})}));
+ expect(screen.getByTestId('native-report')).toBeVisible();expect(screen.getByRole('link',{name:'视频号 · 仅视频号'})).toHaveAttribute('aria-current','page');
+ expect(mocks.account).toHaveBeenCalledWith(expect.objectContaining({params:{accountId:'wechat-only'}}));
+ expect(mocks.reports).toHaveBeenCalledWith(expect.objectContaining({params:{accountId:'wechat-only'}}));
+ expect(mocks.works).not.toHaveBeenCalled();expect(mocks.metrics).not.toHaveBeenCalled();
+ expect(mocks.create).toHaveBeenLastCalledWith(expect.objectContaining({groupId:'g',accountId:'wechat-only',membershipVersion:4}));
+});

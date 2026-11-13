@@ -25,6 +25,8 @@ import type { RequestContext } from "@creatoros/contract";
 export interface CollectResult {
   itemsNew: number;
   itemsUpdated: number;
+  /** false 表示采集器未提供作品差分计数；兼容数字字段不能解释成真实零变化。 */
+  countsReported?: boolean;
   /** 默认是本批计数；流量队列等返回整项累计值时显式标注。 */
   countMode?: "batch" | "cumulative";
   /** 旧合并任务各采集器统计独立累计，避免混加流量累计数与评论本批数。 */
@@ -289,9 +291,10 @@ export async function runScheduledCollection(
     await deps.ai.recordStep(ctx, task.id, {
       stepNo: 1,
       kind: "collect",
-      text:
-        `采集${label} → 新增 ${itemsNew} 条,更新 ${itemsUpdated} 条` +
-        (result.message ? `(${result.message})` : ""),
+      text: result.countsReported === false
+        ? result.message ?? "本次采集未提供条数统计"
+        : `采集${label} → 新增 ${itemsNew} 条,更新 ${itemsUpdated} 条` +
+          (result.message ? `(${result.message})` : ""),
       toolCalls: [],
     });
 

@@ -468,3 +468,11 @@ it.each(['defer','terminal'])('T985 延迟fetch写入不能覆盖%s，收口后�
  lateReport({stage:'late',processed:1,total:1});await new Promise(r=>setTimeout(r,5));
  expect(before).toEqual([]);expect(writes).toEqual(['fetch',mode==='defer'?'waiting':'terminal']);
 });
+
+it('T1479 未提供作品差分计数时完成步骤不虚报新增0条或更新0条',async()=>{
+ const deps=makeDeps({collectors:{'self.metrics':async()=>({itemsNew:0,itemsUpdated:0,countsReported:false,message:'后台报表已同步，可在该账号的数据页查看日期和原始字段'})}});
+ await runScheduledCollection({...ctx,accountId:'only-wechat'},baseTask,deps);
+ expect(deps.ai.markSucceeded).toHaveBeenCalledOnce();
+ const step=(deps.ai.recordStep as ReturnType<typeof vi.fn>).mock.calls[0]![2];
+ expect(step.text).toContain('报表已同步');expect(step.text).not.toMatch(/新增|更新/);
+});

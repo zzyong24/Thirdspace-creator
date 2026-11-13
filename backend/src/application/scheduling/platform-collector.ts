@@ -33,7 +33,7 @@ export function createPlatformMetricsCollector(ports:{
   if(account.platform==='wechatVideo'||account.platform==='wechatOfficial'){
    const reports=await collect('nativeReports',`scheduled-${taskId}-reports`);
    if(reports?.status!=='complete')return pending;
-   return {itemsNew:0,itemsUpdated:0,message:'原生后台报表已同步，可在该账号的数据页查看日期和原始字段'};
+   return {itemsNew:0,itemsUpdated:0,countsReported:false,message:'原生后台报表已同步，可在该账号的数据页查看日期和原始字段。'};
   }
   const catalog=await collect('workCatalog',`scheduled-${taskId}-catalog`);
   if(catalog?.status!=='complete')return pending;

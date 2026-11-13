@@ -1,4 +1,6 @@
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
+import {createPlatformMetricsCollector} from '../../application/scheduling/platform-collector';
+import {runScheduledCollection} from '../ai-runtime/scheduled-collection-runner';
 import {createRequire} from 'node:module';
 import {createWechatNativeCollector,type WechatNativeBrowserOptions} from '../../application/collection/wechat-native-collector';
 import {parseWechatNativeReport,type WechatNativeReportInput} from '@creatoros/ai-worker/platform/wechat-native-report-parser';
@@ -10,12 +12,12 @@ import {platformCollectionBindings,platformCatalogs,platformNativeReports} from 
 import {createPlatformCollectionService} from './platform-collection.service';
 import {lockWorkspaceMembership,assertFrozenWorkspaceMembership,createAccountGroupService} from '../platform-account';
 import {createPlatformCollectionTransport} from './platform-collection.transport';
-import {ENDPOINTS as platformCollectionOperations} from '@creatoros/contract';
+import {ENDPOINTS as platformCollectionOperations,type RequestContext} from '@creatoros/contract';
 const time='2026-10-09T02:00:00.000Z';
 const report={platform:'wechatVideo' as const,kind:'channelsDaily' as const,scope:'accountDaily' as const,selection:{startDate:'2026-10-08',endDate:'2026-10-08',timeZone:'Asia/Shanghai' as const,meaning:'statisticsDates' as const},accumulation:'daily' as const,sourcePath:'/platform/statistic/post' as const,filename:'数据.csv',sha256:'b'.repeat(64),receivedBytes:100,tables:[{key:'daily',label:'每日',columns:[{key:'播放',label:'播放',unit:'count' as const}],rows:[[{raw:'0',value:0}]]}]};
-async function fixture(options:{key?:string;ownerStatus?:string;platform?:'wechatOfficial'|'wechatVideo';claim?:boolean}={}){
+async function fixture(options:{key?:string;ownerStatus?:string;platform?:'wechatOfficial'|'wechatVideo';claim?:boolean;singleAccount?:boolean}={}){
  const {db,client}=await createDb();let n=0;const platform=options.platform??'wechatVideo';
- for(const [a,g] of [['a','g1'],['b','g2']] as const){
+ for(const [a,g] of (options.singleAccount?[['a','g1']] as const:[['a','g1'],['b','g2']] as const)){
   await db.insert(platformAccounts).values({id:a,userId:'u',platform,accountHandle:a,externalAccountId:`id-${a}`,createdAt:time,updatedAt:time});
   await db.insert(accountGroups).values({id:g,userId:'u',name:g,version:1,createdAt:time,updatedAt:time});
   await db.insert(accountGroupMemberships).values({id:`m-${a}`,userId:'u',groupId:g,accountId:a,version:1,joinedAt:time});
@@ -153,5 +155,25 @@ it.each([true,false])('T1110公开转组在微信queued/running=%s时拒绝，�
   await f.request(platformCollectionOperations.cancelCollection,{params:{accountId:'a',attemptId:f.run.attemptId}});
   const ready=await groups.previewTransfer(f.ctx,{accountId:'a',toGroupId:'g2'});expect(ready.activeTaskCount).toBe(0);
   expect(await groups.transfer(f.ctx,{...ready,idempotencyKey:'move-native-cancelled'})).toMatchObject({groupId:'g2',version:2});
+ }finally{await f.client.close();}
+},180000);
+
+it('T1479 只有视频号且无抖音绑定：调度runner到原生采集、真实CSV解析、落库公开回读独立完成',async()=>{
+ const f=await fixture({singleAccount:true,claim:false,key:'scheduled-owner-task-reports',ownerStatus:'running'});
+ try{
+  expect((await f.db.select().from(platformAccounts)).map(a=>a.platform)).toEqual(['wechatVideo']);
+  const execution=nativeExecutor(f,async o=>{expect(o.platform).toBe('wechatVideo');for(const input of sourceFiles('wechatVideo'))await o.onReport(input);});
+  const readAccount=vi.fn(async(c:RequestContext,id:string)=>{expect(c.groupId).toBe('g1');expect(id).toBe('a');const [a]=await f.db.select().from(platformAccounts).where(eq(platformAccounts.id,id));return a!;});
+  const metrics=createPlatformMetricsCollector({account:readAccount,start:(c,input)=>f.service.start(c,input),status:f.service.status,schedule:async(c,run)=>{await execution.execute(c,run);}});
+  const recordStep=vi.fn(async()=>{}),markSucceeded=vi.fn(async()=>{}),markFailed=vi.fn(async()=>{}),updateRun=vi.fn(async()=>({}));
+  await runScheduledCollection(f.ctx,{id:'owner-task',taskType:'scheduled.self.metrics',inputData:{jobId:'only-video-job',jobRunId:'only-video-run',target:{__operationsSync:true}}},{
+   ai:{markRunning:async()=>{},recordStep,markSucceeded,markFailed},runs:{updateRun},collectors:{'self.metrics':(c,_t,_r,owner)=>metrics(c,owner!.taskId)},isNotLoggedInError:()=>false,now:()=>time,
+  });
+  expect(markSucceeded).toHaveBeenCalledOnce();expect(markFailed).not.toHaveBeenCalled();expect(readAccount).toHaveBeenCalledOnce();
+  expect(updateRun).toHaveBeenCalledWith(f.ctx,'only-video-run',expect.objectContaining({status:'succeeded'}));
+  const read:any=await f.request(platformCollectionOperations.listNativeReports,{params:{accountId:'a'},query:{pageSize:20,cursor:null}});
+  expect(read.items.map((r:any)=>r.kind).sort()).toEqual(['channelsDaily','channelsFollowers','channelsWorks']);expect(read.items.every((r:any)=>r.groupId==='g1'&&r.accountId==='a'&&r.tables.some((t:any)=>t.rows.length>0))).toBe(true);
+  expect(await f.db.select().from(platformCatalogs)).toHaveLength(0);
+  const step=recordStep.mock.calls[0] as unknown as [unknown,unknown,{text:string}];expect(step[2].text).toContain('报表已同步');expect(step[2].text).not.toMatch(/新增|更新/);
  }finally{await f.client.close();}
 },180000);

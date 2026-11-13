@@ -4,7 +4,7 @@ import {createPlatformMetricsCollector,PlatformCollectionNeedsAuthError} from '.
 const ctx:RequestContext={userId:'u',accountId:'ks',groupId:'g',membershipVersion:2,requestId:'test',source:'ingestion'};
 function fixture(platform='kuaishou',status:CollectionRunResource['status']='complete'){
  const start=vi.fn(async(_c:RequestContext,input:{accountId:string;capability:CollectionRunResource['capability'];clientRequestId:string})=>({attemptId:input.clientRequestId,...input,status,generation:1,committedPages:2,completeCatalogGeneration:1,reasonCode:null,startedAt:'2026-10-09T00:00:00Z',updatedAt:'2026-10-09T00:00:00Z'})),schedule=vi.fn(async(_c:RequestContext,_r:CollectionRunResource,_s?:AbortSignal)=>{});
- const collect=createPlatformMetricsCollector({account:async()=>({platform}),start,status:async(_c,_id,attemptId)=>({...await start(_c,{accountId:_id,capability:'workCatalog',clientRequestId:attemptId}),status}),schedule});
+ const collect=createPlatformMetricsCollector({account:async()=>({platform}),start,status:async(_c,_id,attemptId)=>({attemptId,accountId:_id,capability:platform==='wechatVideo'||platform==='wechatOfficial'?'nativeReports' as const:'workCatalog' as const,status,generation:1,committedPages:2,completeCatalogGeneration:1,reasonCode:null,startedAt:'2026-10-09T00:00:00Z',updatedAt:'2026-10-09T00:00:00Z'}),schedule});
  return {collect,start,schedule};
 }
 it('同一持久scheduled任务沿原键恢复，目录完成后才等指标与快手概览，不虚构统计',async()=>{
@@ -37,4 +37,10 @@ it('T1110微信本次执行读回TASK_TIMEOUT后如实结束owner，不把已耗
  const ctx:RequestContext={userId:'u',accountId:'a',source:'ingestion',requestId:'r'},schedule=vi.fn();
  const collect=createPlatformMetricsCollector({account:async()=>({platform:'wechatVideo'}),start:async()=>({...nativeRun('queued'),capability:'nativeReports'}),status:async()=>({...nativeRun('partial'),capability:'nativeReports',reasonCode:'TASK_TIMEOUT'}),schedule});
  await expect(collect(ctx,'owner')).rejects.toThrow('同步等太久已停止');expect(schedule).toHaveBeenCalledOnce();
+});
+
+// 计数没有提供时，成功与真实零变化必须区分。
+it.each(['wechatVideo','wechatOfficial'])('T1479 %s报表成功明确标记未提供作品差分计数',async platform=>{
+ const f=fixture(platform);expect(await f.collect({...ctx,accountId:'only-wechat'},'native-only')).toMatchObject({countsReported:false});
+ expect(f.start.mock.calls.every(([scope,input])=>scope.accountId==='only-wechat'&&input.accountId==='only-wechat'&&input.capability==='nativeReports')).toBe(true);
 });

@@ -919,11 +919,11 @@ describe("RunDetailDialog — 运行详情读 runs + steps", () => {
 
 // T-032b ③:采集反馈 UX 做真 —— 结果文案按 status + itemsNew 分档(测 4)。
 describe("T-032b — 采集反馈结果文案分档", () => {
-  it("succeeded 且 itemsNew=0 → 「✅ 已完成 · 无新数据」(不显得像失败)", async () => {
+  it("已知抖音计数为0 → 「✅ 已完成 · 无新数据」(不显得像失败)", async () => {
     mockClient.listJobRunsByJob.mockResolvedValueOnce([
       makeRun({ status: "succeeded", itemsNew: 0, itemsUpdated: 0 }),
     ]);
-    render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+    render(<RunDetailDialog job={makeJob()} accountPlatform="douyin" open onOpenChange={vi.fn()} />);
     await waitFor(() =>
       expect(screen.getByText(/已完成 · 无新数据/)).toBeInTheDocument(),
     );
@@ -1020,4 +1020,36 @@ it('T985 运行详情等待状态没有运行中的旋转图标',async()=>{
  const item=document.querySelector('[data-slot="automation-run-item"]');
  expect(item?.querySelector('.animate-spin')).toBeNull();
  expect(item?.textContent).not.toContain('采集进行中');
+});
+
+describe('T1479 原生报表完成反馈',()=>{
+ it.each(['wechatVideo','wechatOfficial'])('%s已完成的历史记录不把未提供计数当无变化',async accountPlatform=>{
+  mockClient.listJobRunsByJob.mockResolvedValueOnce([makeRun({itemsNew:0,itemsUpdated:0})]);
+  mockClient.listTaskSteps.mockResolvedValueOnce([{stepNo:1,kind:'collect',text:'采集账号作品数据 → 新增 0 条,更新 0 条(原生后台报表已同步)',toolCalls:[]}]);
+  render(<RunDetailDialog job={makeJob({accountId:'only-wechat'})} accountPlatform={accountPlatform} open onOpenChange={vi.fn()} />);
+  const summary=await screen.findByText('✅ 已完成 · 后台报表已同步');expect(screen.queryByText(/无新数据/)).toBeNull();
+  fireEvent.click(summary);await waitFor(()=>expect(mockClient.listTaskSteps).toHaveBeenCalledOnce());
+  expect(await screen.findByText('后台报表已同步，可在该账号的数据页查看日期和原始字段。')).toBeVisible();
+  expect(screen.queryByText(/新增 0 条|更新 0 条/)).toBeNull();
+ });
+ it('平台未读到时零计数只展示已完成，不推测无新数据',async()=>{
+  mockClient.listJobRunsByJob.mockResolvedValueOnce([makeRun({itemsNew:0,itemsUpdated:0})]);
+  render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+  expect(await screen.findByText('✅ 已完成')).toBeVisible();expect(screen.queryByText(/无新数据|后台报表已同步/)).toBeNull();
+ });
+});
+
+it.each(['failed','needs_reconnect','running'])('T1479 视频号真实%s不被报表成功提示覆盖',async status=>{
+ mockClient.listJobRunsByJob.mockResolvedValueOnce([makeRun({status:status as JobRunResource['status'],itemsNew:0,itemsUpdated:0,aiTaskId:null,error:status==='failed'?'原报表处理失败':null})]);
+ render(<RunDetailDialog job={makeJob({accountId:'only-video'})} accountPlatform="wechatVideo" open onOpenChange={vi.fn()} />);
+ await waitFor(()=>expect(mockClient.listJobRunsByJob).toHaveBeenCalledOnce());
+ const expected=status==='failed'?'失败':status==='needs_reconnect'?'需重连账号':'运行中';
+ expect(await screen.findByText(expected)).toBeVisible();expect(screen.queryByText(/后台报表已同步/)).toBeNull();
+});
+it('T1479 仅视频号账号列表沿真实账号把报表类型传入详情，不借抖音',async()=>{
+ const job=makeJob({accountId:'only-video',name:'视频号后台数据同步'});
+ mockClient.listJobRunsByJob.mockResolvedValue([makeRun({itemsNew:0,itemsUpdated:0})]);
+ render(<AutomationsIsland jobs={[job]} accounts={[{id:'only-video',handle:'唯一视频号',platform:'wechatVideo',status:'active'}]} />);
+ fireEvent.click(screen.getByRole('button',{name:/视频号后台数据同步/}));
+ expect(await screen.findByText('✅ 已完成 · 后台报表已同步')).toBeVisible();expect(mockClient.loginDouyin).not.toHaveBeenCalled();
 });
