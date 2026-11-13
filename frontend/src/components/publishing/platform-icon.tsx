@@ -9,6 +9,7 @@
  */
 
 import * as React from "react";
+import Image from "next/image";
 
 import { getPlatformIcon } from "@/lib/platform-icons";
 import { cn } from "@/lib/utils";
@@ -69,7 +70,16 @@ export function PlatformIcon({
           color: icon.foreground,
         }}
       >
-        {icon.glyph}
+        {icon.id === "douyin" ? (
+          <Image
+            src="/douyin-icon.png"
+            alt=""
+            aria-hidden="true"
+            width={dimension}
+            height={dimension}
+            className="rounded-md object-contain"
+          />
+        ) : icon.glyph}
       </span>
       {showLabel ? <span className="text-sm text-foreground">{icon.label}</span> : null}
     </span>

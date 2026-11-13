@@ -134,6 +134,8 @@ describe("shared business components contract", () => {
       render(<PlatformIcon platform="douyin" />);
       const icon = screen.getByLabelText(/抖音/i);
       expect(icon).toBeInTheDocument();
+      expect(icon.querySelector("img")).toHaveAttribute("src", expect.stringContaining("douyin-icon.png"));
+      expect(icon).not.toHaveTextContent("抖");
     });
   });
 

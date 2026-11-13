@@ -13,7 +13,6 @@ Clock3,
 Link2,
 LockKeyhole,
 MoreHorizontal,
-ImageOff,
 Pause,
 Play,
 RefreshCw,
@@ -1611,7 +1610,6 @@ function ItemCard({
   onSelect: () => void;
   upgradeState?:RadarProjectState;
 }) {
-  const [failedCover, setFailedCover] = React.useState<string | null>(null);
   const title = row.item.title || "未命名内容";
   const projectId = row.item.projectId || upgradeState?.projectId;
   const needsAttention = upgradeState?.preparation?.steps.some(step => ["failed", "blocked", "unknown_result", "waiting_user", "cancelled", "partial"].includes(step.status));
@@ -1623,12 +1621,6 @@ function ItemCard({
     <div data-slot="radar-item-row" className={cn(layoutStyles.itemCard, "border bg-surface transition",
       active ? "border-primary/60 ring-1 ring-primary/20" : "border-border/80 hover:border-primary/30")}>
       <button type="button" onClick={onSelect} aria-pressed={active} className={layoutStyles.itemSelect}>
-        {row.item.coverUrl && failedCover !== row.item.coverUrl ? (
-          // 已有外站封面直读，不新增图片代理或远程域名配置。
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={row.item.coverUrl} alt={`${title}的封面`} width={48} height={48} loading="lazy" className={layoutStyles.cover}
-            onError={() => setFailedCover(row.item.coverUrl)} />
-        ) : <span className={layoutStyles.coverPlaceholder} aria-hidden="true"><ImageOff className="size-4" /></span>}
         <span className={layoutStyles.itemCopy}>
           <span className={layoutStyles.itemTitle} title={title}>{title}</span>
           <span className="block truncate text-xs text-muted-foreground" title={`${row.item.authorName ?? row.item.platform} · ${row.item.publishedAt ? dateLabel(row.item.publishedAt) : `发布时间未知 · 收录于 ${dateLabel(row.item.capturedAt)}`}`}>

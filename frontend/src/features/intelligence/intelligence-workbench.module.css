@@ -87,8 +87,6 @@
 }
 .itemSelect { display: flex; grid-column: 1 / -1; gap: 8px; min-width: 0; width: 100%; text-align: left; border-radius: 4px; }
 .itemSelect:focus-visible { outline: 2px solid var(--creatoros-brand); outline-offset: 2px; }
-.cover { width: 48px; height: 48px; flex-shrink: 0; object-fit: cover; border-radius: 4px; }
-.coverPlaceholder { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 4px; background: var(--creatoros-surface-subtle); color: var(--creatoros-text-muted); }
 .itemCopy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 4px; }
 .itemTitle { font-size: 14px; font-weight: 600; line-height: 20px; }
 .itemMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; font-size: 12px; line-height: 20px; color: var(--creatoros-text-muted); font-variant-numeric: tabular-nums; }

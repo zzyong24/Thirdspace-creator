@@ -829,7 +829,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByText("2 条真实内容")).toBeInTheDocument();
   });
 
-  it("[T-1384] 列表展示已有封面缩略图，详情不渲染大图占位", () => {
+  it("列表和详情均不渲染历史封面或缺图占位", () => {
     const itemWithLegacyCover = {
       ...detail.item,
       coverUrl: "https://example.com/legacy-cover.jpg",
@@ -850,8 +850,7 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    expect(container.querySelectorAll("img")).toHaveLength(1);
-    expect(container.querySelector("img")).toHaveAttribute("width", "48");
+    expect(container.querySelectorAll("img")).toHaveLength(0);
     expect(within(screen.getByTestId("intelligence-detail")).queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getAllByText("真实作品")).toHaveLength(2);
     expect(screen.getAllByText(/赞/).length).toBeGreaterThan(0);
@@ -2261,20 +2260,15 @@ it.each(["unknown", "provider_new_state"])("未知转写状态 %s 显示通用�
  expect(stub.enqueueTranscript).not.toHaveBeenCalled();
 });
 
-it("T-1384 作品行显示已有封面、完整标题提示，缺封面诚实留空且选择仍有效", async () => {
+it("作品行直接展示完整标题，不显示历史封面或缺图占位且选择仍有效", async () => {
   const stub = api();
   const title = "长作品标题".repeat(45);
   render(<IntelligenceWorkbench accountId="density-cover" workspace={workspace} items={[
     { item: {...detail.item, title, coverUrl: "https://example.com/cover.jpg"}, latestMetric: {...detail.metrics[0], likeCount: 12800000}, sourceCount: 2 },
     { item: {...detail.item, id: "no-cover", title: "山"}, latestMetric: {...detail.metrics[0], likeCount: 0}, sourceCount: 1 },
   ]} initialDetail={null} api={stub}/>);
-  const cover = screen.getByRole("img", {name: `${title}的封面`});
-  expect(cover).toHaveAttribute("src", "https://example.com/cover.jpg");
-  expect(cover).toHaveAttribute("loading", "lazy");
   expect(screen.getByText(title)).toHaveAttribute("title", title);
-  expect(screen.getAllByRole("img")).toHaveLength(1);
   expect(screen.getByText("赞 0")).toBeInTheDocument();
-  fireEvent.error(cover);
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
   await userEvent.click(screen.getByText(title));
   expect(stub.getItem).toHaveBeenCalledWith("item-1");
