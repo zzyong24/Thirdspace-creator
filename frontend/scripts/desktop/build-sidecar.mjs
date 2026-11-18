@@ -29,10 +29,10 @@ import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerEx
 
 import { spawnSync } from "node:child_process";
 import { StringDecoder } from "node:string_decoder";
-import { runSidecarSigning, sidecarSigningRequired } from "./sign-sidecar.mjs";
+import { runSidecarSigning, sidecarSigningRequired, signingProcessEnv } from "./sign-sidecar.mjs";
 const SIDECAR_CLEAN_POLICY = "t1273-clean-no-obfuscation-v2";
 // 只由专用签名子进程接收；直接release构建也不向Next/tar/编译器继承此路径。
-const sidecarSigningEnv = { CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH: process.env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH };
+const sidecarSigningEnv = signingProcessEnv(process.env);
 import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, statSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync, openSync, readSync, closeSync, renameSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";

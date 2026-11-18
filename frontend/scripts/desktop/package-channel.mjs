@@ -54,7 +54,7 @@ writeFileSync(resolve(staging, "attestation.json"), `${JSON.stringify(attestatio
 console.log(`[package-channel] ✓ preflight ${manifest.packageRef}/${target}`);
 console.log(`[package-channel] staging: ${staging}`);
 if (!planOnly) {
-  const packageEnv = buildLocalPackageEnv({ baseEnv: process.env });
+  const packageEnv = buildLocalPackageEnv({ baseEnv: { ...process.env, CREATOROS_RELEASE: mode === "release" ? "1" : "0", CREATOROS_CHANNEL_PACKAGE_MODE: mode } });
   const packageBrandEnv = readPackageBrandBuildEnv(packageBrandBuildInput);
   execFileSync(process.execPath, [resolve(frontend, "scripts/desktop/package.mjs")], {
     cwd: frontend,

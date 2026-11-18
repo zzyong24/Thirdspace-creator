@@ -150,6 +150,14 @@ CreatorOS 使用[专有软件许可](LICENSE)。**源码可查看，不等于开
 
 产品采用 **Tauri · Next.js · TypeScript · PGlite**，以本地桌面应用承载创作工作流。
 
+共创开发者修改代码后，在当前平台安装Node 25、pnpm依赖及Rust/Tauri系统工具，即可本地打包：
+
+```bash
+pnpm -C frontend desktop:package-local
+```
+
+不需要正式私钥、Apple公证凭证或模型API密钥，也不要求先提交代码。首次运行会在用户目录自动生成并复用开发密钥，继续校验启动和资源完整性；它不会绕过激活与权益。安装包输出到`~/Downloads/CreatorOS-<version>.dmg`（Windows为`.exe`）。macOS默认自动安装启动，只要产包可设置`CREATOROS_LOCAL_SKIP_INSTALL=1`。正式发布沿用独立签名流程，详见[打包skill](.agents/skills/packaging-creatoros-release/SKILL.md)。
+
 | 想了解什么 | 从这里开始 |
 | --- | --- |
 | 本地开发、目录结构与常用命令 | [开发指引](docs/development/README.md) |

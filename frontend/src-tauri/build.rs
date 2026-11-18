@@ -717,11 +717,28 @@ fn write_empty_manifest(path: &std::path::Path) {
 
 // 复用同一个严验协议；这里只读公开根，签名私钥不进入Cargo或OUT_DIR。
 fn write_release_integrity(out_dir: &std::path::Path, debug_build: bool) {
+    for name in ["CREATOROS_LOCAL_PACKAGE", "CREATOROS_LOCAL_SIDECAR_PUBLIC_KEY_B64", "CREATOROS_RELEASE", "GITHUB_ACTIONS", "CREATOROS_CHANNEL_PACKAGE_MODE"] {
+        println!("cargo:rerun-if-env-changed={name}");
+    }
+    let local = std::env::var("CREATOROS_LOCAL_PACKAGE").as_deref() == Ok("1");
+    let local_public = std::env::var("CREATOROS_LOCAL_SIDECAR_PUBLIC_KEY_B64").unwrap_or_default();
+    let formal = std::env::var("CREATOROS_RELEASE").as_deref() == Ok("1")
+        || std::env::var("GITHUB_ACTIONS").as_deref() == Ok("true")
+        || std::env::var("CREATOROS_CHANNEL_PACKAGE_MODE").as_deref() == Ok("release");
+    assert!(!(formal && (local || !local_public.is_empty())), "本地开发根不能用于正式release或GitHub Actions");
+    assert!(local || local_public.is_empty(), "本地公钥必须由本地打包入口启用");
     if debug_build { return; }
     let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let public_path = manifest.join("../branding/trust/creatoros-update-root-20260805.pub.pem");
-    let pem = std::fs::read_to_string(&public_path).expect("T-1273: 缺少既有更新根公钥");
-    let encoded: String = pem.lines().filter(|line| !line.starts_with("-----")).collect();
+    let encoded: String = if local {
+        local_public
+    } else {
+        let pem = std::fs::read_to_string(&public_path).expect("T-1273: 缺少既有更新根公钥");
+        pem.lines().filter(|line| !line.starts_with("-----")).collect()
+    };
+    if !local {
+        assert_eq!(encoded, "MCowBQYDK2VwAyEAf5OQaYD+psAbLRmrIsgibo9mWng0b+3qTdQQhIlJNh4=", "正式更新根不能被替换");
+    }
     let der = base64::engine::general_purpose::STANDARD.decode(encoded).expect("T-1273: 更新根公钥base64无效");
     const ED25519_SPKI_PREFIX: &[u8] = &[0x30,0x2a,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x03,0x21,0x00];
     assert!(der.len() == 44 && der.starts_with(ED25519_SPKI_PREFIX), "T-1273: 更新根必须为canonical Ed25519 SPKI");

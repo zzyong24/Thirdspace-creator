@@ -15,6 +15,8 @@ import { homedir } from "node:os";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { assertLocalPackageBoundary, isFormalPackageEnv, prepareLocalBuildKeys, verdictPublicKeyFromSeed } from "./local-build-keys.mjs";
+
 const DEFAULTS = Object.freeze({
   // 制品生成与逐功能验收分开；显式设 0 可运行原有额外构建验证。
   CREATOROS_PACKAGE_BUILD_ONLY: "1",
@@ -63,10 +65,32 @@ export function buildLocalPackageEnv({
   for (const [name, value] of Object.entries(DEFAULTS)) {
     if (!env[name]?.trim()) env[name] = value;
   }
+  assertLocalPackageBoundary(env);
+  const formal = isFormalPackageEnv(env);
+  // 显式半套材料不能和旧HOME的另一配对混拼；缺的一侧在下方从同一来源补齐。
+  const explicitVerdict = Boolean(baseEnv.CREATOROS_VERDICT_SIGNING_KEY_B64?.trim() || baseEnv.CREATOROS_VERDICT_PUBKEY_B64?.trim());
   for (const [envName, fileName] of Object.entries(LOCAL_KEY_FILES)) {
     if (!env[envName]?.trim()) {
-      env[envName] = readRequiredLocalKey({ envName, fileName, homeDir, readFile });
+      if (formal) env[envName] = readRequiredLocalKey({ envName, fileName, homeDir, readFile });
+      else if (!explicitVerdict) {
+        try { env[envName] = String(readFile(join(homeDir, ".creatoros", fileName), "utf8")).trim(); }
+        catch (error) {
+          if (error.code && error.code !== "ENOENT") throw error;
+        }
+      }
     }
+  }
+  if (!formal) {
+    const local = prepareLocalBuildKeys(homeDir, { needsVerdict: !env.CREATOROS_VERDICT_SIGNING_KEY_B64?.trim() });
+    if (!env.CREATOROS_VERDICT_SIGNING_KEY_B64?.trim()) {
+      env.CREATOROS_VERDICT_SIGNING_KEY_B64 = local.signingKeyB64;
+      env.CREATOROS_VERDICT_PUBKEY_B64 = local.publicKeyB64;
+    } else if (!env.CREATOROS_VERDICT_PUBKEY_B64?.trim()) {
+      env.CREATOROS_VERDICT_PUBKEY_B64 = verdictPublicKeyFromSeed(env.CREATOROS_VERDICT_SIGNING_KEY_B64);
+    }
+    env.CREATOROS_LOCAL_PACKAGE = "1";
+    env.CREATOROS_UPDATE_ROOT_PRIVATE_KEY_PATH = local.sidecarPrivateKeyPath;
+    env.CREATOROS_LOCAL_SIDECAR_PUBLIC_KEY_B64 = local.sidecarPublicKeyB64;
   }
   return env;
 }
@@ -212,7 +236,7 @@ function run() {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
   const packageScript = join(scriptDir, "package.mjs");
   console.log(
-    "[desktop:package-local] ✓ 已加载 CreatorOS 本机安全密钥与 Growth 公共验签配置。",
+    "[desktop:package-local] ✓ 已准备本机打包密钥与 Growth 公共验签配置（本地开发包无需正式私钥）。",
   );
   const result = spawnSync(
     process.execPath,

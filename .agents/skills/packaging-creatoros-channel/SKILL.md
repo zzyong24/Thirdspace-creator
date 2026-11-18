@@ -5,6 +5,38 @@ description: Use when CreatorOS 需要新建或复用渠道专属桌面包，或
 
 # CreatorOS 渠道专属包
 
+## Agent 必须直接执行的本地流程
+
+用户要求已有渠道的本地编译/打包时，复用仓库已有manifest与identity lock，直接执行下列完整命令，不只回复命令、不要求先提交、不索要正式密钥，也不重新收集已有渠道资料。首次缺Node、pnpm、Rust或系统工具时，执行[官方打包skill的环境准备命令](../packaging-creatoros-release/SKILL.md#新电脑缺什么补什么)，然后回到这里继续；不能只报告“缺依赖”。
+
+在仓库根目录先安装依赖，成功后选择**本机**对应的一条构建命令。Agent从`frontend/branding/packages/`及已确认渠道读取真实`packageRef`，替换占位符后执行：
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+```bash
+# Apple Silicon macOS
+pnpm -C frontend desktop:package-channel -- --manifest branding/packages/<packageRef>/package.json --target macos-aarch64 --mode local-test
+
+# Intel macOS
+pnpm -C frontend desktop:package-channel -- --manifest branding/packages/<packageRef>/package.json --target macos-x86_64 --mode local-test
+
+# Windows x64（PowerShell执行同一条命令）
+pnpm -C frontend desktop:package-channel -- --manifest branding/packages/<packageRef>/package.json --target windows-x86_64 --mode local-test
+```
+
+这些命令直接构建安装包；`--plan-only`仅在用户只要求预检时添加，不能把预检成功当成已出包。依赖安装失败先解决安装再继续；本地密钥由入口自动生成并复用，无需渠道方持有正式私钥。模型API密钥、GitHub登录、隔离测试数据库和全项目reconcile都不是本地出包前提。产物应检查后给出`~/Downloads/<displayName>-<version>.dmg`或Windows用户Downloads中的同名`.exe`，不能只给预期路径。
+
+用户只是编译当前官方CreatorOS、没有要求换标时，直接执行：
+
+```bash
+pnpm install --frozen-lockfile
+pnpm -C frontend desktop:package-local
+```
+
+这类请求不进入下方“新渠道资料收集”和正式GitHub发布流程。
+
 ## 目标
 
 把渠道资料转成仓库内唯一 `PackageManifest`，复用共享 CreatorOS runtime，生成品牌壳、隔离身份与更新证明。安全规则由仓库脚本强制执行，不在对话里复刻。
@@ -29,8 +61,11 @@ description: Use when CreatorOS 需要新建或复用渠道专属桌面包，或
 
    `pnpm -C frontend desktop:package-local`
 
-   该入口自动从 `~/.creatoros/` 读取 verdict 双密钥，并固定 CreatorOS projectKey、Growth origin、
-   公共验签 keyId 与拉取开关。禁止再靠会话手工拼接这些环境变量；缺密钥必须在重型构建前失败。
+   该入口自动复用完整既有verdict密钥；缺失时在`~/.creatoros/local-build-keys/`生成并复用开发配对，
+   同时用独立开发根签名资源并把公开根固化到本地壳。固定CreatorOS projectKey、Growth origin、公共验签
+   keyId与拉取开关。无需Bitwarden、正式更新根、Apple或updater私钥；不复制用户PEM、不打印密钥。
+   本地允许未提交改动，不能以缺正式密钥或工作树不干净阻断。正式release/GitHub Actions仍要求正式凭证，
+   拒绝使用本地开发根；开发密钥不改变激活与权益规则。
    构建成功后固定产物为 `~/Downloads/CreatorOS-<version>.dmg`（Windows 为 `.exe`）；Tauri
    内部带架构后缀的 target 文件只属于构建细节，不作为用户验收入口。macOS 本地验收必须继续
    自动替换 `/Applications/CreatorOS.app`、启动应用并确认真实进程；只报告安装包路径不算交付。
@@ -38,7 +73,7 @@ description: Use when CreatorOS 需要新建或复用渠道专属桌面包，或
 
    `pnpm -C frontend desktop:package-channel -- --manifest branding/packages/<packageRef>/package.json --target <target> --mode local-test --plan-only`
 
-9. 用户要求渠道本地包时移除 `--plan-only`。本地包不公证；只有用户明确要求 GitHub 正式渠道包时才进入下一条。
+9. 用户要求渠道本地包时移除 `--plan-only`；它复用第7条的本地开发密钥准备，不要求渠道方持有正式私钥。本地包不公证；只有用户明确要求 GitHub 正式渠道包时才进入下一条。
 10. GitHub 正式渠道包只触发独立 workflow，禁止借用或修改官方 `desktop-release.yml`：
 
     `gh workflow run channel-package.yml --ref main -f package_ref=<packageRef> -f only=<macos|windows|all>`
@@ -65,7 +100,7 @@ description: Use when CreatorOS 需要新建或复用渠道专属桌面包，或
 - 默认不上传、不发布、不修改 Growth；必须获得明确发布授权。
 - GitHub workflow 的授权只包含构建并上传 Actions artifact，不自动包含 tag、GitHub Release、官网/CDN、
   Activity/Growth 版本地址或真实用户放量。
-- 正常渠道出包不得顺手修改产品代码、视觉或官方 workflow；发现产品问题先停止并另行取得修改授权。
+- 正常渠道出包不顺手修改产品代码、视觉或官方workflow；本地开发者可打包自己尚未提交的改动。构建失败先记录实际原因，已有明确修复授权时沿用。
 - 不得把 `CreatorOS.app.pre-*`、`before-*`、`backup-*` 等备份 App 留在 `/Applications`；
   Launchpad 会把它们识别成多个应用。替换安装前需要备份时只能放临时目录或废纸篓，验收完成后
   `/Applications` 只允许保留一个 `CreatorOS.app`。

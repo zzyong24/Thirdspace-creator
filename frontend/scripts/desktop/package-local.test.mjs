@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import {
   buildLocalPackageEnv,
   canonicalLocalArtifactName,
@@ -6,8 +9,10 @@ import {
   publishCanonicalLocalArtifact,
 } from "./package-local.mjs";
 
-const signingPath = "/test-home/.creatoros/verdict-signing.key";
-const publicPath = "/test-home/.creatoros/verdict-public.key";
+const testHome = mkdtempSync(join(tmpdir(), "package-local-legacy-test-"));
+afterAll(() => rmSync(testHome, { recursive: true, force: true }));
+const signingPath = join(testHome, ".creatoros/verdict-signing.key");
+const publicPath = join(testHome, ".creatoros/verdict-public.key");
 
 function fakeReadFile(path) {
   if (path === signingPath) return " local-signing-key\n";
@@ -19,7 +24,7 @@ describe("buildLocalPackageEnv", () => {
   it("一次补齐 CreatorOS 本地包所需的固定配置和安全密钥", () => {
     const env = buildLocalPackageEnv({
       baseEnv: {},
-      homeDir: "/test-home",
+      homeDir: testHome,
       readFile: fakeReadFile,
     });
 
@@ -42,7 +47,7 @@ describe("buildLocalPackageEnv", () => {
         CREATOROS_VERDICT_SIGNING_KEY_B64: "explicit-signing",
         CREATOROS_VERDICT_PUBKEY_B64: "explicit-public",
       },
-      homeDir: "/missing-home",
+      homeDir: testHome,
       readFile: () => {
         throw new Error("must not read");
       },
@@ -55,7 +60,7 @@ describe("buildLocalPackageEnv", () => {
   it("可显式选择原有额外验证且保留本机密钥与 ad-hoc 签名", () => {
     const env = buildLocalPackageEnv({
       baseEnv: { CREATOROS_PACKAGE_BUILD_ONLY: "0" },
-      homeDir: "/test-home",
+      homeDir: testHome,
       readFile: fakeReadFile,
     });
     expect(env.CREATOROS_PACKAGE_BUILD_ONLY).toBe("0");
@@ -64,11 +69,11 @@ describe("buildLocalPackageEnv", () => {
     expect(env.CREATOROS_VERDICT_PUBKEY_B64).toBe("local-public-key");
   });
 
-  it("缺少本机安全密钥时在重型构建前给出明确错误", () => {
+  it("正式release缺少本机安全密钥时在重型构建前给出明确错误", () => {
     expect(() =>
       buildLocalPackageEnv({
-        baseEnv: {},
-        homeDir: "/missing-home",
+        baseEnv: { CREATOROS_RELEASE: "1" },
+        homeDir: testHome,
         readFile: () => {
           throw new Error("ENOENT");
         },
