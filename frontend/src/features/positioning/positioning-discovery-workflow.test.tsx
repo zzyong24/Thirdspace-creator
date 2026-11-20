@@ -46,7 +46,6 @@ describe("PositioningDiscoveryWorkflow — T-707", () => {
 
     expect(screen.getByText("定位对话")).toBeTruthy();
     expect(screen.getByRole("link", { name: /开始定位对话/ })).toBeTruthy();
-    expect(screen.getByText("默认无需抖音登录")).toBeInTheDocument();
     const entry = new URL(screen.getByRole("link", { name: /开始定位对话/ }).getAttribute("href")!, "http://localhost");
     expect(entry.searchParams.get("copilot")).toBe("open");
     expect(decodeURIComponent(entry.href)).not.toContain("定位路径：scratch");

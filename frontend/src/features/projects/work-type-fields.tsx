@@ -5,9 +5,9 @@ import * as React from "react";
 export type WorkType = "article" | "image" | "video";
 export type WorkPlatform = "xiaohongshu" | "douyin" | "kuaishou" | "wechatOfficialAccount";
 export const WORK_CHOICES = [
-  {id: "article", contentType: "article", label: "文章", description: "分段正文、摘要、配图与公众号排版"},
-  {id: "image", contentType: "image", label: "图文", description: "正文、多张图卡与封面"},
-  {id: "video", contentType: "video", label: "视频", description: "脚本、录制素材与可视剪辑"},
+  {id: "article", contentType: "article", label: "文章"},
+  {id: "image", contentType: "image", label: "图文"},
+  {id: "video", contentType: "video", label: "视频"},
 ] as const;
 
 // 只收起新界面入口；完整类型表保留，历史创建会话仍按原顺序和参数恢复。
@@ -39,7 +39,6 @@ export function WorkTypeFields({value, onChange, platform, onPlatformChange, dis
             if (!WORK_PLATFORMS.some(item => item.id === platform && (item.types as readonly string[]).includes(choice.id))) onPlatformChange("");
           }} className="sr-only" />
           <span className="block text-sm font-medium">{choice.label}</span>
-          <span className="mt-1 block text-xs text-muted-foreground">{choice.description}</span>
         </label>)}
       </div>
     </fieldset>
@@ -77,14 +76,13 @@ export function WorkTypesFields({values, onChange, platform, onPlatformChange, d
     <fieldset disabled={disabled}>
       <legend className="mb-2 text-sm font-medium">作品形式 <span className="font-normal text-muted-foreground">（可多选）</span></legend>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {CREATABLE_WORK_CHOICES.map(choice => <label key={choice.id} className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 focus-within:ring-2 focus-within:ring-ring ${values.includes(choice.id) ? "border-primary bg-primary/5" : "border-border"}`}>
+        {CREATABLE_WORK_CHOICES.map(choice => <label key={choice.id} className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 focus-within:ring-2 focus-within:ring-ring ${values.includes(choice.id) ? "border-primary bg-primary/5" : "border-border"}`}>
           <input type="checkbox" checked={values.includes(choice.id)} onChange={() => toggle(choice.id)}
             onKeyDown={event => {if (event.key === "Enter") {event.preventDefault(); if (!disabled) toggle(choice.id);}}}
-            className="mt-0.5 size-4 shrink-0 accent-primary" />
-          <span><span className="block text-sm font-medium">{choice.label}</span><span className="mt-1 block text-xs text-muted-foreground">{choice.description}</span></span>
+            className="size-4 shrink-0 accent-primary" />
+          <span className="text-sm font-medium">{choice.label}</span>
         </label>)}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">每种形式都有独立稿件，创建后可在顶部切换工作台。</p>
     </fieldset>
     <details className="mt-3 text-sm">
       <summary className="cursor-pointer text-muted-foreground">平台设置{platform ? ` · ${WORK_PLATFORMS.find(item => item.id === platform)?.label}` : "（可选）"}</summary>

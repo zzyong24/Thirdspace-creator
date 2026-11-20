@@ -331,18 +331,10 @@ export function ThesisSkeletonPanel({
       className="flex flex-col gap-3 rounded-card border border-border bg-surface px-4 py-3"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h2 className="flex items-center gap-1.5 text-[13.5px] font-semibold text-foreground">
-            <GitBranch className="size-4 text-brand" aria-hidden="true" />
-            论点骨架（可选）
-          </h2>
-          <p className="text-xs text-text-subtle">
-            适合知识讲解、观点评论、测评对比、较长内容，或需要证据与反驳时先理清观点。
-          </p>
-          <p className="text-xs text-text-subtle">
-            已有完整逐字稿、简单通知、短口播、纯记录或只想快速成稿时，可以直接跳过。
-          </p>
-        </div>
+        <h2 className="flex items-center gap-1.5 text-[13.5px] font-semibold text-foreground">
+          <GitBranch className="size-4 text-brand" aria-hidden="true" />
+          论点骨架（可选）
+        </h2>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
           <Button
             type="button"
@@ -451,7 +443,7 @@ export function ThesisSkeletonPanel({
                 重置
               </Button>
             ) : null}
-            <span
+            {(saveStatus === "saved" || saveStatus === "error" || dirty) && <span
               data-slot="thesis-save-status"
               className={cn(
                 "text-[11px]",
@@ -462,12 +454,8 @@ export function ThesisSkeletonPanel({
                 ? "已保存"
                 : saveStatus === "error"
                   ? "保存失败；尚未保存，刷新或离开会丢失，请重试"
-                  : dirty
-                    ? "尚未保存，刷新或离开会丢失"
-                    : isAdopted
-                      ? "改动会追加为新版本，并保持本次写稿采用"
-                      : "改动会追加为新版本，不会自动用于写稿"}
-            </span>
+                  : "尚未保存，刷新或离开会丢失"}
+            </span>}
           </div>
         </div>
       ) : (
@@ -476,7 +464,7 @@ export function ThesisSkeletonPanel({
           className="rounded-md border border-dashed border-border bg-surface-subtle px-3 py-4 text-center"
         >
           <p className="text-xs text-muted-foreground">
-            还没有论点骨架。需要复杂论证时可先梳理核心论点、支撑依据、证据和反驳；不需要时直接写稿即可。
+            还没有论点骨架。
           </p>
         </div>
       )}

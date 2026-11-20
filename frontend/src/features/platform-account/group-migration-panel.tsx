@@ -55,7 +55,7 @@ export function GroupMigrationPanel({sourceGroup,groups,onChanged,onBusyChange,d
  const foreignLedger=ledger&&ledger.record.fromGroupId!==sourceGroup.id;
  const locked=busy||disabled;
  const requestedRecordId=typeof window!=="undefined"?new URLSearchParams(window.location.search).get("migrationId"):null;
- return <SectionCard title="历史资料归组" description="项目及其全部内容和记录一起归组；独立知识和对话由你明确选择。">
+ return <SectionCard title="历史资料归组">
   <div className="flex min-w-0 flex-col gap-4"><p className="text-sm">来源账号组：<strong>{sourceGroup.name}</strong></p><p className="text-xs leading-relaxed text-muted-foreground">账号转组只改变今后的归属。这里单独整理历史项目与资料；既有后台任务继续使用创建时的账号组。</p>
    {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}{message&&<p role="status" className="text-sm text-muted-foreground">{message}</p>}
    {scopeLost?<p className="text-sm text-muted-foreground">返回账号组管理，进入来源工作区后重试。</p>:<>

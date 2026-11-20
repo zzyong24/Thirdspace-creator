@@ -212,7 +212,6 @@ export const CopilotAttachmentPicker = React.forwardRef<
           event.currentTarget.value = "";
         }}
       />
-      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           disabled={disabled || items.length >= MAX_ATTACHMENTS}
@@ -222,10 +221,6 @@ export const CopilotAttachmentPicker = React.forwardRef<
           <Paperclip className="size-3.5 text-brand" aria-hidden="true" />
           添加文件或图片
         </button>
-        <span className="text-[11px] text-muted-foreground">
-          也可拖到这里；图片识别效果取决于当前模型
-        </span>
-      </div>
       {items.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {items.map((item) => (

@@ -36,7 +36,7 @@ export default async function Page({searchParams}: {searchParams?:Promise<Record
     const data=await createServerClient(session.ctx).getGroupOverview({body:undefined,params:{groupId:session.ctx.groupId},query:workspaceQueryFromSearch(await searchParams??{})});
     const w=data.workspace;
     const query={...workspaceQueryFromSearch(await searchParams??{}),startDate:w.startDate,endDate:w.endDate};
-    return <DashboardPage previewRecent={hasPreviewSamples(session.ctx.groupId)?<PreviewRecentPublications/>:undefined} viewModel={data} greetingName={session.user.displayName} dateRange={{startDate:w.startDate,endDate:w.endDate}} trendSource={{groupId:w.groupId,query,latestCapturedAt:w.latestCapturedAt}} filters={<GroupWorkspaceFilters workspace={w}/>}/>;
+    return <DashboardPage previewRecent={hasPreviewSamples(session.ctx.groupId)?<PreviewRecentPublications/>:undefined} viewModel={data} dateRange={{startDate:w.startDate,endDate:w.endDate}} trendSource={{groupId:w.groupId,query,latestCapturedAt:w.latestCapturedAt}} filters={<GroupWorkspaceFilters workspace={w}/>}/>;
   }
 
   // [T-348] 0 号(未绑号)首页现放行守卫(见 zero-account-guidance 白名单)→ 首页自己承接
@@ -56,14 +56,5 @@ export default async function Page({searchParams}: {searchParams?:Promise<Record
     viewModel = zeroAccountDashboardViewModel();
   }
 
-  // Greet the REAL account holder (identity.getCurrentUser via resolveSession),
-  // the same source the Shell user card reads — not the fixture dataset. After
-  // the T-135 identity 中性化 this renders「早上好, 创作者!」instead of the old
-  // fixture "Zyong". The `greetingName` prop remains DashboardPage's test seam.
-  return (
-    <DashboardPage
-      viewModel={viewModel}
-      greetingName={session.user.displayName}
-    />
-  );
+  return <DashboardPage viewModel={viewModel} />;
 }

@@ -119,7 +119,9 @@ describe("IssueFeedbackDialog", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
-    expect(await screen.findByText(/不会发送日志/)).toBeInTheDocument();
+    expect(await screen.findByRole("textbox", { name: "反馈内容预览" })).toBeVisible();
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(/不会附带日志/);
+    expect(screen.getByRole("textbox", { name: "问题摘要" })).toHaveAccessibleDescription("5–160 字符");
     const channel = screen.getByRole("button", { name: "打开反馈页" });
     expect(channel).toBeEnabled();
     expect(

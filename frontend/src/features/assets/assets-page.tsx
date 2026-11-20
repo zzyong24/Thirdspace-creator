@@ -710,7 +710,6 @@ function StorageUsageCard({ storage }: StorageUsageCardProps) {
   return (
     <SectionCard
       title="存储空间"
-      description="本地素材库使用情况"
       contentClassName="flex flex-col gap-1.5"
     >
       <div data-slot="storage-usage-card" className="flex flex-col gap-1.5">
@@ -735,10 +734,6 @@ function StorageUsageCard({ storage }: StorageUsageCardProps) {
             磁盘总容量未知,仅显示已用量
           </p>
         )}
-        <p className="text-[11px] text-muted-foreground">
-          {/* ASSET-17:去掉"自动同步已开启"假文案(无同步机制支撑)。 */}
-          个人本地素材库
-        </p>
       </div>
     </SectionCard>
   );

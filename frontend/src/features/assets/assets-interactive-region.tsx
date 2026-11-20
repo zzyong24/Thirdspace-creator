@@ -677,9 +677,6 @@ function AssetCardGrid({ assets, selectedId, onSelect }: AssetCardGridProps) {
         <p className="text-sm font-medium text-foreground">
           当前没有可显示的素材
         </p>
-        <p className="max-w-md text-xs text-muted-foreground">
-          素材按账号组分别管理。你可以调整筛选条件，或点击上方「上传素材」添加图片、视频等素材。
-        </p>
       </div>
     );
   }

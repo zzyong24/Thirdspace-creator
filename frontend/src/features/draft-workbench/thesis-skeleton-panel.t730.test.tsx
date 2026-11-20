@@ -41,7 +41,7 @@ beforeEach(() => vi.clearAllMocks());
 afterEach(() => cleanup());
 
 describe("T-730 可选论点骨架", () => {
-  it("空态明确说明适用与可跳过场景，两个动作都真实可用", () => {
+  it("空态显示当前状态，仍能梳理观点或直接写稿", () => {
     const scrollIntoView = vi.fn();
     const script = document.createElement("section");
     script.id = "script";
@@ -51,8 +51,7 @@ describe("T-730 可选论点骨架", () => {
 
     render(<ThesisSkeletonPanel thesis={null} />);
     const panel = screen.getByRole("region", { name: "论点骨架（可选）" });
-    expect(within(panel).getByText(/知识讲解、观点评论、测评对比/)).toBeInTheDocument();
-    expect(within(panel).getByText(/已有完整逐字稿、简单通知、短口播/)).toBeInTheDocument();
+    expect(within(panel).getByText("还没有论点骨架。")).toBeInTheDocument();
 
     fireEvent.click(within(panel).getByRole("button", { name: "先梳理观点" }));
     expect(openChat).toHaveBeenCalledWith(

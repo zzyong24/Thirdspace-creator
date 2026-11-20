@@ -136,10 +136,9 @@ function ProjectOutputHomeSession({ projectId, projectTitle, initialOutputs, acc
       <Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">← 返回项目</Link>
       <Link href={`/projects/${encodeURIComponent(projectId)}`} className="inline-flex rounded-md border px-3 py-2 text-sm hover:bg-surface-subtle">返回脚本编辑台</Link>
       <h1 className="text-2xl font-semibold text-foreground">{projectTitle}</h1>
-      <p className="text-sm text-muted-foreground">一个项目可包含多种作品。</p>
     </header>
     <section className="rounded-xl border border-border bg-surface p-5" aria-label="创作作品">
-      <div className="mb-4"><h2 className="text-lg font-semibold">创作作品</h2><p className="mt-1 text-sm text-muted-foreground">仅设置本次作品的平台与形式。</p></div>
+      <h2 className="mb-4 text-lg font-semibold">创作作品</h2>
       <NewProjectForm includeWorkType multipleWorkTypes={false} submitLabel="开始创作"
         defaultValues={{name: projectTitle, contentType: initialType ?? recommendedWorkChoice(accountPlatform)}}
         onCreate={createWork} onCancel={() => router.push(`/projects/${encodeURIComponent(projectId)}`)} />
@@ -150,7 +149,7 @@ function ProjectOutputHomeSession({ projectId, projectTitle, initialOutputs, acc
         <div className="text-xs text-muted-foreground">{outputLabel(output)}</div>
         <h3 className="mt-1 font-medium">{output.title}</h3>
         <Link href={workDestination(projectId, output)} className="mt-3 inline-block text-sm font-medium text-primary hover:underline">打开作品 →</Link>
-      </li>)}</ul> : <p className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">还没有作品。上方选一种形式即可开始。</p>}
+      </li>)}</ul> : <p className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">还没有作品。</p>}
     </section>
   </main>;
 }

@@ -52,10 +52,10 @@ export function ProjectPipelinePanel({projectId,origin="manual"}:{projectId:stri
         {references.length?<ul className="mt-2 space-y-2">{references.map(ref=><li key={ref.id} className="min-w-0 text-sm">
           {ref.url?<a className="break-all text-brand hover:underline" href={ref.url} target="_blank" rel="noreferrer">{ref.sourceKind==="platform_work"?`${ref.platform} · ${ref.externalId}`:"查看原始素材"}</a>:<span>{ref.sourceKind==="platform_work"?`${ref.platform} · ${ref.externalId}`:"原始素材"}</span>}
           <span className="block text-xs text-text-subtle">{ref.bodyAvailable?"来源正文可用":"待补充来源正文"}</span>
-        </li>)}</ul>:<p className="mt-2 text-sm text-muted-foreground">{preparation?"未记录外部来源，可继续手写和保存。":"来源状态待读取。"}</p>}
+        </li>)}</ul>:<p className="mt-2 text-sm text-muted-foreground">{preparation?"未记录外部来源。":"来源状态待读取。"}</p>}
       </div>
       <div className="min-w-0">
-        {preparation?.registration==="not_registered"?<div className="rounded-xl border border-border p-4"><p className="text-sm">未登记准备流程</p><p className="mt-2 text-sm text-muted-foreground">按需启动准备；已有资料和稿件仍可继续编辑。</p>{preparation.availableActions.includes("start")?<Button className="mt-3" size="sm" disabled={state?.busy} onClick={()=>void run(()=>state!.start(null))}>启动项目准备</Button>:null}</div>:null}
+        {preparation?.registration==="not_registered"?<div className="rounded-xl border border-border p-4"><p className="text-sm">未登记准备流程</p>{preparation.availableActions.includes("start")?<Button className="mt-3" size="sm" disabled={state?.busy} onClick={()=>void run(()=>state!.start(null))}>启动项目准备</Button>:null}</div>:null}
         <ol aria-label="项目自动处理步骤" className="grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">{preparation?.steps.map(step=>{
           const candidates=preparation.candidates.filter(candidate=>candidate.kind===(step.name==="brief"?"brief":"draft")&&candidate.status!=="rejected");
           const accepted=step.status==="candidate_ready"&&candidates.length>0&&candidates.every(candidate=>candidate.acceptanceReceipt!==null);

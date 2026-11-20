@@ -93,10 +93,10 @@ it.each(['self.metrics','self.traffic','comments','self.detail'] as const)('独�
  expect(onCreate.mock.calls[0]?.[0]).toMatchObject({sourceKind,schedule:'0 */2 * * *',target});
 });
 
-it('四类采集分别显示优先说明与启用开关，只切换指定作业',async()=>{
+it('四类采集保留独立启用开关，不重复显示优先说明，只切换指定作业',async()=>{
  const jobs=(['self.metrics','self.traffic','comments','self.detail'] as const).map((sourceKind,i)=>makeJob({id:`split-${i}`,name:`独立任务${i}`,sourceKind,target:sourceKind==='self.detail'?{__backfillOnly:true}:{},schedule:'0 */2 * * *'}));
  render(<AutomationsIsland jobs={jobs}/>);
- for(const label of ['作品优先','流量其次','评论后台','封面与内容后台'])expect(screen.getByText(label)).toBeInTheDocument();
+ for(const label of ['作品优先','流量其次','评论后台','封面与内容后台'])expect(screen.queryByText(label)).not.toBeInTheDocument();
  expect(screen.getAllByTestId('automation-edit')).toHaveLength(4);
  fireEvent.click(screen.getByRole('switch',{name:'独立任务2 启用开关'}));await waitFor(()=>expect(mockClient.setScheduledJobEnabled).toHaveBeenCalledTimes(1));
  expect(mockClient.setScheduledJobEnabled.mock.calls[0]?.[0]).toMatchObject({params:{jobId:'split-2'},body:{enabled:false}});

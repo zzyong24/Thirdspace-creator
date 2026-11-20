@@ -71,7 +71,7 @@ export function ContentDirectionActions({ projectId, projectTitle }: {
   };
   return <section aria-label="内容判断" className="mt-3 rounded-card border border-border bg-surface px-3.5 py-3">
     <p className="text-[13px] font-semibold">让编导看内容</p>
-    <p className="mt-1 text-xs text-text-subtle">结合当前稿和已有资料判断或改写，修改由你采纳后才写入。</p>
+
     <div className="mt-2 flex flex-wrap gap-2">{actions.map(([label, prompt]) => <button key={label} type="button" disabled={busy} onClick={() => void diagnose(prompt)} className="rounded-control border border-border px-2.5 py-1.5 text-xs hover:bg-brand-soft disabled:opacity-50">{label}</button>)}<button type="button" data-slot="content-direction-rewrite" disabled={busy} onClick={() => void diagnose(REWRITE_PROMPT, true)} className="rounded-control border border-border px-2.5 py-1.5 text-xs hover:bg-brand-soft disabled:opacity-50">改写整稿</button></div>
     {busy ? <p role="status" className="mt-2 text-xs">正在保存并读取当前稿…</p> : null}
     {error ? <p role="alert" className="mt-2 text-xs text-destructive">{error} 可再次点击上方按钮重试。</p> : null}

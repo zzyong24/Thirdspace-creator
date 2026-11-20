@@ -104,7 +104,7 @@ test.describe("项目复盘记录闭环（T-634）", () => {
 
     await page.goto(`/projects/${project.id}/review`);
     await expect(
-      page.getByText("手动洞察保存在本次复盘记录", { exact: false }),
+      page.getByRole("textbox", { name: "洞察标题", exact: true }),
     ).toBeVisible();
 
     const trigger = page.locator('[data-slot="review-history-trigger"]').first();

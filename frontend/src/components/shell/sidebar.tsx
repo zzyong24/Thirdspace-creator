@@ -33,7 +33,6 @@ import {
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -351,7 +350,6 @@ export function Sidebar({
             collapsed={collapsed}
             displayName={resolvedUser.displayName}
             email={resolvedUser.email}
-            planLabel={resolvedUser.planLabel}
             initials={resolvedUser.initials}
           />
         </div>
@@ -628,21 +626,19 @@ function SidebarContextualCard({ variant, collapsed }: SidebarContextualCardProp
 // 审计裁定**不挂登出菜单**:T-046 单机免登录语义下(request-context.server.ts:无 session
 // token / token 失效 → 以本机主用户直通,登录页已下线),登出后一刷新即自动回登,
 // 「退出登录」是无意义按钮;/api/v1/auth/logout 保留给未来多用户/web 形态。
-// 故这里只做身份展示(头像/名/邮箱/套餐),不做任何可点菜单暗示。
+// 故这里只做身份展示，不做任何可点菜单暗示。
 function UserProfileCard({
   collapsed,
   displayName,
   email,
-  planLabel,
   initials,
 }: {
   collapsed: boolean;
   displayName: string;
   email: string;
-  planLabel: string;
   initials: string;
 }) {
-  // [T-129] 收拢态:仅头像(tooltip 显名+套餐),窄条不摆姓名/邮箱/套餐条。
+  // 收拢时通过工具提示显示身份名称。
   if (collapsed) {
     return (
       <Tooltip>
@@ -658,7 +654,7 @@ function UserProfileCard({
           </div>
         </TooltipTrigger>
         <TooltipContent side="right">
-          {displayName} · {planLabel}
+          {displayName}
         </TooltipContent>
       </Tooltip>
     );
@@ -677,9 +673,6 @@ function UserProfileCard({
         </span>
         <span className="truncate text-xs text-muted-foreground">{email}</span>
       </div>
-      <Badge variant="secondary" className="shrink-0 text-[10px]">
-        {planLabel}
-      </Badge>
     </div>
   );
 }

@@ -51,7 +51,6 @@ import {
   BarChart3,
   Gauge,
   Inbox,
-  Sparkles,
   Flame,
   Lightbulb,
   Star,
@@ -70,15 +69,6 @@ function describeAutomationError(error:unknown,fallback:string){
 import { notifyAccountsChanged } from "@/lib/account-events";
 import { Switch } from "@/components/ui/switch";
 
-// [T-359] 新绑号分层启用:默认关的任务开关旁写明**启用前置**(条件齐了一键开)。
-// 与 collection-bootstrap 的 enabledByDefault 分层对齐;仅 job 禁用时显示,不啰嗦。
-const ENABLEMENT_HINTS: Record<string, string> = {
-  favorites: "先去 内容雷达 → 我的收藏 绑定收藏夹",
-  benchmark: "先去 内容雷达 登记对标博主",
-  "topic.daily": "先去 设置 配好文本模型",
-  comments: "有导入作品后再开(评论抓自己作品)",
-};
-
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -91,7 +81,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -153,7 +142,6 @@ const EXTRA_SOURCE_LABELS: Record<string, string> = {
   "intelligence.sync": "内容雷达",
   "self.traffic": "流量来源",
 };
-const COLLECTION_PRIORITY_LABELS:Record<string,string>={"self.metrics":"作品优先","self.traffic":"流量其次",comments:"评论后台","self.detail":"封面与内容后台"};
 
 // [T-258] 登记源驱动源的模板卡图标(SOURCE_META 无 icon 时兜底,让 6 张卡视觉可辨)。
 const EXTRA_SOURCE_ICONS: Record<string, LucideIcon> = {
@@ -562,7 +550,6 @@ export function JobRow({
           <Clock className="size-3.5 text-muted-foreground" />
           {formatScheduleFriendly(job.schedule,job.target.scheduleTimezone)}
         </span>
-        {COLLECTION_PRIORITY_LABELS[job.sourceKind] ? <><span className="text-[11px] font-medium text-brand">{COLLECTION_PRIORITY_LABELS[job.sourceKind]}</span><span className="text-[11px] text-muted-foreground">成功同步后，近 7 天每 2 小时更新<br/>7–30 天每 6 小时，30 天以上每天更新</span></> : null}
         <span
           data-slot="automation-last-run"
           className="text-[11px] text-muted-foreground tabular-nums"
@@ -601,14 +588,6 @@ export function JobRow({
             {pendingToggle ? "更新中…" : job.enabled ? "已启用" : "未启用"}
           </span>
         </div>
-        {!job.enabled && ENABLEMENT_HINTS[job.sourceKind] ? (
-          <span
-            data-slot="automation-enablement-hint"
-            className="max-w-[190px] text-[11px] leading-snug text-text-subtle"
-          >
-            {ENABLEMENT_HINTS[job.sourceKind]}
-          </span>
-        ) : null}
       </div>
 
       {/* 操作:编辑(T-248)+ needs_reconnect → 扫码绑定(D4);否则 立即运行(D5) */}
@@ -1137,6 +1116,7 @@ export function CreateJobDialog({
       <DialogContent
         data-slot="automation-create-dialog"
         data-mode={mode}
+        aria-describedby={undefined}
         className="sm:max-w-lg"
       >
         <DialogHeader>
@@ -1148,13 +1128,10 @@ export function CreateJobDialog({
             )}
             {isEdit ? "编辑采集任务" : "新建采集任务"}
           </DialogTitle>
-          <DialogDescription>
-            {isEdit ? "设置任务内容和执行时间，启用状态保持不变。" : enabled ? "保存后按计划运行。" : "保存后保持停用，启用后才按计划运行。"}
-          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
-          {targetLabel ? <p className="text-sm text-muted-foreground">目标：{targetLabel}{isEdit ? "" : "；每日选题属于账号组。"}</p> : null}
+          {targetLabel ? <p className="text-sm text-muted-foreground">目标：{targetLabel}</p> : null}
           {formError ? <p role="alert" className="text-sm text-destructive">{formError}</p> : null}
           {/* name */}
           <label className="flex flex-col gap-1.5">
@@ -1360,6 +1337,7 @@ export function RunDetailDialog({job,accountPlatform=null,open,onOpenChange,pref
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         data-slot="automation-run-detail-dialog"
+        aria-describedby={undefined}
         className="flex max-h-[80vh] flex-col gap-0 p-0 sm:max-w-2xl"
       >
         <DialogHeader className="min-w-0 border-b px-5 py-4 pr-12">
@@ -1367,9 +1345,6 @@ export function RunDetailDialog({job,accountPlatform=null,open,onOpenChange,pref
             <Clock className="size-4 shrink-0 text-brand" />
             运行详情{job ? ` · ${job.name}` : ""}
           </DialogTitle>
-          <DialogDescription>
-            查看本次进度和历史运行记录。
-          </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -1388,7 +1363,7 @@ export function RunDetailDialog({job,accountPlatform=null,open,onOpenChange,pref
             >
               <Inbox className="size-8 text-muted-foreground/60" />
               <p className="text-sm text-muted-foreground">
-                还没有运行记录。任务到点或手动运行后会在这里显示。
+                还没有运行记录。
               </p>
             </div>
           ) : (
@@ -1486,7 +1461,7 @@ export function RunDetailDialog({job,accountPlatform=null,open,onOpenChange,pref
                                 <span className="leading-snug text-text-subtle">
                                   {s.kind === "tool_call" ? "调工具 · " : ""}
                                   {nativeReports&&run.status==='succeeded'&&s.kind==='collect'
-                                    ? "后台报表已同步，可在该账号的数据页查看日期和原始字段。"
+                                    ? "后台报表已同步"
                                     : s.text || "（无描述）"}
                                 </span>
                               </li>
@@ -1549,13 +1524,6 @@ export function TemplateCards({
       aria-label="从模板入手"
       className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
     >
-      <div className="flex items-center gap-2">
-        <Sparkles className="size-4 text-brand" />
-        <h2 className="text-sm font-semibold text-foreground">快速创建</h2>
-        <span className="text-xs text-muted-foreground">
-          从常用任务开始
-        </span>
-      </div>
       <div className="grid gap-2 lg:grid-cols-2">
         {COLLECTION_TEMPLATES.filter(tpl => !enforceTarget || canCreateKind(tpl.sourceKind,targetAccount??null) || existingBySourceKind.has(tpl.sourceKind)).map((tpl) => {
           const Icon =
@@ -1574,11 +1542,11 @@ export function TemplateCards({
               onClick={() =>
                 existing ? onEnableExisting?.(existing) : onPick(tpl)
               }
-              className="group grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 rounded-control border border-border bg-surface-subtle/40 p-3 text-left transition-colors hover:border-brand hover:bg-brand-soft/40"
+              className="group grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-control border border-border bg-surface-subtle/40 p-3 text-left transition-colors hover:border-brand hover:bg-brand-soft/40"
             >
               <span
                 aria-hidden="true"
-                className="row-span-2 flex size-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand"
+                className="flex size-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand"
               >
                 <Icon className="size-4" />
               </span>
@@ -1606,9 +1574,6 @@ export function TemplateCards({
                   新建
                 </span>
               )}
-              <span className="col-start-2 col-end-4 truncate text-[11px] text-muted-foreground">
-                {tpl.description}
-              </span>
             </button>
           );
         })}
@@ -1962,7 +1927,6 @@ export function AutomationsIsland({
             </select>
           </label>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">共享任务保留在所有筛选中；选择具体账号后，可管理该账号的采集计划。</p>
         <ul className="mt-3 flex flex-wrap gap-2" aria-label="组内账号计划状态">
           {accounts.filter(a=>(platformFilter==="all"||a.platform===platformFilter)&&(accountFilter==="all"||a.id===accountFilter)).map(a=>{
             const count=jobs.filter(j=>j.accountId===a.id&&!isSharedKind(j.sourceKind)).length;
@@ -2030,20 +1994,11 @@ export function AutomationsIsland({
           className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border bg-surface py-16 text-center"
         >
           <Inbox className="size-10 text-muted-foreground/50" />
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-foreground">
-              {currentAccount
-                ? `${currentAccount.handle} 还没有采集任务`
-                : "还没有采集任务"}
-            </p>
-            <p className="max-w-md text-xs text-muted-foreground">
-              {/* [T-332 S4·§6.2] 新号诚实空态:绑号 bootstrap 会自动建好该号的日常采集
-                  任务;这里为空通常是「还没绑号/没选号」,给对应引导而不是干瘪的 0。 */}
-              {currentAccount
-                ? "从上方开启作品自动同步，持续更新指标、评论、流量来源和视频内容；也可以安排每日选题。"
-                : "当前筛选没有账号采集任务。共享任务仍显示；选择具体账号查看计划资格与可创建模板。"}
-            </p>
-          </div>
+          <p className="text-sm font-medium text-foreground">
+            {currentAccount
+              ? `${currentAccount.handle} 还没有采集任务`
+              : "当前筛选没有账号采集任务"}
+          </p>
           <button
             type="button"
             onClick={openBlank}

@@ -294,7 +294,7 @@ function KnowledgeAtomGateSession({
       className="flex flex-col gap-2 rounded-md border border-border bg-surface p-2.5"
     >
       <p className="text-[11px] text-muted-foreground">
-        蒸馏出 {rows.length} 个知识原子(勾选要留的,类型/标题/出处可改;采纳后进知识库)
+        蒸馏出 {rows.length} 个知识原子
       </p>
       <ul className="flex flex-col gap-2">
         {rows.map((atom, index) => (

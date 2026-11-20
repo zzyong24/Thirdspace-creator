@@ -54,8 +54,6 @@ function SavedReports({workspace,account}:{workspace:GroupWorkspace;account:Acco
   {phase==='loading'?<p role="status" className="text-muted-foreground">正在读取已保存报表…</p>:phase==='slow'?<p role="status" className="text-muted-foreground">报表读取较慢，其他数据仍可使用。</p>:phase==='error'?<p className="text-muted-foreground">已保存报表暂时无法读取。</p>:null}
   {state.total!==undefined&&phase!=='ready'?<p className="text-xs text-muted-foreground">暂保留上次读到的报表数量。</p>:null}
   {phase==='slow'||phase==='error'?<Button variant="outline" size="sm" onClick={retryRead}>重试读取报表</Button>:null}
-  <p className="text-xs text-muted-foreground">数量为全部已保存报表，不受当前日期筛选限制。</p>
-  <p className="text-xs text-muted-foreground">日报不计入上方按作品汇总的累计指标。</p>
   <Link className="text-brand underline underline-offset-4" href={worksHref(account.id)}>查看原生报表</Link>
  </div>;
 }
@@ -89,11 +87,11 @@ function useGroupConfirmation(groupId:string){
 export function GroupPlatformData({workspace:w}:{workspace:GroupWorkspace}){
  const confirmation=useGroupConfirmation(w.groupId);
  const selected=w.accounts.filter(account=>(!w.platform||normalizeWorkspacePlatform(account.platform)===normalizeWorkspacePlatform(w.platform))&&(!w.accountId||account.id===w.accountId));
- return <SectionCard title="平台采集数据" description="查看各平台账号的已采集作品与原生报表">
+ return <SectionCard title="平台采集数据">
   {confirmation==='checking'?<p role="status" className="text-muted-foreground">正在确认当前账号组…</p>:confirmation==='invalid'?<p className="text-muted-foreground">账号组已切换，请等待当前账号组的数据。</p>:<div className="flex min-w-0 flex-col gap-4">
    <div className="flex flex-col gap-2">
     <p className="text-xs text-muted-foreground tabular-nums">{w.startDate} — {w.endDate}</p>
-    {w.collected?.state==='ready'?<><p className="tabular-nums">所选日期内有 {w.collected.catalogWorkCount?.toLocaleString('zh-CN')} 条作品已拿到数据</p><p className="text-xs text-muted-foreground">只算这段时间发布的作品，更早的作品可在「已采集作品」里查看。</p>{w.collected.catalogWorkCount===0&&selected.some(account=>!isWechat(account.platform))?<p className="text-muted-foreground">这段时间内没有拿到数据的作品，可以调整日期或查看已采集作品。</p>:null}</>:<p className="text-muted-foreground">{w.collected?.state==='unavailable'?'暂时读不到作品数量，可以先查看各账号的已采集作品。':'暂时没有作品数量，可以先查看各账号的已采集作品。'}</p>}
+    {w.collected?.state==='ready'?<p className="tabular-nums">所选日期内有 {w.collected.catalogWorkCount?.toLocaleString('zh-CN')} 条作品已拿到数据</p>:<p className="text-muted-foreground">{w.collected?.state==='unavailable'?'暂时读不到作品数量。':'暂时没有作品数量。'}</p>}
    </div>
    {!selected.length?<p className="text-muted-foreground">当前筛选内没有可查看的平台账号。</p>:<ul className="grid min-w-0 gap-3 sm:grid-cols-2">{selected.map(account=><li key={account.id} className="min-w-0 rounded-control border border-border p-3">
     <p className="break-words font-medium">{platformName(account.platform)} · {account.name}</p>

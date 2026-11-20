@@ -262,7 +262,6 @@ describe("PositioningCenterView", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getAllByRole("button", { name: "恢复此版本" }).length).toBe(2);
     expect(screen.getByText("当前使用")).toBeInTheDocument();
-    expect(screen.getByText(/恢复会切换到所选版本，不新增重复定位/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "设为当前" })).toBeNull();
   });
 
@@ -294,6 +293,7 @@ describe("PositioningCenterView", () => {
     expect(
       screen.getByRole("heading", { name: "恢复 v1 为当前母版？" }),
     ).toBeInTheDocument();
+    expect(screen.getByText(/当前母版中的修改会被所选快照替换/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "确认恢复" }));
   });
 

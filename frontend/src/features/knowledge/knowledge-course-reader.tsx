@@ -11,13 +11,10 @@ import {
   CheckCircle2,
   ChevronRight,
   Circle,
-  Clock3,
   Lightbulb,
   ListChecks,
-  MessageCircleQuestion,
   NotebookPen,
   Route,
-  Sparkles,
   Target,
 } from "lucide-react";
 
@@ -200,32 +197,16 @@ function CourseHome({
       <section className="overflow-hidden rounded-card border border-border bg-brand-soft text-foreground">
         <div className="grid gap-8 p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:p-8">
           <div className="max-w-3xl">
-            <div className="mb-4 flex items-center gap-2 text-sm font-medium text-brand-hover">
-              <span className="inline-flex">
-                <Sparkles className="size-4" aria-hidden="true" />
-              </span>
-              内置课程
-            </div>
             <h1 className="max-w-3xl text-balance text-2xl font-semibold leading-snug sm:text-3xl">
               {BUILT_IN_IP_COURSE.title}
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-text-muted">
-              {BUILT_IN_IP_COURSE.description} 
-            </p>
-            <p className="mt-3 text-sm text-text-muted">{BUILT_IN_IP_COURSE.subtitle}</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href={lessonHref(nextLessonId)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand px-5 text-sm font-semibold text-brand-foreground transition hover:bg-brand-hover"
-              >
-                {completedCount > 0 ? "继续学习" : "从第一课开始"}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-              <span className="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm text-text-muted">
-                <Clock3 className="size-4" aria-hidden="true" />
-                适合边做边学
-              </span>
-            </div>
+            <Link
+              href={lessonHref(nextLessonId)}
+              className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-control bg-brand px-5 text-sm font-semibold text-brand-foreground transition hover:bg-brand-hover"
+            >
+              {completedCount > 0 ? "继续学习" : "从第一课开始"}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
 
           <aside className="self-end rounded-card bg-surface p-5">
@@ -267,17 +248,9 @@ function CourseHome({
       </p>
 
       <section aria-labelledby="course-roadmap-title">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            
-            <h2 id="course-roadmap-title" className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-              学习路径
-            </h2>
-          </div>
-          <p className="max-w-xl text-sm leading-6 text-text-muted">
-            学习进度仅存本机，不修改个人知识库。
-          </p>
-        </div>
+        <h2 id="course-roadmap-title" className="mb-5 text-2xl font-semibold tracking-tight text-foreground">
+          学习路径
+        </h2>
 
         <div className="grid gap-4 lg:grid-cols-2">
           {BUILT_IN_IP_COURSE.modules.map((module, moduleIndex) => {
@@ -444,11 +417,7 @@ function CourseLesson({
         <aside className="space-y-4 lg:col-start-2 xl:col-start-auto xl:sticky xl:top-5">
           {activePoint?.socratic.length ? (
             <section className="rounded-card border border-border bg-surface p-5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <MessageCircleQuestion className="size-5 text-brand-hover" aria-hidden="true" />
-                先自测，再看提示
-              </div>
-              <div className="mt-4 space-y-3">
+              <div className="space-y-3">
                 {activePoint.socratic.map((question, index) => (
                   <details key={`${question.q}-${index}`} className="group rounded-card border border-border bg-surface p-4">
                     <summary className="cursor-pointer list-none text-sm font-medium leading-6 text-foreground marker:hidden">

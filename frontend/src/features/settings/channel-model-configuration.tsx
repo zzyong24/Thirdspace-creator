@@ -114,35 +114,26 @@ export function AiCreditCenterCard({ accountStatus }: { readonly accountStatus?:
   }, []);
 
   return (
-    <SectionCard
-      title="AI 额度与消耗"
-      description="前往额度中心查看总额度、已消耗和剩余额度，并进行购买或充值。"
-    >
-      <IncludedCreditActivation state={upgrade} />
-      <div
-        data-slot="ai-credit-center-card"
-        className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <p className="text-base leading-6 text-muted-foreground">
-          首次使用时按页面提示完成账号连接；之后可从这里直接进入额度中心。
-        </p>
-        {accountStatus !== "not_configured" || upgrade.status === "ready" ? <Button
-          type="button"
-          data-slot="open-ai-credit-center"
-          disabled={opening}
-          onClick={() => void openCredits()}
-        >
-          {opening ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : null}
-          {opening ? "正在打开…" : "查看 AI 额度与消耗"}
-        </Button> : null}
+    <SectionCard title="AI 额度与消耗">
+      <div data-slot="ai-credit-center-card" className="flex flex-col items-start gap-3">
+        <IncludedCreditActivation state={upgrade} />
+        {accountStatus !== "not_configured" || upgrade.status === "ready" ? (
+          <Button
+            type="button"
+            data-slot="open-ai-credit-center"
+            disabled={opening}
+            onClick={() => void openCredits()}
+          >
+            {opening ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+            {opening ? "正在打开…" : "查看 AI 额度与消耗"}
+          </Button>
+        ) : null}
+        {error ? (
+          <p data-slot="ai-credit-center-error" className="text-base text-destructive">
+            {error}
+          </p>
+        ) : null}
       </div>
-      {error ? (
-        <p data-slot="ai-credit-center-error" className="mt-2 text-base text-destructive">
-          {error}
-        </p>
-      ) : null}
       <AiCreditBootstrapForm />
     </SectionCard>
   );
@@ -234,11 +225,7 @@ export function ChannelServiceCredentialCard({
             value={secret}
             disabled={pending}
             onChange={(event) => setSecret(event.target.value)}
-            placeholder={
-              service.hasSecret
-                ? "留空保持不变，填写后覆盖"
-                : "粘贴这个服务的 API Key"
-            }
+            placeholder={service.hasSecret ? "留空保持不变，填写后覆盖" : undefined}
             aria-label="模型访问密钥"
           />
           <Button
@@ -290,7 +277,6 @@ export function ChannelManagedModelCard({
   return (
     <SectionCard
       title={title}
-      description="当前权益已提供这项能力，无需填写密钥；有多个模型时可以直接选择。"
     >
       <div
         data-slot="channel-managed-model-card"

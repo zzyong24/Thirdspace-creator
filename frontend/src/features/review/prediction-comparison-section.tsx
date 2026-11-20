@@ -65,7 +65,6 @@ export function PredictionComparisonSection({
   return (
     <SectionCard
       title="预测 vs 实际"
-      description="发布前盲预测与发布后真实表现的对照(校准飞轮)"
     >
       <div data-testid="prediction-comparison" data-rows={rows.length}>
         {rows.length === 0 ? (
@@ -75,8 +74,8 @@ export function PredictionComparisonSection({
           >
             <Crosshair className="size-4" />
             {publicationScoped
-              ? "所选发布范围内暂无可对照的预测。已在稿面锁分但尚未发布的内容，可先返回稿面查看；发布并关联实际版本后再在这里对照。"
-              : "本项目未做盲预测。去稿面的发布包区「先盲预测」,发布后即可在这里对照。"}
+              ? "所选发布范围内暂无可对照的预测。"
+              : "本项目未做盲预测。"}
           </p>
         ) : (
           <div className="flex flex-col gap-3">

@@ -242,7 +242,6 @@ export async function ProjectsPage({
 
       <div data-slot="studio-projects-body">
       <section data-slot="studio-projects-index" aria-label="项目状态概览" className={styles.stageIndex}>
-        <div className={styles.stageIndexHeading}><h2>按创作阶段查看</h2></div>
         <nav aria-label="按阶段筛选项目" className={styles.stageNav}>
         {tabs.map(tab => <Link key={tab.id} href={(() => { const query = new URLSearchParams(); if(tab.id !== "all") query.set("status",tab.id); if(sort !== "updated") query.set("sort",sort); return query.size ? `/projects?${query}` : "/projects"; })()} aria-current={status === tab.id ? "page" : undefined}>
           <span>{tab.label}</span><span className={styles.stageCount}>{tab.count.toLocaleString("zh-CN")}</span>
@@ -250,7 +249,7 @@ export async function ProjectsPage({
         </nav>
       </section>
       <div data-slot="studio-projects-list">
-      <div className={styles.listHeading}><h2>项目稿件</h2><p>{totalLabel}</p></div>
+      <h2 className={styles.listHeading}>项目稿件</h2>
       <ProjectsToolbar
         tabs={tabs}
         status={status}
@@ -292,7 +291,6 @@ function ProjectList({
     return (
       <EmptyState
         title={filtered ? "当前状态下没有项目" : groupId?"这个账号组还没有项目":"这个账号还没有项目"}
-        description={filtered ? "试试其他状态，或返回全部项目继续创作。" : groupId?"项目属于当前账号组。可以先创建项目，分发时再添加平台账号，也可以从选题池立项。":"项目按抖音号隔离。新建一个项目,或先去选题池挑一条候选立项。"}
         action={
           <div className="flex flex-wrap items-center gap-4">
             {filtered ? <Link href="/projects" className={styles.returnLink}>查看全部项目 →</Link> : null}

@@ -20,21 +20,21 @@ it('微信只读真实报表总数0，不触发同步，携带冻结组账号且
  expect(url).toBe('/api/v1/dispatch');expect(new Headers(init.headers).get('x-group-id')).toBe('g');expect(new Headers(init.headers).get('x-account-id')).toBe('wv');
  expect(JSON.parse(String(init.body))).toEqual({id:'platforms.reports.list',input:{params:{accountId:'wv'},query:{pageSize:1,cursor:null}}});
  expect(fetch).toHaveBeenCalledOnce();expect(screen.getByRole('link',{name:'查看原生报表'})).toHaveAttribute('href','/accounts/works?accountId=wv');
- expect(screen.queryByRole('button',{name:/同步|登录/})).toBeNull();expect(screen.getByText('日报不计入上方按作品汇总的累计指标。')).toBeVisible();
+ expect(screen.queryByRole('button',{name:/同步|登录/})).toBeNull();expect(screen.queryByText('日报不计入上方按作品汇总的累计指标。')).toBeNull();
 });
 it('已有报表显示全部保存份数，非当前日期匹配数，不把报表份数叫作品数',async()=>{
  vi.stubGlobal('fetch',vi.fn(async()=>response(4,[report])));render(<GroupPlatformData workspace={workspace}/>);
- await screen.findByText('已有 4 份报表');expect(screen.getByText('数量为全部已保存报表，不受当前日期筛选限制。')).toBeVisible();
+ await screen.findByText('已有 4 份报表');expect(screen.queryByText('数量为全部已保存报表，不受当前日期筛选限制。')).toBeNull();
 });
 it('非微信目录入口冻结账号ID，窗内汇总与系统发布记录分开，不发报表请求',()=>{
  const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
  render(<GroupPlatformData workspace={{...workspace,platform:'xiaohongshu',accounts:[{...account,id:'x/a ?',platform:'xiaohongshu'}],collected:{...workspace.collected!,catalogWorkCount:11}}}/>);
- expect(screen.getByText('所选日期内有 11 条作品已拿到数据')).toBeVisible();expect(screen.getByText(/只算这段时间发布的作品/)).toBeVisible();
+ expect(screen.getByText('所选日期内有 11 条作品已拿到数据')).toBeVisible();expect(screen.queryByText(/只算这段时间发布的作品/)).toBeNull();
  expect(screen.getByRole('link',{name:'查看已采集作品'})).toHaveAttribute('href','/accounts/works?accountId=x%2Fa+%3F');expect(fetch).not.toHaveBeenCalled();
 });
-it('快手窗内0解释发布日期范围，保留全部目录入口但不声称全目录0',()=>{
+it('快手保留发布日期和窗内0数量，保留全部目录入口但不声称全目录0',()=>{
  vi.stubGlobal('fetch',vi.fn());render(<GroupPlatformData workspace={{...workspace,platform:'kuaishou',accounts:[{...account,id:'ks',platform:'kuaishou'}]}}/>);
- expect(screen.getByText('2026-09-24 — 2026-10-23')).toBeVisible();expect(screen.getByText(/这段时间内没有拿到数据的作品，可以调整日期或查看已采集作品/)).toBeVisible();
+ expect(screen.getByText('2026-09-24 — 2026-10-23')).toBeVisible();expect(screen.getByText('所选日期内有 0 条作品已拿到数据')).toBeVisible();
  expect(screen.getByRole('link',{name:'查看已采集作品'})).toHaveAttribute('href','/accounts/works?accountId=ks');expect(screen.queryByText(/全目录.*0/)).toBeNull();
 });
 it('报表失败局部可重试，双击仅一次新请求',async()=>{
@@ -95,7 +95,7 @@ it('当前组与旧页面不符时不请求，也不提供旧账号入口',()=>{
 it('摘要读取失败不变成平台作品0，报表异常协议不变成未同步',async()=>{
  vi.stubGlobal('fetch',vi.fn(async()=>new Response(JSON.stringify({data:{total:-1,items:[],nextCursor:null}}),{status:200})));
  render(<GroupPlatformData workspace={{...workspace,collected:{state:'unavailable',catalogWorkCount:null,unattributableWorkCount:null,deduplicatedWorkCount:null,metrics:[]}}}/>);
- expect(screen.getByText('暂时读不到作品数量，可以先查看各账号的已采集作品。')).toBeVisible();await screen.findByText('已保存报表暂时无法读取。');expect(screen.queryByText('尚未同步平台报表')).toBeNull();expect(screen.queryByText(/有 0 条作品已拿到数据/)).toBeNull();
+ expect(screen.getByText('暂时读不到作品数量。')).toBeVisible();await screen.findByText('已保存报表暂时无法读取。');expect(screen.queryByText('尚未同步平台报表')).toBeNull();expect(screen.queryByText(/有 0 条作品已拿到数据/)).toBeNull();
 });
 
 it.each(['g','other'])('SSR到hydrate当前组%s保持首屏一致，确认前不渲染旧账号入口',async currentGroup=>{

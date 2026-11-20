@@ -109,19 +109,17 @@ export function DraftWorkbenchPage({ vm, deferred }: { vm: DraftWorkbenchVm; def
             data-slot="draft-script-section"
             className="scroll-mt-20"
           >
-            {/* [T-054 组B] 区头 = 编辑器唯一的用户视角标题(编辑器卡内不再叠「主脚本/
-                实现描述」双头);副行合并版本提示,一句话说清「写-存-回滚」。 */}
             <div className="mb-1.5 flex flex-wrap items-center gap-2 px-0.5">
               <h2 className="text-[13.5px] font-semibold text-foreground">口播脚本</h2>
-              <span className="text-xs text-text-subtle">
-                {/* [Bug-8 T-021] imported 项目没跑逐字稿 → 提示去跑(而非「直接开写」误导)。 */}
-                {script.versionCount > 0
-                  ? `v${script.versionCount} · 写你的口播稿——保存即新版本,可回滚`
-                  : project.imported
-                    // 用户视角文案不暴露内部队列术语；未配云端 ASR 时仍走本地 Whisper。
-                    ? "系统会从抖音逐步补齐逐字稿；未配置云端 ASR 时会使用本地 Whisper，处理可能较慢。着急的话也可让右侧编导先起草"
-                    : "写你的口播稿——直接开写,或在右侧让编导起草"}
-              </span>
+              {script.versionCount > 0 ? (
+                <span className="text-xs text-text-subtle">
+                  v{script.versionCount}
+                </span>
+              ) : project.imported ? (
+                <span className="text-xs text-text-subtle">
+                  系统会从抖音逐步补齐逐字稿；未配置云端 ASR 时会使用本地 Whisper，处理可能较慢。着急的话也可让右侧编导先起草
+                </span>
+              ) : null}
               {scriptArtifactId && (script.versions?.length ?? 0) > 0 ? (
                 <span className="ml-auto">
                   <ScriptVersionMenu
@@ -319,11 +317,7 @@ function PublishPackSection({
           }
         />
         <div className="min-w-0 flex-1">
-          {/* [T-054 组B] 规范 §2:无发布行时不再摆「标题草稿:定稿后从脚本 HOOK 生成 /
-              标签、平台在发布时选」这类机制注记,收敛为用户视角一句话。 */}
-          <p className="truncate text-[13px] font-semibold text-foreground">
-            {publishPack?.title || "发布时会从脚本钩子生成标题草稿、选封面与标签"}
-          </p>
+          {publishPack?.title && <p className="truncate text-[13px] font-semibold text-foreground">{publishPack.title}</p>}
           {publishPack ? (
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               {publishPack.tags.length > 0 ? (
@@ -449,9 +443,6 @@ function MissingMaterialsNote({
           </li>
         ))}
       </ul>
-      <p className="mt-1.5 text-[11px] text-amber-700/80 dark:text-amber-400/80">
-        这些是脚本画面已经点名、但项目里还没有的素材。可以用上方「联网找资料」或「上传 / 管理素材」补齐。
-      </p>
     </section>
   );
 }
@@ -476,13 +467,8 @@ function AmmoDrawer({
       aria-label="创作素材"
       className="rounded-xl border border-border/70 bg-surface p-3"
     >
-      <div className="mb-3 flex flex-wrap items-start gap-x-3 gap-y-2">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[13.5px] font-semibold text-foreground">创作素材</h2>
-          <p className="mt-0.5 text-xs leading-5 text-text-subtle">
-            收集资料、上传文件，也可以用画布制作图片和视频。选中的结果会出现在这件作品里。
-          </p>
-        </div>
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h2 className="min-w-0 flex-1 text-[13.5px] font-semibold text-foreground">创作素材</h2>
         <Link
           href={`/canvases?projectId=${encodeURIComponent(projectId)}`}
           className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground transition hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

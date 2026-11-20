@@ -131,11 +131,10 @@ export function SearchFacetsPanel({ initialQuery = "" }: SearchFacetsPanelProps)
     [navigate, urlQuery, activeType],
   );
 
+  if (!urlQuery) return null;
+
   return (
-    <SectionCard
-      title="筛选"
-      description="按类型、标签缩小范围"
-    >
+    <SectionCard title="筛选">
       {/* `data-slot="search-filters"` is the stable selector the sidebar facet
           block has always exposed (visual / e2e specs locate it by this); the
           `data-search-facets-panel` marker tags the new REAL facet island. */}
@@ -144,11 +143,7 @@ export function SearchFacetsPanel({ initialQuery = "" }: SearchFacetsPanelProps)
         data-search-facets-panel="true"
         className="flex flex-col gap-3"
       >
-        {urlQuery === "" ? (
-          <p className="px-2 text-[11px] leading-snug text-muted-foreground">
-            输入搜索词后，这里会显示可点选的类型 / 标签分面。
-          </p>
-        ) : state.status === "loading" ? (
+        {state.status === "loading" ? (
           <p
             data-slot="search-facets-loading"
             className="px-2 text-[11px] text-muted-foreground"

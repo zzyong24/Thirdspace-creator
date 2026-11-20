@@ -215,8 +215,7 @@ export interface AccountInformation {
   readonly timezone: string;
   /**
    * BCP-47 locale tag from the user's identity (`userResource.locale`).
-   * Rendered as a real identity chip (Module 00, Task 12); the 已验证
-   * badge + plan chip stay intentionally inert (decorative).
+   * Rendered as an identity chip (Module 00, Task 12).
    */
   readonly locale: string;
 }

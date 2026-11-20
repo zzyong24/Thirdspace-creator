@@ -49,7 +49,7 @@ export function PublishingCenterSummaryRail({
       className="flex min-w-0 flex-col gap-card-gap"
     >
       <PublishingMetrics metrics={viewModel.metrics} />
-      {nativeMode ? <SectionCard title="视频播放 · 平台比较" description="同一期间作品的累计播放（次）"><HorizontalBarsChart slot="publishing-platform-comparison" shape="platform-views" data={viewModel.platformComparison.map(row=>({label:row.platformLabel,value:row.share}))} emptyMessage="当前筛选内暂无视频播放指标" unit="次" summary="按相同播放口径比较各平台，文章阅读另列统计。"/><p className="mt-3 text-xs text-muted-foreground">各账号采集时间见下方发布记录</p></SectionCard> : <PlatformComparisonChart shares={viewModel.platformComparison} />}
+      {nativeMode ? <SectionCard title="视频播放 · 平台比较"><HorizontalBarsChart slot="publishing-platform-comparison" shape="platform-views" data={viewModel.platformComparison.map(row=>({label:row.platformLabel,value:row.share}))} emptyMessage="当前筛选内暂无视频播放指标" unit="次" summary="按相同播放口径比较各平台，文章阅读另列统计。"/></SectionCard> : <PlatformComparisonChart shares={viewModel.platformComparison} />}
       <TrendChart trend={viewModel.trend} nativeMode={nativeMode} />
     </aside>
   );
@@ -106,7 +106,7 @@ function PlatformComparisonChart({
   const total = shares.reduce((acc, row) => acc + row.share, 0);
   if (shares.length === 0 || total <= 0) {
     return (
-      <SectionCard title="平台对比" description="按平台播放量占比">
+      <SectionCard title="平台对比">
         <p
           data-slot="platform-comparison-empty"
           className="py-6 text-center text-xs text-muted-foreground"
@@ -118,7 +118,7 @@ function PlatformComparisonChart({
   }
 
   return (
-    <SectionCard title="平台对比" description="按平台播放量占比">
+    <SectionCard title="平台对比">
       <div data-slot="platform-comparison-chart" className="flex flex-col gap-2">
         <ul
           data-slot="platform-comparison-list"
@@ -181,10 +181,10 @@ function TrendChart({
   trend: ReadonlyArray<{ readonly label: string; readonly value: number|null }>;
   nativeMode?: boolean;
 }) {
-  if (nativeMode) return <ChartFrame title="视频每日新增播放" description="相邻采集日实测差分（次）；缺失日期留空" summary={`视频每日新增播放：${trend.map(point=>`${point.label} ${point.value===null?"未知":point.value.toLocaleString()+"次"}`).join("；") || "尚无可比较的逐日采集"}`} trend={trend} slot="trend-chart" shape="line" testId="publishing-trend-chart" />;
+  if (nativeMode) return <ChartFrame title="视频每日新增播放" summary={`视频每日新增播放：${trend.map(point=>`${point.label} ${point.value===null?"未知":point.value.toLocaleString()+"次"}`).join("；") || "尚无可比较的逐日采集"}`} trend={trend} slot="trend-chart" shape="line" testId="publishing-trend-chart" />;
   if (trend.length === 0) {
     return (
-      <SectionCard title={nativeMode ? "视频每日新增播放" : "发布趋势"} description={nativeMode ? "相邻采集日实测差分（次）" : "按日播放量"}>
+      <SectionCard title={nativeMode ? "视频每日新增播放" : "发布趋势"}>
         <p
           data-slot="trend-chart-empty"
           className="py-6 text-center text-xs text-muted-foreground"
@@ -198,7 +198,7 @@ function TrendChart({
   if (trend.length === 1) {
     const only = trend[0]!;
     return (
-      <SectionCard title="发布趋势" description="至少两个采集日后显示变化">
+      <SectionCard title="发布趋势">
         <div
           data-slot="trend-chart-single-point"
           className="flex items-end justify-between gap-4 py-2"
@@ -230,7 +230,6 @@ function TrendChart({
   return (
     <ChartFrame
       title={nativeMode ? "视频每日新增播放" : "发布趋势"}
-      description={nativeMode ? "相邻采集日实测差分（次）；缺失日期留空" : "按日播放量"}
       summary={summary}
       trend={trend}
       slot="trend-chart"
@@ -247,7 +246,7 @@ function TopContentList({
 }) {
   if (items.length === 0) {
     return (
-      <SectionCard title="热门内容" description="播放量最高">
+      <SectionCard title="热门内容">
         <p
           data-slot="top-content-empty"
           className="py-6 text-center text-xs text-muted-foreground"
@@ -259,7 +258,7 @@ function TopContentList({
   }
 
   return (
-    <SectionCard title="热门内容" description="播放量最高">
+    <SectionCard title="热门内容">
       <ul
         data-slot="top-content-list"
         className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4"
@@ -279,10 +278,8 @@ function TopContentList({
               fallback={
                 <span
                   aria-hidden="true"
-                  className="flex h-9 w-16 shrink-0 items-center justify-center rounded-md border border-border bg-brand-soft text-[10px] font-medium text-brand"
-                >
-                  16:9
-                </span>
+                  className="h-9 w-16 shrink-0 rounded-md border border-border bg-brand-soft"
+                />
               }
             />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">

@@ -106,7 +106,7 @@ afterEach(() => {
 describe("AutomationsIsland — 列表渲染", () => {
   it("空态:无作业时渲染引导空态 + 新建入口", () => {
     render(<AutomationsIsland jobs={[]} />);
-    expect(screen.getByText("还没有采集任务")).toBeInTheDocument();
+    expect(screen.getByText("当前筛选没有账号采集任务")).toBeInTheDocument();
     // 「新建任务」按钮(顶部 + 空态)
     expect(screen.getAllByText("新建任务").length).toBeGreaterThanOrEqual(1);
   });
@@ -482,7 +482,7 @@ describe("TemplateCards — 从模板入手", () => {
   it("渲染模板卡;点非灰置模板 → onPick 带该模板", () => {
     const onPick = vi.fn();
     render(<TemplateCards onPick={onPick} />);
-    expect(screen.getByText("快速创建")).toBeInTheDocument();
+    expect(screen.queryByText("快速创建")).not.toBeInTheDocument();
     expect(screen.getByText("作品数据同步")).toBeInTheDocument();
     expect(screen.getByText("作品数据同步")).toBeInTheDocument();
     // 点“作品数据同步”模板卡
@@ -1029,7 +1029,7 @@ describe('T1479 原生报表完成反馈',()=>{
   render(<RunDetailDialog job={makeJob({accountId:'only-wechat'})} accountPlatform={accountPlatform} open onOpenChange={vi.fn()} />);
   const summary=await screen.findByText('✅ 已完成 · 后台报表已同步');expect(screen.queryByText(/无新数据/)).toBeNull();
   fireEvent.click(summary);await waitFor(()=>expect(mockClient.listTaskSteps).toHaveBeenCalledOnce());
-  expect(await screen.findByText('后台报表已同步，可在该账号的数据页查看日期和原始字段。')).toBeVisible();
+  expect(await screen.findByText('后台报表已同步')).toBeVisible();
   expect(screen.queryByText(/新增 0 条|更新 0 条/)).toBeNull();
  });
  it('平台未读到时零计数只展示已完成，不推测无新数据',async()=>{

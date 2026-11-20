@@ -160,7 +160,6 @@ test.describe("Settings page", () => {
     const header = slot(page, "app-top-header");
     await expect(header).toHaveAttribute("data-mode", "global");
     await expect(slot(page, "header-page-heading")).toContainText("设置");
-    await expect(slot(page, "header-page-heading")).toContainText("账号、偏好与系统");
     // 模态背景仍是原壳，只从可访问树隐藏；DOM/当前路由不变量完整保留。
     const nav = slot(page, "sidebar-primary-nav");
     await expect(nav).toHaveAttribute("aria-label", "主要导航");
@@ -190,9 +189,9 @@ test.describe("Settings page", () => {
       if (previous && previous !== category.id) await expect(panel(page, previous)).toBeHidden();
       for (const card of category.cards) await expect(slot(page, card)).toBeVisible();
       if (category.id === "account") {
-        await expect(slot(page, "activation-status-card")).toContainText("激活为桌面端功能");
-        await expect(slot(page, "check-update-card")).toContainText("软件更新为桌面端功能");
-        await expect(slot(page, "diagnostic-logs-card")).toContainText("诊断日志为桌面端功能");
+        await expect(slot(page, "activation-status-card")).toContainText("Web 端无需激活");
+        await expect(slot(page, "check-update-card")).toContainText("Web 端随浏览器加载最新版");
+        await expect(slot(page, "diagnostic-logs-card")).toContainText("Web 端无本地日志文件");
       } else if (category.id === "data-services") {
         await expect(panel(page, category.id)).toContainText("RedFox 数据服务");
         await expect(page.locator("#redfox-key")).toHaveAttribute("type", "password");

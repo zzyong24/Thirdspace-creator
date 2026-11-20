@@ -429,12 +429,7 @@ export function KnowledgeGraphView({
 
   const { stats } = graph;
   const isEmpty = stats.knowledgeNodes === 0;
-  // [T-260a] 关系 0 → 诚实引导(不留空白画布);关系少但非 0 → 稀疏提示。
   const hasNoRelations = !isEmpty && stats.relationEdges === 0;
-  const isSparse =
-    !isEmpty &&
-    stats.relationEdges > 0 &&
-    stats.relationEdges < stats.knowledgeNodes / 2;
 
   return (
     <section
@@ -473,14 +468,7 @@ export function KnowledgeGraphView({
           data-slot="knowledge-graph-no-relations"
           className="rounded-md border border-dashed border-border bg-surface-subtle px-2.5 py-1.5 text-[12px] text-muted-foreground"
         >
-          还没有关联——点上方「AI 找关联」让编导找找知识之间的联系(关联是 AI 建的活,不用自己手连)。
-        </p>
-      ) : isSparse ? (
-        <p
-          data-slot="knowledge-graph-sparse-hint"
-          className="rounded-md border border-dashed border-border bg-surface-subtle px-2.5 py-1.5 text-[12px] text-muted-foreground"
-        >
-          关联还比较少——继续用「AI 找关联」让编导补候选(诚实稀疏,不生成假边填场面)。
+          还没有关联
         </p>
       ) : null}
 
@@ -490,8 +478,7 @@ export function KnowledgeGraphView({
           data-slot="knowledge-graph-cap-hint"
           className="rounded-md border border-dashed border-border bg-surface-subtle px-2.5 py-1.5 text-[12px] text-muted-foreground"
         >
-          节点较多,按引用次数与关联度采样,显示前 {NODE_RENDER_CAP},共{" "}
-          {totalNodes} 个(其余在「AI 找关联」/详情里仍可访问)。
+          显示前 {NODE_RENDER_CAP},共 {totalNodes} 个节点
         </p>
       ) : null}
 
@@ -516,13 +503,12 @@ export function KnowledgeGraphView({
               data-slot="knowledge-relate-empty"
               className="text-[12px] text-muted-foreground"
             >
-              AI 未发现可提议的关联——原子之间暂无语义上真实相关的组合(诚实空,不硬凑)。
+              AI 未发现可提议的关联
             </p>
           ) : (
             <>
               <p className="text-[11px] text-muted-foreground">
-                AI 提议 {candidates.length} 条候选关联(勾选要采纳的,关联类型可改;采纳后落库为
-                AI 建边)
+                AI 提议 {candidates.length} 条候选关联
               </p>
               <ul className="flex flex-col gap-1.5">
                 {candidates.map((c, index) => (
@@ -618,7 +604,7 @@ export function KnowledgeGraphView({
           data-slot="knowledge-graph-empty"
           className="rounded-md border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-[12px] text-muted-foreground"
         >
-          知识库还是空的——先去上方倾倒场倒入内容,图谱才有节点可画。
+          知识库还是空的
         </div>
       ) : (
         <>
@@ -634,7 +620,7 @@ export function KnowledgeGraphView({
             data-slot="knowledge-graph-mobile-hint"
             className="rounded-md border border-border bg-surface-subtle px-2.5 py-2 text-[12px] text-muted-foreground md:hidden"
           >
-            力导向图请在桌面端查看;此处为统计摘要:{stats.knowledgeNodes} 条知识、
+            {stats.knowledgeNodes} 条知识、
             {stats.relationEdges} 条关联、{stats.usageEdges} 条引用。
           </p>
         </>
@@ -648,7 +634,7 @@ export function KnowledgeGraphView({
           className="flex flex-col gap-1.5 rounded-md border border-border bg-surface p-2.5"
         >
           <p className="text-[11px] font-medium text-muted-foreground">
-            已建关联({relationEdges.length})—— 点边可选中,采纳错的可删
+            已建关联({relationEdges.length})
           </p>
           <ul className="flex flex-col gap-1">
             {relationEdges.map((edge) => {

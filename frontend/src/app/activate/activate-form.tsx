@@ -136,7 +136,6 @@ export function ActivateForm(): React.JSX.Element {
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          placeholder="请输入激活码"
           required
           value={code}
           onChange={(event) => setCode(event.target.value)}

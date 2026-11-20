@@ -193,11 +193,8 @@ export function PublishPackageCta({
     return (
       <div
         data-slot="draft-publish-package-cta"
-        className="mt-2 flex items-center justify-between gap-2"
+        className="mt-2"
       >
-        <p className="text-[11.5px] leading-snug text-text-subtle">
-          发布物料已生成并保存，可随时查看。
-        </p>
         <PublishPackageViewer publishPack={publishPack} />
       </div>
     );
@@ -206,11 +203,8 @@ export function PublishPackageCta({
   return (
     <div
       data-slot="draft-publish-package-cta"
-      className="mt-2 flex items-center justify-between gap-2"
+      className="mt-2"
     >
-      <p className="text-[11.5px] leading-snug text-text-subtle">
-        标题 + 简介一键生成，自动过发布合规审核，采纳后写进发布包。
-      </p>
       <Button
         type="button"
         size="sm"

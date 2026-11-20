@@ -48,9 +48,8 @@ export function QuickCreateWork({ accountPlatform, sourceItemId, sourceTitle, so
 
   return <main data-page="quick-create-work" data-studio-layout="creation" className="mx-auto w-full max-w-3xl space-y-6 p-5 md:p-8">
     <header><Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">← 返回项目</Link>
-      <h1 className="mt-3 text-2xl font-semibold">这次想创作什么？</h1>
-      <p className="mt-2 text-sm text-muted-foreground">填写主题，选择作品形式。</p></header>
-    <section className="space-y-5 rounded-xl border border-border bg-surface p-5" aria-label="快速创作">
+      <h1 id="quick-create-work-heading" className="mt-3 text-2xl font-semibold">快速创作</h1></header>
+    <section className="space-y-5 rounded-xl border border-border bg-surface p-5" aria-labelledby="quick-create-work-heading">
       {sourceTitle && <p className="rounded-md bg-primary/5 p-3 text-sm">来自内容雷达：{sourceTitle}。原始来源会随项目保留；准备状态和候选在项目页查看。</p>}
       {sourceNotice && <div className="rounded-md bg-warning/10 p-3 text-sm text-muted-foreground"><p>{sourceNotice}</p>{sourceChoice===noticeKey?<p>已选择不附来源继续创作。</p>:<button type="button" className="mt-2 text-primary underline" onClick={()=>setSourceChoice(noticeKey)}>不附来源继续创作</button>}</div>}
       <NewProjectForm key={`${scopeKey}:${sourceKey}`} includeWorkType submitLabel="开始创作"

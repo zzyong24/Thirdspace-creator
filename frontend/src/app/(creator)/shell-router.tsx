@@ -347,7 +347,6 @@ export function resolveRoute(
     return {
       headerMode: "global",
       pageTitle: "设置",
-      pageDescription: "账号、偏好与系统",
       contextualCardVariant: "assistant",
     };
   }

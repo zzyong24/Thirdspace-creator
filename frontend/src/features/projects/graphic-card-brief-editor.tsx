@@ -13,8 +13,7 @@ export function GraphicCardBriefEditor({cards,onChange,disabled}:{cards:GraphicP
   const next=[...cards];[next[index],next[target]]=[next[target]!,next[index]!];onChange(next);
  }
  return <section aria-label="图卡文字" className="space-y-4 rounded-xl border border-border bg-surface p-5">
-  <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">图卡文字</h2>
-   <p className="mt-1 text-sm text-muted-foreground">先保存每页文字。图片可以稍后补充。</p></div>
+  <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-semibold">图卡文字</h2>
    <Button variant="outline" disabled={disabled} onClick={()=>onChange([...cards,{cardId:crypto.randomUUID(),title:"",body:"",sourceRefs:[]}])}>添加图卡文字</Button></div>
   {cards.length?<ol className="space-y-4">{cards.map((card,index)=><li key={card.cardId} className="space-y-3 rounded-lg border border-border p-3">
    <label className="block text-sm">第 {index+1} 页标题<input aria-label={`图卡${index+1}标题`} disabled={disabled} value={card.title}
@@ -24,6 +23,6 @@ export function GraphicCardBriefEditor({cards,onChange,disabled}:{cards:GraphicP
    <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" aria-label={`图卡${index+1}上移`} disabled={disabled||index===0} onClick={()=>move(index,-1)}>上移</Button>
     <Button size="sm" variant="outline" aria-label={`图卡${index+1}下移`} disabled={disabled||index===cards.length-1} onClick={()=>move(index,1)}>下移</Button>
     <Button size="sm" variant="ghost" aria-label={`移除图卡${index+1}文字`} disabled={disabled} onClick={()=>onChange(cards.filter(item=>item.cardId!==card.cardId))}>移除文字</Button></div>
-  </li>)}</ol>:<p className="text-sm text-muted-foreground">暂无图卡文字，可逐页添加。</p>}
+  </li>)}</ol>:<p className="text-sm text-muted-foreground">暂无图卡文字。</p>}
  </section>;
 }

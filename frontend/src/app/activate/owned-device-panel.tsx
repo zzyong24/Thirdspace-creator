@@ -82,7 +82,6 @@ export function OwnedDevicePanel({ enabled = true, intent = "register_device", h
   return (
     <section aria-label={title} className="grid min-w-0 gap-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-base leading-6">
       <h2 ref={headingRef} tabIndex={-1} className="text-base font-semibold outline-none">{title}</h2>
-      <p className="text-base text-muted-foreground">{intent === "link_owner" ? "连接本人手机号后，可在官方页面管理已连接的两台电脑。" : "验证本人手机号，选择已有产品，再确认这台电脑。有效期与额度沿用原产品。"}</p>
       {view && <p role="status" aria-live="polite" className="break-words text-base">{view.message}</p>}
       {waiting ? <>
         <div className="rounded-md bg-background p-3 text-center"><p className="text-base">本次确认短码</p><p className="mt-2 font-mono text-xl font-semibold tracking-widest">{view.userCode}</p></div>

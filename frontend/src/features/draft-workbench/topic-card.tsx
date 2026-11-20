@@ -96,9 +96,9 @@ export function TopicCard({
         </span>
       </button>
       <dl className="grid gap-1.5 border-t border-border/60 px-4 py-3 text-xs">
-        <div><dt className="inline text-text-subtle">给谁看：</dt><dd className="inline">{briefDetail?.targetAudience || "尚未明确具体观众和处境，可让编导结合已有资料判断"}</dd></div>
+        <div><dt className="inline text-text-subtle">给谁看：</dt><dd className="inline">{briefDetail?.targetAudience || "尚未明确具体观众和处境"}</dd></div>
         <div><dt className="inline text-text-subtle">希望带来什么：</dt><dd className="inline">{briefDetail?.contentGoal || "尚未明确主要目的"}{briefDetail?.coreMessage ? ` · ${briefDetail.coreMessage}` : ""}</dd></div>
-        <div><dt className="inline text-text-subtle">依据与缺口：</dt><dd className="inline">{radarEvidence?.sourceReferences.length ? `已有 ${radarEvidence.sourceReferences.length} 条对标来源；仍需核对哪些经历、演示或材料属于本账号。` : "选题卡尚未记录可核对来源；不代表账号没有材料，需结合素材确认。"}</dd></div>
+        <div><dt className="inline text-text-subtle">依据与缺口：</dt><dd className="inline">{radarEvidence?.sourceReferences.length ? `已有 ${radarEvidence.sourceReferences.length} 条对标来源` : "选题卡尚未记录可核对来源。"}</dd></div>
         {radarDecomposition?.reusablePattern ? <div><dt className="inline text-text-subtle">可借表达：</dt><dd className="inline">{radarDecomposition.reusablePattern}</dd></div> : null}
         {radarStrategy?.replace.length ? <div><dt className="inline text-text-subtle">必须替换：</dt><dd className="inline">{radarStrategy.replace.join("；")}</dd></div> : null}
       </dl>

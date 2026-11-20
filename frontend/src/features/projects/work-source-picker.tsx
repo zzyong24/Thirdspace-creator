@@ -45,6 +45,6 @@ function sourceDescription(source:WorkSourceRef){
  return {name,range};
 }
 export function WorkSourceList({sources,disabled,onRemove}:{sources:WorkSourceRef[];disabled:boolean;onRemove:(index:number)=>void}){
- if(!sources.length)return <p className="text-xs text-muted-foreground">还没有来源。可选择已保存稿件，明确本次使用的内容。</p>;
+ if(!sources.length)return <p className="text-xs text-muted-foreground">还没有来源。</p>;
  return <ul aria-label="已记录的来源" className="space-y-2">{sources.map((source,index)=>{const description=sourceDescription(source);return <li key={`${source.versionId}:${"selectionDigest" in source?source.selectionDigest:source.id}:${index}`} className="flex items-start gap-3 rounded-lg border p-3"><div className="min-w-0 flex-1 space-y-1"><p className="text-sm font-medium">{description.name} · {description.range}</p><details className="text-xs text-muted-foreground"><summary className="cursor-pointer">查看来源版本记录</summary><p className="mt-1 break-all">保存版本：{source.versionId}</p></details></div><Button variant="ghost" size="sm" disabled={disabled} aria-label={`移除来源 ${index+1}`} onClick={()=>onRemove(index)}>移除</Button></li>;})}</ul>;
 }

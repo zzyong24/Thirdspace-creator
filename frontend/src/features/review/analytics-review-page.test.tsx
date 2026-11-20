@@ -412,7 +412,7 @@ describe("AnalyticsReviewPage", () => {
       );
       expect(empty).not.toBeNull();
       expect(empty!.textContent ?? "").toContain("未采集该作品评论");
-      expect(empty!.textContent ?? "").toContain("抓我作品评论");
+      expect(empty!.textContent ?? "").toContain("未采集该作品评论");
       // 没有任何评论条目(不摆假)。
       expect(
         container.querySelectorAll('[data-slot="review-comment-item"]'),

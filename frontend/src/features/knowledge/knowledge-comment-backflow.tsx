@@ -19,7 +19,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquareQuote } from "lucide-react";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
@@ -170,14 +169,6 @@ export function KnowledgeCommentBackflow() {
       className="flex flex-col gap-2 rounded-card border border-border bg-surface p-3"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <MessageSquareQuote
-          className="size-4 shrink-0 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <span className="text-xs text-text-subtle">
-          把采集到的观众评论蒸馏成「观众问题」原子(三级去噪:规则预筛 → AI 只留真疑问 →
-          人工采纳)
-        </span>
         <button
           type="button"
           data-slot="knowledge-comment-backflow-run"
@@ -211,9 +202,6 @@ export function KnowledgeCommentBackflow() {
           <p className="text-[12px] font-medium text-foreground">
             还没有采集到评论
           </p>
-          <p className="text-[11px] text-muted-foreground">
-            先在作品复盘页采集评论(或去自动化配「抓我作品评论」),回来再回流。
-          </p>
           <Link
             href="/projects"
             data-slot="knowledge-comment-backflow-goto"
@@ -235,7 +223,7 @@ export function KnowledgeCommentBackflow() {
           共 {result.signalsTotal} 条评论:{result.droppedNoise} 条被规则预筛掉(短/水),
           {result.droppedBackflowed} 条已回流过
           {result.prefiltered > 0
-            ? `;AI 蒸馏后没有发现新的真实疑问(诚实空,不编问题)`
+            ? `;AI 蒸馏后没有发现新的真实疑问`
             : `;没有剩余可蒸馏的评论`}
           。
         </p>
@@ -248,8 +236,7 @@ export function KnowledgeCommentBackflow() {
           className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle/40 p-2.5"
         >
           <p className="text-[11px] text-muted-foreground">
-            蒸馏出 {rows.length} 个观众问题候选(来自 {result?.prefiltered ?? 0} 条预筛评论;
-            勾选要留的,问题/备注可改;采纳后进知识库为 qa 原子)
+            蒸馏出 {rows.length} 个观众问题候选(来自 {result?.prefiltered ?? 0} 条预筛评论)
           </p>
           <ul className="flex flex-col gap-2">
             {rows.map((row, index) => (

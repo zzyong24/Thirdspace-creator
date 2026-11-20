@@ -14,7 +14,6 @@
  * 「手动加餐」定位,不与候选池三栏抢视觉权重 —— 候选池是页面 C 位。
  */
 
-import * as React from "react";
 import styles from "./topics-prepare.module.css";
 import Link from "next/link";
 import {
@@ -35,35 +34,30 @@ import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 const GENERATE_ACTIONS: ReadonlyArray<{
   basis: string;
   label: string;
-  description: string;
   icon: LucideIcon;
   prefill: string;
 }> = [
   {
     basis: "positioning",
     label: "基于定位出题",
-    description: "围绕账号方向",
     icon: Target,
     prefill: "基于我的定位和真实信号,出一批选题候选。",
   },
   {
     basis: "comments",
     label: "基于评论问题",
-    description: "回应观众疑问",
     icon: MessageSquare,
     prefill: "基于我评论区的真实问题和求带信号,出一批选题候选。",
   },
   {
     basis: "knowledge",
     label: "基于知识库出题",
-    description: "从资料中找切口",
     icon: BookOpen,
     prefill: "基于我知识库里的素材和沉淀,出一批选题候选。",
   },
   {
     basis: "trend",
     label: "基于热点出题",
-    description: "结合热点找方向",
     icon: Flame,
     prefill: "结合当下热点和我的定位,出一批蹭得住的选题候选。",
   },
@@ -76,17 +70,16 @@ export function TopicGenerateBand({
   /** @deprecated 弹窗任务流已退役(T-060①);保留形参兼容旧调用,不再消费。 */
   readonly pendingReview?: unknown;
 }) {
-  const id = React.useId();
   return (
     <section data-testid="topics-generate-band" className={styles.aiPanel} aria-label="AI 选题会">
-      <header className={styles.sectionHeader}><h3><Sparkles size={17} aria-hidden="true"/>让 AI 帮我找选题</h3><p>选择一种依据，进入对话后再发送。</p></header>
+      <header className={styles.sectionHeader}><h3><Sparkles size={17} aria-hidden="true"/>让 AI 帮我找选题</h3></header>
       <div data-testid="topics-generate-actions" className={styles.actions}>
         {GENERATE_ACTIONS.map(action => <Link key={action.basis}
           href={copilotDeepLink("topics", "topic.generate", undefined, action.prefill)}
           data-testid={`topics-generate-${action.basis}`} data-basis={action.basis}
-          aria-label={action.label} aria-describedby={`${id}-${action.basis}`}>
+          aria-label={action.label}>
           <action.icon size={18} aria-hidden="true"/>
-          <span><strong>{action.label}</strong><small id={`${id}-${action.basis}`}>{action.description}</small></span>
+          <strong>{action.label}</strong>
           <ArrowUpRight size={15} aria-hidden="true"/>
         </Link>)}
       </div>

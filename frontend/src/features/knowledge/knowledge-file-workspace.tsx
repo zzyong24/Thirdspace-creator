@@ -148,10 +148,7 @@ export function KnowledgeFileWorkspace({
       className="overflow-hidden rounded-card border border-border bg-surface"
     >
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">文件工作区</h2>
-          <p className="text-xs text-text-subtle">文件夹是默认入口；下方仍保留全部、关系图和观点地图。</p>
-        </div>
+        <h2 className="text-sm font-semibold text-foreground">文件工作区</h2>
         <div className="relative w-56">
           <Search className="absolute left-2.5 top-2.5 size-3.5 text-text-subtle" aria-hidden="true" />
           <input

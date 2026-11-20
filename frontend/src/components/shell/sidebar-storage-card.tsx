@@ -103,10 +103,6 @@ export function SidebarStorageCard() {
         // 诚实降级:读失败不回退假值,直接说不可用。
         <p data-slot="sidebar-storage-unavailable">存储用量不可用</p>
       )}
-      {state.kind === "ready" ? (
-        // ASSET-17 同款处置:去掉「自动同步已开启」假文案(无同步机制支撑)。
-        <p>个人本地素材库</p>
-      ) : null}
     </div>
   );
 }

@@ -38,10 +38,7 @@ import { OnboardingCard } from "@/features/onboarding/onboarding-card";
 // [T-247] 待办卡 client 岛(完成勾选 → tasks.patch)。
 import { TodoCard } from "./todo-card";
 import { client } from "@/lib/contract-client.server";
-import {
-  canonicalDataset,
-  getProjectPlatforms,
-} from "@/fixtures/canonical";
+import { getProjectPlatforms } from "@/fixtures/canonical";
 import { cn } from "@/lib/utils";
 import type {
   ContinueCreating,
@@ -59,15 +56,6 @@ import type { ProjectStageName } from "@/types/domain";
 export interface DashboardPageProps {
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: DashboardViewModel & {readonly workspace?:GroupWorkspace};
-  /**
-   * The displayed greeting name. In production `(creator)/page.tsx` passes the
-   * REAL account holder (`resolveSession().user.displayName` — identity
-   * getCurrentUser, the same source the Shell user card reads). Only when there
-   * is no session (SSR fallback / unit tests) is this omitted and the greeting
-   * falls back to the fixture dataset so SSR never crashes. Also the test seam.
-   */
-  readonly greetingName?: string;
-  /** 当前组的数据筛选位于问候之后，与原顶栏动作留出同一行空间。 */
   readonly filters?: React.ReactNode;
   readonly previewRecent?: React.ReactNode;
   readonly dateRange?: {startDate:string;endDate:string};
@@ -81,7 +69,6 @@ export interface DashboardPageProps {
 
 export async function DashboardPage({
   viewModel,
-  greetingName,
   filters,
   previewRecent,
   dateRange,
@@ -94,13 +81,6 @@ export async function DashboardPage({
       query: undefined,
       body: undefined,
     }));
-  // Greet the real account holder: `page.tsx` passes the session user's
-  // displayName via `greetingName`. Only the no-session SSR fallback / unit
-  // tests reach the fixture default (so SSR never crashes).
-  const greeting = buildGreeting(
-    vm,
-    (greetingName ?? canonicalDataset.user.displayName).trim() || "创作者",
-  );
   const overviewQuery=new URLSearchParams(Object.entries(trendSource?.query??{}).filter((entry):entry is [string,string]=>typeof entry[1]==='string')).toString();
   const workspace=vm.workspace;
   const summaryMetrics:DashboardViewModel['metrics']=workspace?[
@@ -114,20 +94,12 @@ export async function DashboardPage({
       className={cn("flex flex-col gap-section-gap", styles.page)}
     >
       <header className={styles.welcome}>
-        <div className={styles.welcomeText}>
-          <h1
-            data-slot="dashboard-welcome"
-            className="font-heading text-2xl font-semibold text-foreground"
-          >
-            {greeting}
-          </h1>
-          <p
-            data-slot="dashboard-subtext"
-            className="text-sm text-muted-foreground"
-          >
-            {buildDashboardSubtext(vm.todos.length, vm.suggestions.length)}
-          </p>
-        </div>
+        <h1
+          data-slot="dashboard-welcome"
+          className="font-heading text-2xl font-semibold text-foreground"
+        >
+          首页
+        </h1>
         <Link
           href="/projects"
           data-slot="dashboard-projects-link"
@@ -141,9 +113,10 @@ export async function DashboardPage({
       <details data-slot="studio-home-data">
         <summary>数据概况与筛选范围</summary>
         <div data-slot="studio-home-data-body">{filters}<SummaryMetrics metrics={summaryMetrics} />
-          {workspace&&<p className="text-xs text-muted-foreground">{workspace.collected?.state==='ready'?'已采集作品指所选日期内发布、已拿到数据的作品。':'暂时读不到作品数量。'} CreatorOS 已发布内容：{workspace.contentCount.toLocaleString('zh-CN')} 期 · CreatorOS 发布记录：{workspace.publicationCount.toLocaleString('zh-CN')} 条 · 待处理任务：{workspace.pendingCount.toLocaleString('zh-CN')} 项；这些只统计通过 CreatorOS 发布的内容。</p>}
-          {workspace&&vm.metrics.find(metric=>metric.id==='g-content')&&<p className="text-xs text-muted-foreground">CreatorOS 全组项目数：{vm.metrics.find(metric=>metric.id==='g-content')!.value}，不代表当前平台的作品数量。</p>}
-          {summaryMetrics.some(metric=>metric.value==='—'&&metric.id==='g-read')&&<p className="text-xs text-muted-foreground">文章阅读暂缺：当前筛选内暂无可用阅读指标。可到<Link href={`/overview${overviewQuery?'?'+overviewQuery:''}`} className="text-brand underline underline-offset-4">创作者总览</Link>查看账号绑定与采集情况。</p>}
+          {workspace&&<p className="text-xs text-muted-foreground">CreatorOS 已发布内容：{workspace.contentCount.toLocaleString('zh-CN')} 期 · CreatorOS 发布记录：{workspace.publicationCount.toLocaleString('zh-CN')} 条 · 待处理任务：{workspace.pendingCount.toLocaleString('zh-CN')} 项</p>}
+          {workspace&&vm.metrics.find(metric=>metric.id==='g-content')&&<p className="text-xs text-muted-foreground">CreatorOS 全组项目数：{vm.metrics.find(metric=>metric.id==='g-content')!.value}</p>}
+          {workspace?.collected?.state==='unavailable'&&<p className="text-xs text-muted-foreground">暂时读不到作品数量。</p>}
+          {summaryMetrics.some(metric=>metric.value==='—'&&metric.id==='g-read')&&<div className="flex flex-wrap gap-2 text-xs text-muted-foreground"><p>文章阅读暂缺</p><Link href={`/overview${overviewQuery?'?'+overviewQuery:''}`} className="text-brand underline underline-offset-4">创作者总览</Link></div>}
         </div>
       </details>
       {vm.continueCreating ? <OnboardingCard /> : null}
@@ -248,30 +221,14 @@ function ContinueCreatingCard({
             data-slot="continue-creating-empty"
             className="flex flex-col items-start gap-3 rounded-card border border-dashed border-border bg-surface-subtle px-3.5 py-6"
           >
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-foreground">
-                还没有进行中的项目
-              </p>
-              <p className="text-xs text-muted-foreground">
-                创建第一个项目,把选题变成可执行的创作流程。
-              </p>
-              {/* [T-332 S4·§6.2] 新号从零开始的引导:先定位(账号的创作方向是一切上游),
-                  数据面等首轮采集(绑号 bootstrap 自动建的任务)跑完自然充实,诚实告知。 */}
-              <p
-                data-slot="dashboard-empty-bootstrap-hint"
-                className="text-xs text-muted-foreground"
-              >
-                建议先为当前账号组
-                <Link
-                  href="/positioning"
-                  data-slot="dashboard-empty-positioning-link"
-                  className="mx-0.5 font-medium text-brand underline-offset-4 hover:underline"
-                >
-                  设置创作定位
-                </Link>
-                ;数据类卡片会在首轮采集任务跑完后自动充实。
-              </p>
-            </div>
+            <p className="text-sm font-medium text-foreground">还没有进行中的项目</p>
+            <Link
+              href="/positioning"
+              data-slot="dashboard-empty-positioning-link"
+              className="text-xs font-medium text-brand underline-offset-4 hover:underline"
+            >
+              设置创作定位
+            </Link>
             <Link
               href="/projects/new"
               data-slot="new-project-entry"
@@ -386,7 +343,7 @@ function TrendingTopicsCard({ topics }: { topics: ReadonlyArray<TopicRow> }) {
           data-slot="trending-topics-empty"
           className="rounded-control border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-xs text-muted-foreground"
         >
-          还没有热门选题。去选题池让 AI 结合你的定位与知识库生成一批。
+          还没有热门选题。
         </p>
       ) : (
       <ul
@@ -501,7 +458,7 @@ function CreationSuggestionsCard({
           data-slot="creation-suggestions-empty"
           className="rounded-control border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-xs text-muted-foreground"
         >
-          暂无创作建议。开始一个项目、发布作品后,这里会基于你的进度给下一步行动。
+          暂无创作建议。
         </p>
       ) : (
       <ul
@@ -609,32 +566,4 @@ function getProjectPlatformLabels(projectId: string): ReadonlyArray<string> {
   // [FE-M04] 只返回真实目标平台;缺失就返回空(不再伪造「多平台」)。空数组时由
   // ContinueCreatingCard 显示「未设置」中性标签,诚实反映「还没配发布平台」。
   return getProjectPlatforms(projectId);
-}
-
-function buildGreeting(
-  vm: DashboardViewModel,
-  displayName: string,
-): string {
-  const firstName = displayName.split(/\s+/)[0] ?? displayName;
-  void vm; // reserved for future variation by todos/suggestions count
-  return `早上好, ${firstName}!`;
-}
-
-/**
- * [FE-M04] 首页副标题:聚合**真实**待办(未完成任务 + 创作建议)。原实现只看
- * suggestions,todos>0 时仍谎报「所有任务都已处理完」。只有两者都为空才说「暂无」——
- * 诚实,不伪造「全部处理完」。
- */
-export function buildDashboardSubtext(
-  todoCount: number,
-  suggestionCount: number,
-): string {
-  if (todoCount + suggestionCount === 0) {
-    return "今天暂无待办与创作建议。";
-  }
-  const parts = [
-    todoCount > 0 ? `${todoCount} 项待办` : null,
-    suggestionCount > 0 ? `${suggestionCount} 条创作建议` : null,
-  ].filter(Boolean);
-  return `今天有 ${parts.join("、")}待处理。`;
 }

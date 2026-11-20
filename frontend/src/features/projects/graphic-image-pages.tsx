@@ -12,18 +12,18 @@ export function GraphicImagePages({document,selectedCardIds,onSelectionChange,on
  const cards=document.cardBriefs??[];
  const otherImages=graphicDeliveryImages(document).filter(image=>image.role!=='card'||!cards.some(card=>card.cardId===image.cardId));
  return <section aria-label="小红书图片" className="space-y-4 rounded-xl border border-border bg-surface p-4">
-  <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">小红书图片 · {cards.length} 页</h2><p className="mt-1 text-sm text-muted-foreground">根据每页内容用 AI 生成图片，预览后采用。可以只重做选中的页。</p></div>
+  <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="font-semibold">小红书图片 · {cards.length} 页</h2>
    {cards.length>0&&<Button variant="outline" disabled={disabled} onClick={()=>onSelectionChange(selectedCardIds.length===cards.length?[]:cards.map(card=>card.cardId))}>{selectedCardIds.length===cards.length?'取消全选':'选择全部页'}</Button>}
   </div>
   {!cards.length&&<p className="text-sm text-muted-foreground">先点击“重新组织内容”，让 AI 整理小红书配文和每页画面，采用规划后即可生成图片。</p>}
   <LazyDisclosure label="整组画面设置">{()=> <div className="mt-3 space-y-3">
-    <label className="block text-sm">统一视觉方向<textarea aria-label="统一视觉方向" disabled={disabled} value={document.seriesProfile?.visualDirection??''} rows={3} placeholder="描述整组要保持的人物、场景、色彩与画风" className="mt-1 w-full rounded-md border border-border bg-background p-2" onChange={event=>onChange({...document,seriesProfile:{...document.seriesProfile,visualDirection:event.target.value,aspectRatio:document.seriesProfile?.aspectRatio??''}})}/></label>
+    <label className="block text-sm">统一视觉方向<textarea aria-label="统一视觉方向" disabled={disabled} value={document.seriesProfile?.visualDirection??''} rows={3} className="mt-1 w-full rounded-md border border-border bg-background p-2" onChange={event=>onChange({...document,seriesProfile:{...document.seriesProfile,visualDirection:event.target.value,aspectRatio:document.seriesProfile?.aspectRatio??''}})}/></label>
     <label className="block text-sm">画幅比例<select aria-label="组图画幅比例" disabled={disabled} value={document.seriesProfile?.aspectRatio??''} className="mt-1 block min-h-11 w-full rounded-md border border-border bg-background px-3 sm:w-auto" onChange={event=>onChange({...document,seriesProfile:{...document.seriesProfile,visualDirection:document.seriesProfile?.visualDirection??'',aspectRatio:event.target.value}})}>
      <option value="">使用模型默认比例</option><option value="3:4">3:4 · 竖版</option><option value="2:3">2:3 · 竖版</option><option value="9:16">9:16 · 竖屏</option><option value="1:1">1:1 · 方图</option><option value="4:3">4:3 · 横版</option><option value="16:9">16:9 · 横屏</option>
      {document.seriesProfile?.aspectRatio&&!['3:4','2:3','9:16','1:1','4:3','16:9'].includes(document.seriesProfile.aspectRatio)&&<option value={document.seriesProfile.aspectRatio}>{document.seriesProfile.aspectRatio} · 已保存</option>}
     </select></label>
     <p className="text-xs text-muted-foreground">设置会先保存，再用于生成所选页；已采用的图片保持原样。模型支持的尺寸可能与所选比例不同，请在采用前核对实际画面。</p>
-    {document.seriesProfile?.referenceImage&&<div className="space-y-2"><p className="text-sm">统一参考图</p><div className="max-w-40"><GraphicImagePreview image={document.seriesProfile.referenceImage}/></div><Button variant="outline" disabled={disabled} onClick={()=>{const {referenceImage:_reference,...profile}=document.seriesProfile!;onChange({...document,seriesProfile:profile});}}>取消统一参考</Button><p className="text-xs text-muted-foreground">使用这张图片的固定版本帮助保持风格，仍需逐页检查人物和场景。</p></div>}
+    {document.seriesProfile?.referenceImage&&<div className="space-y-2"><p className="text-sm">统一参考图</p><div className="max-w-40"><GraphicImagePreview image={document.seriesProfile.referenceImage}/></div><Button variant="outline" disabled={disabled} onClick={()=>{const {referenceImage:_reference,...profile}=document.seriesProfile!;onChange({...document,seriesProfile:profile});}}>取消统一参考</Button></div>}
    </div>}</LazyDisclosure>
   <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{cards.map((card,index)=>{
    const image=document.imageUses.find(item=>item.role==='card'&&item.cardId===card.cardId);

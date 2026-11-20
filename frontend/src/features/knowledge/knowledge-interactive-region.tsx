@@ -458,18 +458,15 @@ export function KnowledgeInteractiveRegion({
                   onSubmit={handleRevisionSubmit}
                   className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-2.5"
                 >
-                  <div className="flex items-center justify-between">
-                    <label
-                      className="text-[11px] font-medium text-muted-foreground"
-                      htmlFor="knowledge-revision-content"
-                    >
-                      编辑正文(保存为新版本,旧版本保留可追溯)
-                    </label>
-                  </div>
+                  <label
+                    className="text-[11px] font-medium text-muted-foreground"
+                    htmlFor="knowledge-revision-content"
+                  >
+                    编辑正文
+                  </label>
                   <textarea
                     id="knowledge-revision-content"
                     data-slot="knowledge-revision-content"
-                    placeholder="就地修改这条知识的正文…"
                     value={revisionContent}
                     onChange={(event) => setRevisionContent(event.target.value)}
                     rows={12}
@@ -1046,7 +1043,7 @@ function CategoryPanel({
 }) {
   return (
     <div data-slot="category-panel">
-      <KnowledgeOrganizerSection title="知识分类" description="按类型组织">
+      <KnowledgeOrganizerSection title="知识分类">
         <ul
           data-slot="category-list"
           className="flex flex-col gap-0.5"
@@ -1238,7 +1235,6 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
     // (taxonomy.entityTags.remove)。写侧三 op 的首个前端消费者。
     <KnowledgeOrganizerSection
       title="热门标签"
-      description="使用频率最高的标签"
       action={<KnowledgeTagManager />}
     >
       <ul
@@ -1281,7 +1277,7 @@ function MemoryInsights({
   items: ReadonlyArray<KnowledgeInsight>;
 }) {
   return (
-    <KnowledgeOrganizerSection title="记忆洞察" description="系统从知识库中提炼的要点">
+    <KnowledgeOrganizerSection title="记忆洞察">
       {items.length === 0 ? <p className="text-sm text-muted-foreground">暂无已验证的洞察</p> : null}
       <ul
         data-slot="memory-insights"
@@ -1312,7 +1308,7 @@ function UnsortedItems({
   items: ReadonlyArray<KnowledgeUnsorted>;
 }) {
   return (
-    <KnowledgeOrganizerSection title="未整理" description="尚未归类的知识条目">
+    <KnowledgeOrganizerSection title="未整理">
       <ul
         data-slot="unsorted-items"
         className="flex flex-col gap-0.5"
@@ -1350,7 +1346,7 @@ function ReusableSnippets({
   items: ReadonlyArray<KnowledgeSnippet>;
 }) {
   return (
-    <KnowledgeOrganizerSection title="可复用片段" description="快速插入到脚本的模板">
+    <KnowledgeOrganizerSection title="可复用片段">
       <ul
         data-slot="reusable-snippets"
         className="flex flex-col gap-1.5"
@@ -1384,7 +1380,7 @@ function ReusableSnippets({
 
 /** 整理侧栏的平面分区，避免卡片再套卡片。 */
 function KnowledgeOrganizerSection({ title, action, children }: {
-  title: string; description?: string; action?: React.ReactNode; children: React.ReactNode;
+  title: string; action?: React.ReactNode; children: React.ReactNode;
 }) {
   return <section className="border-b border-border pb-4 last:border-b-0 last:pb-0">
     <div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">{title}</h3>{action}</div>

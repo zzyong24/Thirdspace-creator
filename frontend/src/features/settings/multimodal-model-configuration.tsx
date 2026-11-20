@@ -39,41 +39,32 @@ const MULTIMODAL_META = {
     capability: "image.generate" as const,
     title: "图片生成与编辑模型",
     icon: Palette,
-    description:
-      "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
     // [T-379] openai = OpenAI 兼容 images API。
     providerSuggestions: ["openai", "minimax"] as ReadonlyArray<string>,
-    providerPlaceholder: "openai",
     providerHelp:
       "内置适配：MiniMax / OpenAI 兼容图片接口。其他接口需要对应适配能力。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
     modelHelp:
       "文生图模型 id 自由填(示例:gpt-image-2 / image-01;仅示例,以你的服务商最新型号为准)。",
-    modelPlaceholder: "示例:gpt-image-2(以服务商最新为准)",
     baseUrlPlaceholder:
       "示例：https://api.example.com/v1（留空使用默认地址）",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   imageEdit: {
     capability: "image.edit" as const,title: "独立编辑配置",icon: Palette,
-    description: "默认复用图片生成配置。仅需独立编辑接口时填写；已有独立配置保持。",
-    providerSuggestions: ["openai"] as ReadonlyArray<string>,providerPlaceholder: "openai",
+    providerSuggestions: ["openai"] as ReadonlyArray<string>,
     providerHelp: "使用已接入的 OpenAI 兼容图片编辑接口。",modelHelp: "填写服务商支持图片编辑的准确模型 ID。",
-    modelPlaceholder: "",baseUrlPlaceholder: "https://api.example.com/v1",disabledHint: "未配置时编辑状态由真实兼容配置核验。",
+    baseUrlPlaceholder: "https://api.example.com/v1",disabledHint: "未配置时编辑状态由真实兼容配置核验。",
   },
   video: {
     capability: "video.generate" as const,
     title: "文生视频模型",
     icon: Cpu,
-    description:
-      "录制阶段 AI 生成视频素材用;不配则录制页「AI 生成视频」禁用。",
     providerSuggestions: ["seedance", "minimax"] as ReadonlyArray<string>,
-    providerPlaceholder: "seedance",
     providerHelp:
       "支持已接入的视频生成接口；旧配置中的 seedance / seeddance 会自动兼容。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
     modelHelp: "文生视频模型 id 自由填(示例:seedance/seedance-2.0-fast / MiniMax-H3;以服务商控制台为准)。",
-    modelPlaceholder: "示例:seedance/seedance-2.0-fast 或 MiniMax-H3",
     baseUrlPlaceholder: "示例：https://api.example.com/media/v1（MiniMax 留空使用官方地址）",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
@@ -83,15 +74,11 @@ const MULTIMODAL_META = {
     capability: "transcribe.audio" as const,
     title: "语音转文字（建议配置）",
     icon: Cpu,
-    description:
-      "建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。",
     providerSuggestions: ["qwen-asr", "xiaomi-mimo", "siliconflow", "openai", "groq"] as ReadonlyArray<string>,
-    providerPlaceholder: "xiaomi-mimo",
     providerHelp:
       "预设会自动填写；只有自建中转或其他厂商才需要修改。",
     modelHelp:
       "填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。",
-    modelPlaceholder: "mimo-v2.5-asr",
     baseUrlPlaceholder:
       "https://api.xiaomimimo.com/v1",
     disabledHint:
@@ -104,14 +91,10 @@ const MULTIMODAL_META = {
     capability: "knowledge.search.embed" as const,
     title: "语义搜索模型",
     icon: Cpu,
-    description:
-      "知识库 AI 搜索用(embedding 语义召回);不配则搜索为纯关键词匹配。",
     providerSuggestions: ["siliconflow", "openai"] as ReadonlyArray<string>,
-    providerPlaceholder: "siliconflow",
     providerHelp:
       "OpenAI 兼容 embedding 厂商,可自定义(SiliconFlow / OpenAI 同形状)。",
     modelHelp: "embedding 模型 id,如 BAAI/bge-m3(SiliconFlow)。",
-    modelPlaceholder: "BAAI/bge-m3",
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 知识库搜索为纯关键词。",
   },
@@ -121,13 +104,9 @@ const MULTIMODAL_META = {
     capability: "asset.classify" as const,
     title: "素材归类模型",
     icon: Cpu,
-    description:
-      "倾倒场素材 AI 归类用(视觉模型看图打标签+描述);不配则只按文件名/类型归类。",
     providerSuggestions: ["siliconflow", "openai", "minimax"] as ReadonlyArray<string>,
-    providerPlaceholder: "siliconflow",
     providerHelp: "OpenAI 兼容视觉模型厂商,可自定义。",
     modelHelp: "视觉模型 id,如 Qwen/Qwen2.5-VL-72B-Instruct(SiliconFlow)。",
-    modelPlaceholder: "",
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 素材归类只跑确定性第一层。",
   },
@@ -138,15 +117,11 @@ const MULTIMODAL_META = {
     capability: "web.search" as const,
     title: "联网搜索",
     icon: Cpu,
-    description:
-      "素材搜集(找素材/搜资料)前置真联网检索用;不配则素材来自模型训练记忆、来源需核实。rss / browser 免 key。",
     providerSuggestions: ["rss", "browser", "bocha", "tavily", "serpapi"] as ReadonlyArray<string>,
-    providerPlaceholder: "rss",
     providerHelp:
       "免 key:rss(baseUrl 填 RSS/Atom feed 网址,逗号分隔多个)/ browser(真开无头浏览器搜 Bing,自截图存证,较慢较脆弱)。付费需 key:bocha(博查,中文优)/ tavily / serpapi。任意模型都能真联网。",
     modelHelp:
       "多数搜索无「模型」概念可留空;serpapi 用它当 engine(默认 google,可填 bing 等);rss/browser 留空。",
-    modelPlaceholder: "",
     baseUrlPlaceholder:
       "rss=feed URL(逗号分隔);browser=搜索 URL 模板(留空=Bing,{q} 占位查询词);留空=provider 默认(bocha=api.bochaai.com 等)",
     disabledHint: "未配 → 素材来自模型记忆,标注需核实。",
@@ -159,13 +134,9 @@ const MULTIMODAL_META = {
     capability: "chat.fallback" as const,
     title: "备用对话模型",
     icon: Cpu,
-    description:
-      "主对话模型故障(限流/服务端错误/网络断)自动重试仍失败时,由它接管本轮;建议配与主模型不同厂商的模型(故障不同时发生)。不配则重试耗尽后直接报错。",
     providerSuggestions: ["anthropic", "minimax", "deepseek", "openai"] as ReadonlyArray<string>,
-    providerPlaceholder: "anthropic",
     providerHelp: "任意厂商名,可自定义(建议与主模型不同厂商,故障不同时发生)。",
     modelHelp: "模型 id 自由填(示例:claude-opus-4-8 / deepseek-chat;仅示例,以你的服务商最新型号为准)。",
-    modelPlaceholder: "",
     baseUrlPlaceholder: "https://api.anthropic.com(留空=provider 默认)",
     disabledHint: "未配 → 主模型重试耗尽后直接报错。",
   },
@@ -392,7 +363,6 @@ export function MultimodalModelCard({
   return (
     <SectionCard
       title={meta.title}
-      description={meta.description}
       action={
         state.hasSecret ? (
           <Badge
@@ -433,7 +403,6 @@ export function MultimodalModelCard({
           <SettingsFormRow
             label="ASR 供应商"
             controlId="multimodal-audio-preset"
-            help="Qwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。"
           >
             <Select
               value={asrPresetId}
@@ -487,7 +456,6 @@ export function MultimodalModelCard({
               list={providerListId}
               value={provider}
               disabled={pending}
-              placeholder={meta.providerPlaceholder}
               onChange={(event) => {
                 const next = event.target.value;
                 setProvider(next);
@@ -513,7 +481,6 @@ export function MultimodalModelCard({
             list={isFallback ? `multimodal-${kind}-model-suggestions` : undefined}
             value={modelName}
             disabled={pending}
-            placeholder={meta.modelPlaceholder}
             onChange={(event) => setModelName(event.target.value)}
             aria-label={`${meta.title}名称`}
           />
@@ -558,7 +525,6 @@ export function MultimodalModelCard({
           <SettingsFormRow
             label="接口格式"
             controlId={`multimodal-${kind}-api-format`}
-            help="鉴权与请求体格式(与主模型卡同义)。"
           >
             <Select
               value={apiFormat}
@@ -606,7 +572,6 @@ export function MultimodalModelCard({
               data-slot={`multimodal-${kind}-secret-input`}
               value={secret}
               disabled={pending}
-              placeholder={state.hasSecret ? "已配置(留空不变)" : "粘贴 API Key"}
               onChange={(event) => setSecret(event.target.value)}
               aria-label={`${meta.title}密钥`}
             />

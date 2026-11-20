@@ -233,7 +233,6 @@ export function CliAccessCard() {
         <section aria-labelledby="workbuddy-mcp-heading" className="rounded-lg border border-border p-4 text-sm">
           <h3 id="workbuddy-mcp-heading" className="font-medium text-foreground">WorkBuddy 外部工具接入</h3>
           <p className="mt-2 leading-6 text-muted-foreground">
-            在 WorkBuddy 的 MCP 管理中添加 CreatorOS，让其对话使用本产品的项目、稿件与素材工具。
             首次信任和工具调用需在 WorkBuddy 中确认；这里不会修改你的 WorkBuddy 配置或选择应用内引擎。
           </p>
           {canTransfer ? (

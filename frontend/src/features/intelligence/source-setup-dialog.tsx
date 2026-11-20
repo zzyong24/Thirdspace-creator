@@ -386,9 +386,7 @@ export function AddSourceDialog({
       <DialogContent className="max-h-[min(90vh,760px)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>添加真实来源</DialogTitle>
-          <DialogDescription>
-            主页、网页和收藏夹先真实验证再保存；博主主页也可在未登录时先保存，登录后再同步。逐字稿不会自动生成。
-          </DialogDescription>
+          <DialogDescription>只收录公开作品和计数，不采集评论正文。</DialogDescription>
         </DialogHeader>
         <div
           data-testid="source-type-choices"
@@ -463,11 +461,6 @@ export function AddSourceDialog({
                 </option>
               ))}
             </select>
-            <span>
-              {type === "creator_profile"
-                ? "用所选账号的登录态读取作品。未登录抖音也可以先保存主页，登录并关联账号后再同步作品。"
-                : "用当前组所选真实账号的登录态采集，内容归当前组。未绑定账号仍可添加公开网页或 RSS。"}
-            </span>
           </label>
         ) : null}
         {type === "favorites_folder" ? (
@@ -493,9 +486,6 @@ export function AddSourceDialog({
               }}
               placeholder="与抖音收藏夹同名，例如：选题库"
             />
-            <span>
-              可直接输入准确名称；也可以读取所选账号后，从下方列表选择。
-            </span>
           </label>
         ) : null}
         {type === "favorites_folder" && folders.length > 0 ? (
@@ -544,15 +534,17 @@ export function AddSourceDialog({
           />
         ) : null}
         {type === "web" || type === "rss" ? (
-          <Input
-            aria-label="监控说明"
-            value={instruction}
-            onChange={(event) => {
-              setInstruction(event.target.value);
-              resetVerification();
-            }}
-            placeholder="例如：只关注 AI 产品更新（会进入真实抽取规则）"
-          />
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            监控说明
+            <Input
+              aria-label="监控说明"
+              value={instruction}
+              onChange={(event) => {
+                setInstruction(event.target.value);
+                resetVerification();
+              }}
+            />
+          </label>
         ) : null}
         <Input
           aria-label="来源显示名称"
