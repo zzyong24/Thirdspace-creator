@@ -38,9 +38,9 @@ describe("视频作品稿面归属", () => {
     expect(api.listArtifactVersions).not.toHaveBeenCalled();
   });
 
-  it("视频作品卡进入具体 output 路由", () => {
+  it("历史视频作品卡返回所在项目的稿面", () => {
     expect(workDestination("project", { id: "output-b", title: "B", contentType: "video" }))
-      .toBe("/projects/project/outputs/output-b/video");
+      .toBe("/projects/project");
   });
 
   it("真实能力支持时自动提交该 output 的脚本，来源 ID 一并传入", async () => {

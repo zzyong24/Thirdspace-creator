@@ -39,20 +39,19 @@ describe("resolveRoute", () => {
     expect(res.primaryActionLabel).toBe("导出报告");
   });
 
-  it("[T-254c] production 路由映射进「制作视频」段(脚本 completed,复盘 pending)", () => {
+  it("[T-1464] 历史 production 路由打开脚本导航，复盘等待进入", () => {
     const res = resolveRoute("/projects/ai-native-browser/production");
     expect(res.headerMode).toBe("project-workspace");
-    expect(res.projectStages?.[0]?.status).toBe("pending");
-    expect(res.projectStages?.[1]?.status).toBe("in_progress");
-    expect(res.projectStages?.[2]?.status).toBe("pending");
-    // 制作视频段不渲阶段跳转主行动(可执行入口都在 tab 内)。
+    expect(res.projectStages?.map(({ id, status }) => ({ id, status }))).toEqual([
+      { id: "script", status: "in_progress" },
+      { id: "review", status: "pending" },
+    ]);
     expect(res.primaryActionLabel).toBeUndefined();
   });
 
   it("[T-075] 项目根路由(稿面)与阶段页同一套 project-workspace 阶段条(双导航收敛)", () => {
     const res = resolveRoute("/projects/ai-native-browser");
     expect(res.headerMode).toBe("project-workspace");
-    // [T-076] 6 项 → 2 项;[T-254c] 制作视频段复活 → 3 项(脚本 | 制作视频 | 复盘)。
     expect(res.projectStages?.map(s => s.id)).toEqual(["script", "review"]);
   });
 

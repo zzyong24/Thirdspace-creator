@@ -68,7 +68,7 @@ jobs:
   # fail-fast=false：某片失败仍执行其余片，所有原包与质量守卫保留。
   unit:
     name: 单测 ${{ matrix.package }} (${{ matrix.shard }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # 实测依赖准备已约 40 分钟、完整分片约 25 分钟；总预算另含诊断与证据上传。
     # 只调整 job 外层预算，保留原用例超时、完整套件与运行异常门禁。
     timeout-minutes: 90
