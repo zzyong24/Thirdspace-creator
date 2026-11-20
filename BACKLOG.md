@@ -6,6 +6,9 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1493|本地打包并替换当前 macOS 安装|✅|—|—|[SPEC](docs/features/t1493-local-macos-preview.md)|跳过官网验收，从当前源码出本机预览包，移除旧应用并用新包启动，保留用户数据。|
+|T-1492|放大编导生成过程与采纳内容的可读区域|✅|—|—|[SPEC](docs/features/t1492-director-reading-layout.md)|调整项目编导已有过程详情与候选的空间和滚动，保留现有操作与流程。|
+|T-1491|修复项目转写文章混入模型思考|✅|—|—|[SPEC](docs/features/t1491-transcription-article-body.md)|仅清理转写整理与已确认脚本生成文章时混入成稿的模型思考，保留入口、参数、预览、采纳和导出。|
 |T-1440|GitHub项目首页视觉与产品介绍更新|✅|—|—|[SPEC](docs/features/t1440-github-product-readme.md)|参考OpenMausBot，以真实截图、视频和清楚的产品入口重做README，保留开发指引及商业授权边界。|
 |T-1439|官网权益说明与产品演示视频|✅|—|—|[SPEC](docs/features/t1439-website-rights-video.md)|两站讲清分销和源码共创，在官网嵌入真实视频并完善购买引导。|
 |T-1438|释放编译产物与闲置worktree占用|✅|—|—|[SPEC](docs/features/t1438-storage-cleanup.md)|用户授权清理编译与worktree，保留源码、未提交内容及最新双端安装包。|

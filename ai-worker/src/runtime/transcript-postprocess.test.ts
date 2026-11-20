@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { runTranscriptPostprocessRuntime } from './transcript-postprocess';
+import { checkTranscriptFidelity, runTranscriptPostprocessRuntime } from './transcript-postprocess';
 const fixture = vi.hoisted(() => ({model: {}, node: vi.fn(), modelFor: vi.fn()}));
 vi.mock('./provider-factory', () => ({modelFor: fixture.modelFor.mockImplementation(() => fixture.model)}));
 vi.mock('../nodes/structured-node', () => ({runStructuredNode: fixture.node}));
@@ -26,4 +26,11 @@ describe('后处理默认执行路径', () => {
   expect(fixture.modelFor).not.toHaveBeenCalled();
  });
 
+});
+it("保真校验拒绝模型添加的思考包装，并保留说话人真实原话", () => {
+  const original = "让我先讲个例子。接下来我会去取书。" + "收到通知后，先核对地点，再确认截止时间。".repeat(20);
+  expect(checkTranscriptFidelity(original, original).ok).toBe(true);
+  expect(checkTranscriptFidelity(original, `<think>排一下顺序</think>${original}`).ok).toBe(false);
+  expect(checkTranscriptFidelity(original, `分析如下：先整理识别结果。\n\n${original}`).ok).toBe(false);
+  expect(checkTranscriptFidelity(original, `接下来，我会先整理。\n\n${original}`).ok).toBe(false);
 });

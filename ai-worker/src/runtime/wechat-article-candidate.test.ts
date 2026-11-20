@@ -24,6 +24,26 @@ function proposal() {
     proposedVisualBriefs:[{sectionId:"section-1",brief:"展示作品与账号的关系示意"}],sourceRefs:[source],
   };
 }
+it("由项目脚本生成的文章候选只保留可采纳的成稿", () => {
+  const ref = {kind: "project_script" as const, id: "script-1", versionId: "script-v1"};
+  const raw = input();
+  raw.sourceRefs.push(ref);
+  raw.sourceMaterials.push({ref, label: "已保存脚本", text: "收到通知后，先核对取书地点。"});
+  const draft = proposal();
+  const section = draft.proposedSections[0]!;
+  const body = '收到通知后，先核对取书地点。\n\n读者说：“接下来我会去取书。”';
+  const polluted = {...draft,
+    proposedSummary: '<reasoning>先检查长度</reasoning>方法与边界。',
+    proposedSections: [{...section, body: `分析如下：\n让我先梳理素材里的时间顺序。\n\n${body}\n\n<chain-of-thought>继续找结尾`},
+      {...section, sectionId: 'reasoning-only', order: 1, body: '<think>这是整段模型思考</think>'}],
+    proposedVisualBriefs: [{sectionId: 'reasoning-only', brief: '随污染段一并丢弃'}],
+  };
+  expect(validateWechatArticleCandidate(polluted, raw)).toMatchObject({
+    proposedSummary: '方法与边界。',
+    proposedSections: [{...section, body}],
+    proposedVisualBriefs: [],
+  });
+});
 describe("wechat article method", () => {
   it("作品互转的严格历史选区来源进入结构候选，改选区摘要不能冒充原来源",()=>{
     const ref={kind:"output_version" as const,sourceOutputId:"video",artifactId:"script",versionId:"saved",

@@ -8,6 +8,7 @@ import {useProjectPreparation} from "@/features/draft-workbench/project-preparat
 import {useDraftChatRequest} from "@/features/draft-workbench/draft-chat-request";
 
 const FIELDS=[['targetAudience','目标观众'],['contentGoal','内容目标'],['contentFormat','内容形式'],['coreMessage','核心信息'],['durationEstimate','预估时长'],['successCriteria','成功标准']] as const;
+const candidateBody = "min-w-0 max-h-[var(--director-candidate-body,20rem)] overflow-y-auto pr-2 whitespace-pre-wrap text-sm leading-6 [overflow-wrap:anywhere]";
 export interface PreparationCardProps {candidate:ProjectPreparationCandidate;projectId:string;current?:Record<string,unknown>|null}
 
 export function ProjectPreparationCandidateCard({candidate,projectId,current}:PreparationCardProps){
@@ -30,13 +31,13 @@ export function ProjectPreparationCandidateCard({candidate,projectId,current}:Pr
     }catch(error){setMessage(error instanceof Error?error.message:"采纳未完成，请核对原回执。");}
     finally{flight.current=false;setPending(false);}
   };
-  return <div data-slot="preparation-candidate-card" data-candidate-id={candidate.id} className="mb-3 rounded-card border border-border bg-surface p-3">
+  return <div data-slot="preparation-candidate-card" data-candidate-id={candidate.id} className="min-w-0 shrink-0 rounded-card border border-border bg-surface p-3">
     <h3 className="text-sm font-semibold">{candidate.kind==="brief"?"资料补全候选":"初稿候选"} · {accepted?"已采纳":"待采纳"}</h3>
     {accepted?<p role="status" className="mt-2 text-sm text-success">已取得采纳回执，正式内容由服务端保存。</p>:null}
     {candidate.contentError?<p role="alert" className="mt-2 text-sm text-destructive">{candidate.contentError}</p>:null}
     {!accepted&&content?<Button type="button" size="sm" variant="ghost" aria-expanded={expanded} onClick={()=>setExpanded(value=>!value)}>{expanded?"收起候选":"展开候选"}</Button>:null}
-    {expanded&&content?.kind==="draft"?<p className="max-h-80 overflow-auto whitespace-pre-wrap break-words text-sm leading-6">{content.text}</p>:null}
-    {expanded&&content?.kind==="brief"?<div className="max-h-80 overflow-auto"><table className="w-full text-left text-xs"><thead><tr><th>字段</th><th>现值</th><th>建议值</th></tr></thead><tbody>{FIELDS.map(([field,label])=><tr key={field} className="border-t border-border align-top"><th className="py-2 pr-2 font-medium">{label}</th><td className="max-w-40 whitespace-pre-wrap break-words py-2 pr-2">{typeof current?.[field]==="string"?String(current[field])||"未填":"未填"}</td><td className="max-w-40 whitespace-pre-wrap break-words py-2 text-brand">{typeof content.briefDetail[field]==="string"?String(content.briefDetail[field])||"未填":"未填"}</td></tr>)}</tbody></table></div>:null}
+    {expanded&&content?.kind==="draft"?<p className={candidateBody} tabIndex={0}>{content.text}</p>:null}
+    {expanded&&content?.kind==="brief"?<div className={candidateBody} tabIndex={0}><table className="w-full table-fixed text-left"><thead><tr><th className="w-1/5">字段</th><th>现值</th><th>建议值</th></tr></thead><tbody>{FIELDS.map(([field,label])=><tr key={field} className="border-t border-border align-top"><th className="py-2 pr-2 font-medium">{label}</th><td className="py-2 pr-2">{typeof current?.[field]==="string"?String(current[field])||"未填":"未填"}</td><td className="py-2 text-brand">{typeof content.briefDetail[field]==="string"?String(content.briefDetail[field])||"未填":"未填"}</td></tr>)}</tbody></table></div>:null}
     {!accepted&&content&&candidate.baseline&&!candidate.contentError&&candidate.status==="pending"?<Button type="button" className="mt-2" size="sm" disabled={pending||state?.busy||!state} onClick={()=>void adopt()}>{pending?"采纳中…":candidate.kind==="brief"?"采纳资料补全":"采纳初稿"}</Button>:null}
     {message?<p role={accepted?"status":"alert"} className="mt-2 text-sm">{message}</p>:null}
   </div>;

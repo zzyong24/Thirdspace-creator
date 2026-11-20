@@ -89,12 +89,14 @@ async function frozen(f:Awaited<ReturnType<typeof fixture>>,v2=false){
 import {createWorkCandidateSourceService} from '../../modules/ai/work-candidate-source.service';
 import {createWorkCandidateAdoption} from './work-candidate-adoption';
 import {workAdoptionDigest} from './work-candidate-projection';
-async function proposeFixture(v2=false){const f=await fixture(),chat=await frozen(f,v2),read=await f.root.read(f.ctx,f.target),input=candidate(f,read);input.article.factItems=[{id:'candidate-fact',text:'预算200元',sourceRefs:[f.target.scriptSourceRef],reviewState:'confirmed'}] as never;
- const request={turnCallId:chat.turn.callId,toolCallId:'original-proposal',toolName:'work.creation.propose',input};
+async function proposeFixture(v2=false,polluted=false){const f=await fixture(),chat=await frozen(f,v2),read=await f.root.read(f.ctx,f.target),input=candidate(f,read);input.article.factItems=[{id:'candidate-fact',text:'预算200元',sourceRefs:[f.target.scriptSourceRef],reviewState:'confirmed'}] as never;
+ const raw=structuredClone(input);
+ if(polluted)raw.article.sections[0]!.body=`<reasoning>检查脚本里的步骤</reasoning>\n\n${raw.article.sections[0]!.body}`;
+ const request={turnCallId:chat.turn.callId,toolCallId:'original-proposal',toolName:'work.creation.propose',input:raw};
  const result=await chat.external.execute(chat.ref,request,chat.tools,chat.signal);expect(result.status).toBe('settled');
  const reader=createWorkCandidateSourceService(f.db),query={conversationId:chat.conversation.id,sourceMessageId:chat.input.sourceMessageId,toolCallId:request.toolCallId};
  const source=await reader.read(f.ctx,query);return {f,chat,input,request,result,reader,query,source};}
-it.each([false,true])('写作v2=%s 原source→assisted公共运输→两个原owner独立版本与receipt，采纳model delta0',async v2=>{const p=await proposeFixture(v2),f=p.f;const adapter=createWorkCandidateAdoption(f.db,{source:p.reader,articles:store=>f.ownersFor(store).articles,graphic:store=>f.ownersFor(store).graphicPosts,lockArtifact:(ctx,id,store)=>f.artifactsFor(store).getArtifact(ctx,id,true)});
+it.each([false,true])('写作v2=%s 原source→assisted公共运输→两个原owner独立版本与receipt，采纳model delta0',async v2=>{const p=await proposeFixture(v2,true),f=p.f;const adapter=createWorkCandidateAdoption(f.db,{source:p.reader,articles:store=>f.ownersFor(store).articles,graphic:store=>f.ownersFor(store).graphicPosts,lockArtifact:(ctx,id,store)=>f.artifactsFor(store).getArtifact(ctx,id,true)});
  const articleBody={adoptionMode:'assistant' as const,expectedCurrentVersionId:f.target.articleMember.baseVersionId,assistantSource:p.source.assistantSource,fieldSelection:[],policyVersion:1 as const,clientRequestId:'article-user-adopt',factSelection:{mode:'keep' as const}};
  const graphicBody={adoptionMode:'assistant' as const,expectedCurrentVersionId:f.target.graphicMember.baseVersionId,assistantSource:p.source.assistantSource,fieldSelection:[],policyVersion:1 as const,clientRequestId:'graphic-user-adopt'};
  const before=await f.db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,p.chat.ref.executionTaskId));

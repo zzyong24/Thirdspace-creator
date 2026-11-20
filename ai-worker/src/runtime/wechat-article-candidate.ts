@@ -1,6 +1,7 @@
 import { z } from "zod";
-import {outputConversionContext,articleDocument,projectImageSource} from "@creatoros/contract";
+import {outputConversionContext,articleDocument,projectImageSource,type ArticleDocument} from "@creatoros/contract";
 import { bindPrompt } from "../prompt/template";
+import { stripGeneratedReasoning } from "./generated-reasoning";
 import {
   WECHAT_ARTICLE_DRAFT_TEMPLATE,
   WECHAT_ARTICLE_METHOD,
@@ -41,6 +42,27 @@ export const wechatArticleMethodInputSchema = z.object({
 
 export type WechatArticleMethodInput = z.input<typeof wechatArticleMethodInputSchema>;
 
+/** 联合创作在候选展示和采纳回执核验中使用同一正文投影。 */
+export function cleanGeneratedArticle(article: ArticleDocument): ArticleDocument {
+  const removed = new Set<string>();
+  const sections = article.sections.flatMap(section => {
+    const body = stripGeneratedReasoning(section.body);
+    if (body !== section.body && !body.trim()) {
+      removed.add(section.sectionId);
+      return [];
+    }
+    return [{...section, body, heading: stripGeneratedReasoning(section.heading)}];
+  });
+  return {
+    ...article,
+    title: stripGeneratedReasoning(article.title),
+    summary: stripGeneratedReasoning(article.summary),
+    sections,
+    visualBriefs: article.visualBriefs.filter(brief => !removed.has(brief.sectionId)),
+    imageUses: article.imageUses.filter(image => !removed.has(image.sectionId)),
+  };
+}
+
 function refKey(ref: z.infer<typeof articleSourceRefSchema>): string {
   return JSON.stringify(["output_version", "moments_version", "work_basis_version"].includes(ref.kind) ? ref : [ref.kind, "id" in ref ? ref.id : undefined, ref.versionId]);
 }
@@ -67,11 +89,7 @@ export function validateWechatArticleCandidate(raw: unknown, inputRaw: unknown):
        (!request.targetFields.includes("summary") && (candidate.proposedSummary!=="" || candidate.proposedSummarySourceRefs.length)) ||
        (!request.targetFields.includes("sections") && (candidate.proposedSections.length || candidate.proposedFactItems.length || candidate.proposedVisualBriefs.length)))
       throw new Error("ARTICLE_CONVERSION_FIELD_UNAUTHORIZED");
-    if((request.targetFields.includes("title") && !candidate.proposedTitle.trim()) ||
-       (request.targetFields.includes("summary") && !candidate.proposedSummary.trim()) ||
-       (request.targetFields.includes("sections") && !candidate.proposedSections.length))throw new Error("ARTICLE_CONVERSION_FIELD_MISSING");
-  }else if(!candidate.proposedTitle.trim() || !candidate.proposedSummary.trim() || !candidate.proposedSections.length)
-    throw new Error("ARTICLE_WHOLE_CANDIDATE_INCOMPLETE");
+  }
   const allowed = new Set(input.sourceRefs.map(refKey));
   const assertRefs = (refs: WechatArticleCandidate["sourceRefs"]) => {
     for (const ref of refs) if (!allowed.has(refKey(ref))) throw new Error("ARTICLE_SOURCE_REF_UNBOUND");
@@ -105,6 +123,25 @@ export function validateWechatArticleCandidate(raw: unknown, inputRaw: unknown):
     briefs.add(brief.sectionId);
     if((input.imageLibrary!==undefined&&brief.proposedAssetId!==undefined&&!brief.proposedAssetFileId)||
        (brief.proposedAssetFileId!==undefined&&!(input.imageLibrary??[]).some(image=>image.assetId===brief.proposedAssetId&&image.assetFileId===brief.proposedAssetFileId)))throw new Error("ARTICLE_IMAGE_PAIR_UNBOUND");
+  }
+  const script = input.sourceMaterials.find(source => source.ref.kind === "project_script");
+  if (script) {
+    const clean = (text: string) => stripGeneratedReasoning(text, script.text);
+    if (!preserveTitle) candidate.proposedTitle = clean(candidate.proposedTitle);
+    if (!preserveSummary) candidate.proposedSummary = clean(candidate.proposedSummary);
+    candidate.proposedSections = candidate.proposedSections
+      .map(section => ({...section, heading: clean(section.heading), body: clean(section.body)}))
+      .filter(section => section.body)
+      .map((section, order) => ({...section, order, heading: section.heading || "正文"}));
+    const retained = new Set(candidate.proposedSections.map(section => section.sectionId));
+    candidate.proposedVisualBriefs = candidate.proposedVisualBriefs.filter(brief => retained.has(brief.sectionId));
+  }
+  if (request?.mode === "selected") {
+    if ((request.targetFields.includes("title") && !candidate.proposedTitle.trim()) ||
+        (request.targetFields.includes("summary") && !candidate.proposedSummary.trim()) ||
+        (request.targetFields.includes("sections") && !candidate.proposedSections.length)) throw new Error("ARTICLE_CONVERSION_FIELD_MISSING");
+  } else if (!candidate.proposedTitle.trim() || !candidate.proposedSummary.trim() || !candidate.proposedSections.length) {
+    throw new Error("ARTICLE_WHOLE_CANDIDATE_INCOMPLETE");
   }
   return candidate;
 }

@@ -73,5 +73,5 @@ sourceRefs 只完整复制 article_context_json 中列出的真实引用对象�
 
 imageLibrary 是本次冻结的真实已有图片目录。按每段正文、事实、视觉简报与图片原名/真实描述理解语义，为合适段落自动提出配图；禁止靠图片顺序或机械关键词匹配，禁止随便选第一张。每个 proposedVisualBriefs 可选 proposedAssetId/proposedAssetFileId，必须完整复制同一目录项的 exact pair。没有匹配可省略两项，图片目录为空或不可读仍应产出合法正文；未匹配不能假称已配图。已有 imageUses 的段落保留原图，不默认换图。
 
-只输出符合结构化协议的 JSON 对象：proposedTitle、proposedTitleSourceRefs、proposedSummary、proposedSummarySourceRefs、proposedFactItems、proposedSections、proposedVisualBriefs、sourceRefs。不要输出文章产物 ID、候选 ID、账户 ID 或发布状态。`,
+只输出符合结构化协议的 JSON 对象：proposedTitle、proposedTitleSourceRefs、proposedSummary、proposedSummarySourceRefs、proposedFactItems、proposedSections、proposedVisualBriefs、sourceRefs。不要输出文章产物 ID、候选 ID、账户 ID 或发布状态。若来源含已保存主脚本，前述写作与审读步骤仅在内部执行。标题、摘要、段落标题和正文只填写可直接发表的文章内容，省略思考标签、推理步骤和生成过程说明，保留素材中有意义的真实引语。`,
 };

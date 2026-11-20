@@ -6,6 +6,7 @@ import type {GraphicPostsService} from '../../modules/graphic-posts';
 import type {createProjectScriptSource} from '../project-script-source';
 import {canonicalJson} from '../../modules/ai/canonical-json';
 import {ChatToolUserError} from '../../modules/ai-runtime/chat-tool-errors';
+import {cleanGeneratedArticle} from '@creatoros/ai-worker/wechat-article-candidate';
 
 export interface WorkCreationPorts {
  compositions:Pick<WorkCompositionsService,'get'>;
@@ -55,7 +56,9 @@ export function createWorkCreationRoot(ports:WorkCreationPorts){
   if(new Set(proposal.article.sections.map(section=>section.sectionId)).size!==proposal.article.sections.length)conflict('文章段落ID重复。');
   const files=[...proposal.article.imageUses,...(proposal.article.coverImageUse?[proposal.article.coverImageUse]:[]),...proposal.graphic.imageUses,...(proposal.graphic.seriesProfile?.referenceImage?[proposal.graphic.seriesProfile.referenceImage]:[])];
   for(const file of files)if(!current.images.some(image=>image.assetId===file.assetId&&image.assetFileId===file.assetFileId))conflict('候选包含未在当前素材目录核验的图片文件。');
-  return workCreationProposalResult.parse({kind:'work.creation.propose',schemaVersion:1,target:current.target,targetDigest:current.targetDigest,article:proposal.article,graphic:proposal.graphic,articleDigest:fingerprint(proposal.article),graphicDigest:fingerprint(proposal.graphic),scriptSourceRef:current.scriptSourceRef,error:null});
+  const article=cleanGeneratedArticle(proposal.article);
+  if(proposal.article.sections.some(section=>section.body.trim())&&!article.sections.some(section=>section.body.trim()))throw new ChatToolUserError('文章候选只有生成过程，没有可采纳的正文。请直接输出成稿。');
+  return workCreationProposalResult.parse({kind:'work.creation.propose',schemaVersion:1,target:current.target,targetDigest:current.targetDigest,article,graphic:proposal.graphic,articleDigest:fingerprint(article),graphicDigest:fingerprint(proposal.graphic),scriptSourceRef:current.scriptSourceRef,error:null});
  }
  async function proposeDraft(ctx:RequestContext,target:WorkCreationTarget,raw:WorkCreationDraftProposalInput){
   const draft=workCreationDraftProposalInput.parse(raw),current=await read(ctx,target);

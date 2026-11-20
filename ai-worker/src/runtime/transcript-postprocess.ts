@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { ModelSpec } from "./provider-factory";
 import { isAsrExecutionControlError } from "./asr-request";
 import { GenerationFailure } from "../execution/generation-error";
+import { stripGeneratedReasoning } from "./generated-reasoning";
 
 export function isTranscriptExecutionControlError(error: unknown): boolean {
   return isAsrExecutionControlError(error) || (error instanceof GenerationFailure && error.outcome === 'unknown_result');
@@ -162,6 +163,9 @@ export function checkTranscriptFidelity(
 ): FidelityVerdict {
   if (!corrected.trim()) {
     return { ok: false, reason: "模型输出为空文本" };
+  }
+  if (stripGeneratedReasoning(corrected, original) !== corrected) {
+    return { ok: false, reason: "模型输出包含整理过程" };
   }
   const normO = normalizeForFidelity(original);
   const normC = normalizeForFidelity(corrected);

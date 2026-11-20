@@ -7,11 +7,12 @@ const states={read:{label:"读取完成",Icon:CheckCircle2,color:"text-success"}
 
 /** 工具原始结果保留在消息中，仅在用户展开详情时生成展示摘要。 */
 export const ChatToolTrace = React.memo(function ChatToolTrace({
-  label, input, output,
+  label, input, output, projectReading = false,
 }: {
   label: string;
   input: unknown;
   output: unknown;
+  projectReading?: boolean;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const outcome=readChatToolOutcome(output),state=states[outcome.phase],Icon=state.Icon;
@@ -30,7 +31,9 @@ export const ChatToolTrace = React.memo(function ChatToolTrace({
         <span className={state.color}>{state.label}</span> · {label}
         {!outcome.blocksData&&typeof total === "number" ? `（共 ${total} 条）` : ""}
       </summary>
-      {expanded && <pre className="mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[10px] leading-relaxed text-text-subtle">{summary}</pre>}
+      {expanded && <pre tabIndex={projectReading ? 0 : undefined} className={projectReading
+        ? "mt-1.5 max-h-[clamp(6rem,calc(100cqh_-_4rem),22rem)] overflow-y-auto whitespace-pre-wrap pr-2 font-sans text-sm leading-6 text-foreground [overflow-wrap:anywhere]"
+        : "mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[10px] leading-relaxed text-text-subtle"}>{summary}</pre>}
     </details>
   );
 });

@@ -16,6 +16,7 @@ import {ConflictError} from "../execution/execution.errors";
 import {readChatTurnSnapshot,chatInputDigest,chatHistoryDigest} from "./chat-turn-submission.service";
 import {readChatHostContextPair} from "./chat-host-context";
 import {canonicalJson} from "./canonical-json";
+import {cleanGeneratedArticle} from '@creatoros/ai-worker/wechat-article-candidate';
 
 type Tool=AgenticBackendTool & {parameterSchema:Record<string,unknown>};
 type Candidate=z.infer<typeof workEditorCandidate>|z.infer<typeof workCreationProposalResult>;
@@ -86,7 +87,9 @@ export function createWorkCandidateSourceService(db:Db,ports:{readGraphicVersion
      catch{throw new ConflictError('候选技术字段与原保存版本不符');}
     }else original=workCreationProposalInput.parse(input);
     if(candidate.articleDigest!==workEditorContentDigest(candidate.article).slice(7)||candidate.graphicDigest!==workEditorContentDigest(candidate.graphic).slice(7)||!isDeepStrictEqual(candidate.scriptSourceRef,candidate.target.scriptSourceRef))throw new ConflictError('联合候选正文摘要或原脚本不符');
-    if(!isDeepStrictEqual(candidate.target,verifiedHost.chatContext.creationTarget)||candidate.targetDigest!==original.targetDigest||!isDeepStrictEqual(candidate.article,original.article)||!isDeepStrictEqual(candidate.graphic,original.graphic))throw new ConflictError('联合候选与原参数或目标不符');
+    // 历史回执仍可按原参数核对。新回执只能等于同一原参数的正文投影。
+    const articleMatches=isDeepStrictEqual(candidate.article,original.article)||isDeepStrictEqual(candidate.article,cleanGeneratedArticle(original.article));
+    if(!isDeepStrictEqual(candidate.target,verifiedHost.chatContext.creationTarget)||candidate.targetDigest!==original.targetDigest||!articleMatches||!isDeepStrictEqual(candidate.graphic,original.graphic))throw new ConflictError('联合候选与原参数或目标不符');
    }
    let toolCallId:string;
    if(call.kind==="tool"){

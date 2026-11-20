@@ -2944,7 +2944,7 @@ export function AICopilotContent({
           ref={messagesScrollRef}
           onScroll={handleMessagesScroll}
           data-slot="copilot-message-scroll"
-          className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
+          className={`min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3 ${embed?.surface === "project" ? "min-h-[clamp(12rem,28dvh,18rem)] [container-type:size]" : "min-h-0"}`}
         >
           <WorkbenchArtifactHistory conversationId={conversationId} accountId={sessionAccountId??""} excludeRefs={visibleArtifactRefs}/>
           {messages.length > 0 || chatError ? (
@@ -3075,7 +3075,7 @@ export function AICopilotContent({
                     // [T-060②] 已完成 trace 行:可折叠展开看入参/结果摘要;后面若有产物卡
                     // 则卡随其后。纯读工具(context.*)也留痕 —— 用户能看见 AI 读了什么。
                     const traceRow = (
-                      <React.Fragment key={`${key}-trace`}><ChatToolTrace label={traceLabel} input={part.input} output={part.output}/><ChatToolOutcomeNotice outcome={outcome}/></React.Fragment>
+                      <React.Fragment key={`${key}-trace`}><ChatToolTrace label={traceLabel} input={part.input} output={part.output} projectReading={embed?.surface === "project"}/><ChatToolOutcomeNotice outcome={outcome}/></React.Fragment>
                     );
                     if(outcome.blocksData)return <React.Fragment key={key}>{traceRow}</React.Fragment>;
                     if((name==="system.action.propose"&&out.kind==="system.action.proposal")||(name==="canvas.create.propose"&&out.kind==="canvas.create.proposal")||(name==="canvas.generate.propose"&&out.kind==="canvas.generate.proposal")){

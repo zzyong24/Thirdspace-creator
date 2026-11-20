@@ -92,7 +92,9 @@ it.each([{groupOnly:true,v2:false},{groupOnly:false,v2:false},{groupOnly:true,v2
  const readResult=await chat.external.execute(chat.ref,request,chat.tools,chat.signal);
  expect(readResult).toMatchObject({status:'settled',outcome:{status:'ok',sideEffect:'none',data:{kind:'work.creation.read',scriptSourceRef:f.target.scriptSourceRef}}});
  const read=await f.root.read(f.ctx,f.target),proposal=candidate(f,read,true);
- const proposeRequest={turnCallId:chat.turn.callId,toolCallId:'creation-propose-call',toolName:'work.creation.propose',input:proposal};
+ const polluted={...proposal,article:{...proposal.article,sections:proposal.article.sections.map(section=>({...section,
+  body:`<think>${'先核对各段材料。'.repeat(200)}</think>\n\n分析如下：梳理来源和写作顺序。\n\n${section.body}`}))}};
+ const proposeRequest={turnCallId:chat.turn.callId,toolCallId:'creation-propose-call',toolName:'work.creation.propose',input:polluted};
  const result=await chat.external.execute(chat.ref,proposeRequest,chat.tools,chat.signal);
  expect(result).toMatchObject({status:'settled',outcome:{status:'ok',sideEffect:'proposal'}});
  const actual=workCreationProposalResult.parse((result as {outcome:{data:unknown}}).outcome.data);

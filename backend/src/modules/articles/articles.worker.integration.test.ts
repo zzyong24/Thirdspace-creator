@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { execFileSync } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { and, eq, createDb, aiTasks, aiTaskResults, executionTasks, executionCalls, type Db } from "@creatoros/backend";
@@ -11,6 +12,7 @@ import { createModelWorkerDispatcher } from "../execution/model-worker-dispatche
 import { createProjectRepository, createProjectsService } from "../projects";
 import { createArtifactsService } from "../artifacts";
 import { createArticlesService } from "./articles.service";
+import { createProjectScriptSource } from "../../application/project-script-source";
 import type { RequestContext } from "@creatoros/contract";
 import { structuredGenerationInputSchema } from "@creatoros/contract/execution-worker";
 
@@ -18,10 +20,11 @@ const now = () => new Date().toISOString();
 const context: RequestContext = {userId: "article-worker-user", accountId: "article-worker-account", requestId: "article-worker-test", source: "user"};
 const budget = {maxCalls: 4, maxTokens: 100000, deadlineMs: 60000};
 const requestFingerprint = `sha256:${"a".repeat(64)}`;
+const cleanBody = '收到取书通知后，先核对取书地点，再确认截止时间。到馆出示取书码，即可带走已登记的图书。';
 const proposed = {
   proposedTitle: "有证据的标题", proposedTitleSourceRefs: [], proposedSummary: "方法与边界", proposedSummarySourceRefs: [],
   proposedFactItems: [], proposedSections: [{op: "insert", sectionId: "section-1", afterSectionId: null, order: 0,
-    heading: "先说明问题", body: "这是由模型返回的完整段落。", sourceRefs: []}],
+    heading: "确认取书通知", body: `<think>${"检查转写里的时间顺序。".repeat(160)}</think>\n\n让我先梳理素材。\n\n${cleanBody}`, sourceRefs: []}],
   proposedVisualBriefs: [{sectionId: "section-1", brief: "一张流程示意图，尚未制作"}], sourceRefs: [],
 };
 
@@ -43,6 +46,7 @@ describe("T-1023 正式 Worker 文章候选回执", () => {
       accountOverlays: {listBySkillIds: async () => []}, now,
     });
     const service = createArticlesService(db, {...deps, projects, artifacts,
+      readProjectScript: createProjectScriptSource({projects: projects(db), artifacts: artifacts(db)}).read,
       assertAssetFile: async () => {},
       resolveDocumentSource: async () => null,
       resolveSelectedBrand: async () => null,
@@ -69,12 +73,19 @@ describe("T-1023 正式 Worker 文章候选回执", () => {
       },
     });
     const project = await projects(db).createProject(context, {title: "文章目标", brief: "介绍可验证的方法", briefDetail: {targetPlatforms: ["wechatOfficialAccount"]}});
+    const transcriptPath = process.env.CREATOROS_T1491_TRANSCRIPT;
+    const transcript = transcriptPath ? readFileSync(transcriptPath, "utf8").trim() : cleanBody;
+    const script = await artifacts(db).createArtifact(context, {projectId: project.id, title: "已确认的转写脚本",
+      artifactType: "master_script", stage: "script", initialContentText: transcript});
     const output = await service.createOutput(context, project.id, {title: "公众号长文", clientRequestId: "article-worker-create-001"});
     const before = await service.getArticle(context, output.id);
     const submitted = await service.generateCandidate(context, output.id, "article-worker-generate-001");
     expect((await service.getArticle(context, output.id)).currentVersionId).toBe(before.currentVersionId);
     let requests = 0;
-    const server = createServer((req, res) => { req.resume(); requests++;
+    let modelInput = '';
+    const server = createServer(async (req, res) => {
+      for await (const chunk of req) modelInput += chunk;
+      requests++;
       const base = {id: "model-article", object: "chat.completion.chunk", created: 1, model: "test"};
       res.writeHead(200, {"content-type": "text/event-stream"});
       res.end(`data: ${JSON.stringify({...base, choices: [{index: 0, delta: {role: "assistant", content: JSON.stringify(proposed)}, finish_reason: null}]})}\n\n`+
@@ -103,12 +114,17 @@ describe("T-1023 正式 Worker 文章候选回执", () => {
       const callsAfter = await db.select().from(executionCalls);
       expect(taskAfter?.status, JSON.stringify({error: taskAfter?.errorMessage, executions: executionAfter.map(row => ({status: row.status, errorCode: row.lastErrorCode, error: row.lastErrorMessage})), calls: callsAfter.map(row => ({status: row.status, rejection: row.rejectionCode, text: row.resultText?.slice(0, 200)}))})).toBe("awaiting_confirmation");
       const candidate = await service.getCandidate(context, submitted.candidateId);
-      expect(candidate.proposedSections[0]?.body).toBe("这是由模型返回的完整段落。");
+      expect(candidate.proposedSections[0]?.body).toBe(cleanBody);
+      expect(modelInput).toContain(script.currentVersionId!);
       expect((await service.getArticle(context, output.id)).currentVersionId).toBe(before.currentVersionId);
       const adopted = await service.adoptCandidate(context, candidate.candidateId, {expectedCurrentVersionId: before.currentVersionId,
         selectedSectionIds: ["section-1"], selectedMetadataFields: ["title", "summary"], clientRequestId: "article-worker-adopt-001"});
       expect(adopted.document.title).toBe("有证据的标题");
-      expect((await service.getArticle(context, output.id)).currentVersionId).toBe(adopted.versionId);
+      const saved = await service.getArticle(context, output.id);
+      expect(saved.currentVersionId).toBe(adopted.versionId);
+      expect(saved.current.sections[0]?.body).toBe(cleanBody);
+      const evidence = process.env.CREATOROS_T1491_ARTICLE_EVIDENCE;
+      if (evidence) writeFileSync(evidence, JSON.stringify({candidate, versionId: saved.currentVersionId, document: saved.current}, null, 2));
     } finally {
       await worker.stop(); server.closeAllConnections();
       await new Promise<void>((done) => server.close(() => done()));
