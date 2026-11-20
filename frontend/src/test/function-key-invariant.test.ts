@@ -64,11 +64,12 @@ describe("[T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发)
     expect(occurrences.some((o) => o.key === "planning.thesis")).toBe(true);
   });
 
-  it("每个前端 functionKey 均可解析为真实工具；媒体快捷入口由原任务固定类型", async () => {
+  it("前端 functionKey 可解析；原任务保留图像和历史视频别名的固定类型", async () => {
+    expect(occurrences.some(o => o.key === "material.generate.image")).toBe(true);
+    expect(occurrences.some(o => o.key === "material.generate.video")).toBe(false);
     const verifiedAliases = new Set<string>();
     for (const kind of ["image", "video"] as const) {
       const key = `material.generate.${kind}`;
-      expect(occurrences.some(o => o.key === key)).toBe(true);
       expect(toolNames.has(key)).toBe(false);
       const context = { userId: "u", accountId: "a", requestId: "r", source: "user" as const };
       const chatContext = { surface: "project" as const, projectId: "project", functionKey: key };

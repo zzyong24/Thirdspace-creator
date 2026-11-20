@@ -79,7 +79,7 @@ it("取消预取不放开未到达阶段或无项目的导航门禁", () => {
     { id: "review", label: "复盘", status: "pending" as const },
   ];
   const view = render(<ProjectStageStepper variant="segmented" projectId="project-x" currentStage="script" stages={stages} />);
-  expect(screen.getByRole("link", { name: "视频" })).toHaveAttribute("href", "/projects/project-x/production");
+  expect(screen.getByRole("link", { name: "视频" })).toHaveAttribute("href", "/projects/project-x");
   expect(screen.getByTestId("stage-segment-review")).toHaveAttribute("aria-disabled", "true");
   expect(screen.getByTestId("stage-segment-review").tagName).toBe("SPAN");
   view.rerender(<ProjectStageStepper variant="segmented" currentStage="script" stages={stages} />);
