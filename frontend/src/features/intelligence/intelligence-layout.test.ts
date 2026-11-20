@@ -26,10 +26,11 @@ describe("T-1384 雷达密度布局契约", () => {
     expect(css).toMatch(/\.resizeHandle\s*\{[^}]*display:\s*block/);
     expect(css).not.toMatch(/repeat\(2, minmax\(0, 1fr\)\)/);
   });
-  it("长名称两行截断，筛选等宽三列，缩略图预留尺寸", () => {
+  it("来源名称和作品标题两行截断，筛选等宽三列，作品保持单列", () => {
     expect(css).toMatch(/\.sourceName[^}]*-webkit-line-clamp:\s*2/);
     expect(css).toMatch(/\.filterBar\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
-    expect(css).toMatch(/\.cover\s*\{[^}]*width:\s*48px/);
+    expect(css).toMatch(/\.itemTitle[^}]*-webkit-line-clamp:\s*2/);
+    expect(css).toMatch(/\.itemGrid\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/);
     expect(css).toMatch(/min-height:\s*44px/);
   });
 });

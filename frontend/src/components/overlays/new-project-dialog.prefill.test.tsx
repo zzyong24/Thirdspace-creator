@@ -45,27 +45,33 @@ afterEach(() => {
 });
 
 describe("NewProjectDialog × 已退役的创作模式偏好", () => {
-  it("旧 flexible 偏好不读取；默认视频且用户可明确多选文章", () => {
+  it("旧 flexible 偏好不读取；默认文章且用户可加选图文", () => {
     mockClient.getPreferences.mockResolvedValue({defaultCreationMode:"flexible",autosaveEnabled:true});
     render(<NewProjectDialog />);
     expect(screen.getByRole("dialog", {name:/新建项目/})).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", {name:/^视频/})).toBeChecked();
-    expect(screen.getByRole("checkbox", {name:/^文章/})).not.toBeChecked();
-    fireEvent.click(screen.getByRole("checkbox", {name:/^文章/}));
-    expect(screen.getByRole("checkbox", {name:/^文章/})).toBeChecked();
-    expect(screen.getByRole("checkbox", {name:/^视频/})).toBeChecked();
+    const article = screen.getByRole("checkbox", {name:/^文章/});
+    const graphic = screen.getByRole("checkbox", {name:/^图文/});
+    expect(article).toBeChecked();
+    expect(graphic).not.toBeChecked();
+    expect(screen.queryByRole("checkbox", {name:/^视频/})).not.toBeInTheDocument();
+    fireEvent.click(graphic);
+    expect(article).toBeChecked();
+    expect(graphic).toBeChecked();
     expect(document.querySelector('input[name="creation-mode"]')).toBeNull();
     expect(mockClient.getPreferences).not.toHaveBeenCalled();
     expect(mockClient.createProject).not.toHaveBeenCalled();
   });
-  it("不可用旧偏好不阻塞表单；用户仍可明确从视频改选图文", () => {
+  it("不可用旧偏好不阻塞表单；用户仍可明确从文章改选图文", () => {
     mockClient.getPreferences.mockImplementation(()=>{throw new Error("no preferences");});
     render(<NewProjectDialog />);
-    expect(screen.getByRole("checkbox", {name:/^视频/})).toBeChecked();
-    fireEvent.click(screen.getByRole("checkbox", {name:/^视频/}));
-    fireEvent.click(screen.getByRole("checkbox", {name:/^图文/}));
-    expect(screen.getByRole("checkbox", {name:/^视频/})).not.toBeChecked();
-    expect(screen.getByRole("checkbox", {name:/^图文/})).toBeChecked();
+    const article = screen.getByRole("checkbox", {name:/^文章/});
+    const graphic = screen.getByRole("checkbox", {name:/^图文/});
+    expect(article).toBeChecked();
+    expect(graphic).not.toBeChecked();
+    fireEvent.click(article);
+    fireEvent.click(graphic);
+    expect(article).not.toBeChecked();
+    expect(graphic).toBeChecked();
     expect(document.querySelector('input[name="creation-mode"]')).toBeNull();
     expect(mockClient.getPreferences).not.toHaveBeenCalled();
     expect(mockClient.createProject).not.toHaveBeenCalled();

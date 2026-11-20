@@ -28,8 +28,15 @@ describe("platform collection composite wiring", () => {
     try{
       expect(nativeWiring.ports).not.toBeNull();
       await nativeWiring.ports!.collectReports({directory:'/synthetic-only-profile',platform:'wechatVideo',expectedPlatformIdentity:'synthetic-only-identity',attemptId:'trusted-synthetic-attempt',signal:new AbortController().signal,deadlineAt:Date.now()+30*60000,onReport:async()=>{},onStopped:async()=>{},onStopUnconfirmed:()=>{}});
-      expect(warn).toHaveBeenCalledWith('[wechat-native-report]',{platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code:'REPORT_LINK_MISSING',exceptionName:'WechatBrowserSourceError',entryObservation:{entryPhase:'wait_entry_or_centre',entryVisibleCount:0,centreVisibleCount:0,centreClicked:false},attemptId:'trusted-synthetic-attempt'});
-      expect(JSON.stringify(warn.mock.calls)).not.toContain('synthetic-source-asserted-attempt');expect(JSON.stringify(warn.mock.calls)).not.toContain('/synthetic-only-profile');expect(JSON.stringify(warn.mock.calls)).not.toContain('synthetic-only-identity');
+      const diagnosticCalls=warn.mock.calls.filter(([tag])=>tag==='[wechat-native-report]');
+      expect(diagnosticCalls).toHaveLength(1);
+      const encodedDiagnostic=diagnosticCalls[0]?.[1];
+      expect(typeof encodedDiagnostic).toBe('string');
+      expect(JSON.parse(String(encodedDiagnostic))).toEqual({platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code:'REPORT_LINK_MISSING',exceptionName:'WechatBrowserSourceError',entryObservation:{entryPhase:'wait_entry_or_centre',entryVisibleCount:0,centreVisibleCount:0,centreClicked:false},attemptId:'trusted-synthetic-attempt'});
+      const allWarnings=JSON.stringify(warn.mock.calls);
+      expect(allWarnings).not.toContain('synthetic-source-asserted-attempt');
+      expect(allWarnings).not.toContain('/synthetic-only-profile');
+      expect(allWarnings).not.toContain('synthetic-only-identity');
     }finally{warn.mockRestore();}
   },120000);
   it("exposes local platform adapters and an empty owned catalog", async () => {

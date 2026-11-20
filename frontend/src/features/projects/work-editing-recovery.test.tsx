@@ -79,14 +79,16 @@ it("共享依据保存结束清除脏状态，不丢尚未提交的表达选择"
  expect(screen.getByRole("combobox",{name:"已有作品组合"})).toBeEnabled();expect(screen.getByRole("checkbox",{name:"朋友圈"})).toBeChecked();
 });
 it("朋友圈稿面归属作品组合导航",()=>{expect(projectWorkspaceId('/projects/project-a/moments/moments-a')).toBe('work');});
-it("表达选择覆盖全部16种组合，包含空选择，不创建或删除稿件",async()=>{
+it("表达选择覆盖全部 8 种组合，包含空选择，不创建或删除稿件",async()=>{
  let revision=1;api.saveWorkCompositionSelection.mockImplementation(async({body})=>({composition:{...work,currentRevision:++revision,current:{...work.current,selection:body.selection}}}));
  render(<WorkCompositionWorkbench projectId="project-a" projectTitle="项目" accountId="account-a" initial={[work]} outputs={[]}/>);
  await screen.findByRole("textbox",{name:"共享主题"});
- const labels=["视频","公众号","图文","朋友圈"],kinds=["video","article","image","moments"];
- for(let mask=1;mask<17;mask++){
-  const selected=mask%16;
-  for(let position=0;position<4;position++){const box=screen.getByRole("checkbox",{name:labels[position]});if((box as HTMLInputElement).checked!==Boolean(selected&(1<<position)))fireEvent.click(box);}
+ expect(screen.queryByRole("checkbox",{name:"视频",exact:true})).not.toBeInTheDocument();
+ const labels=["公众号","图文","朋友圈"],kinds=["article","image","moments"];
+ const combinationCount=1<<labels.length;
+ for(let mask=1;mask<=combinationCount;mask++){
+  const selected=mask%combinationCount;
+  for(let position=0;position<labels.length;position++){const box=screen.getByRole("checkbox",{name:labels[position],exact:true});if((box as HTMLInputElement).checked!==Boolean(selected&(1<<position)))fireEvent.click(box);}
   fireEvent.click(screen.getByRole("button",{name:"保存表达选择"}));
   await waitFor(()=>expect(api.saveWorkCompositionSelection).toHaveBeenCalledTimes(mask));
   expect(api.saveWorkCompositionSelection.mock.calls[mask-1][0].body.selection.slice().sort()).toEqual(kinds.filter((_kind,i)=>Boolean(selected&(1<<i))).sort());

@@ -33,7 +33,7 @@ import {
   type DraftWorkbenchClient,
 } from "@/features/draft-workbench/draft-workbench-data";
 
-// Task 4/6 — the 3 page-read ops are registered into the composite (PERSISTED_OPS)
+// Task 4/6 — the page-read ops are registered into the composite transport
 // and resolve through compositeTransport against the seeded pglite store. Proves
 // the composition module is wired into the SAME store the server reads + the
 // /api/v1 route share (foundation §1 registry). Each op output validates against
@@ -88,14 +88,21 @@ beforeEach(async () => {
 });
 
 describe("query-services ops registered in the composite transport", () => {
-  it("the 3 page-read op ids are persistence-backed (reject without ctx)", async () => {
+  it("registered page reads reject requests without an authenticated context", async () => {
+    expect(QUERY_SERVICES_OP_IDS).toEqual([
+      "pages.dashboard.get",
+      "pages.groupWorkspace.get",
+      "pages.groupOverview.get",
+      "pages.groupTrend.get",
+      "pages.dailyReport.get",
+      "pages.projectOverview.get",
+      "pages.search.get",
+    ]);
     for (const id of QUERY_SERVICES_OP_IDS) {
       await expect(
         compositeTransport.request(ep(id), {} as never),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ code: "AuthenticationError" });
     }
-    // T1246：逐ID核真实视觉模板/组日历/视觉导出/组概览与日报所有者；保原无ctx逐项拒绝。
-    expect(QUERY_SERVICES_OP_IDS).toEqual(["pages.dashboard.get", "pages.groupOverview.get", "pages.groupTrend.get", "pages.dailyReport.get", "pages.projectOverview.get", "pages.search.get"]);
   });
 
   it("pages.dashboard.get → valid dashboardPage, kind=dashboard", async () => {
