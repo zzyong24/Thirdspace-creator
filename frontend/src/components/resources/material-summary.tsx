@@ -210,15 +210,16 @@ export function MaterialSummaryModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         data-slot="material-summary-modal"
+        {...(!normalizedAssetType ? { "aria-describedby": undefined } : {})}
         className="max-h-[85vh] overflow-hidden sm:max-w-2xl"
       >
         <DialogHeader>
           <DialogTitle className="truncate pr-6">{title}</DialogTitle>
-          <DialogDescription>
-            {normalizedAssetType
-              ? `${PREVIEW_TYPE_LABEL[normalizedAssetType]}预览`
-              : "资料全文与要点(只提炼原文已有,不编造)"}
-          </DialogDescription>
+          {normalizedAssetType ? (
+            <DialogDescription>
+              {PREVIEW_TYPE_LABEL[normalizedAssetType]}预览
+            </DialogDescription>
+          ) : null}
         </DialogHeader>
         <div className="flex max-h-[65vh] flex-col gap-3 overflow-auto pr-1">
           {extractStatus ? (

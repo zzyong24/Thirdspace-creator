@@ -1,6 +1,5 @@
 .page { container-type:inline-size; container-name:dashboard; min-width:0; gap:var(--creatoros-space-6); }
-.welcome { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; padding-bottom:4px; }
-.welcomeText { display:flex; min-width:0; flex-direction:column; gap:8px; }
+.welcome { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
 .welcome h1 { font-size:32px; font-weight:600; line-height:1.4; }
 .projectsLink { display:inline-flex; align-items:center; gap:16px; padding:10px 0; font-size:14px; font-weight:500; }
 .projectsLink:focus-visible { outline:2px solid var(--creatoros-brand); outline-offset:4px; }

@@ -140,7 +140,6 @@ export function ModelConfigTransferCard() {
   return (
     <SectionCard
       title="配置备份"
-      description="导出 / 导入全部模型配置(重置工作区、换机后的兜底)"
     >
       <div
         data-slot="model-config-transfer-card"

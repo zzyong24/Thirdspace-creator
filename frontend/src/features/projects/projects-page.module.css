@@ -4,9 +4,6 @@
 .page > header > a { grid-column:2; grid-row:1/3; align-self:center; color:var(--creatoros-text); font-size:13px; padding:9px 12px; border:1px solid var(--creatoros-border-strong); border-radius:6px; }
 .page :global([data-slot="studio-projects-body"]) { display:flex; flex-direction:column; gap:var(--creatoros-space-6); }
 .page .stageIndex { display:block; width:100%; background:transparent; }
-.stageIndexHeading { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px 16px; padding:0 0 14px; }
-.stageIndexHeading h2 { font-size:14px; font-weight:600; }
-.page .stageIndexHeading p { margin:0; font-size:12px; color:var(--creatoros-text-muted); }
 .stageNav { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:0; border:1px solid var(--creatoros-border); border-radius:var(--creatoros-radius-card); overflow:hidden; background:var(--creatoros-surface); }
 .page .stageNav a { display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:16px; padding:16px; border-radius:0; border-right:1px solid var(--creatoros-border); color:var(--creatoros-text-muted); min-width:0; }
 .page .stageNav a:last-child { border-right:0; }
@@ -15,8 +12,7 @@
 .page .stageNav a:hover:not([aria-current="page"]) { background:var(--creatoros-surface-subtle); color:var(--creatoros-text); }
 .page .stageNav a:focus-visible { outline:2px solid var(--creatoros-brand); outline-offset:-3px; }
 .page :global([data-slot="studio-projects-list"]) { display:grid; width:100%; grid-template-columns:minmax(0,1fr) auto; gap:18px 24px; container-name:projects; container-type:inline-size; }
-.listHeading { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
-.listHeading h2 { font-size:17px; font-weight:600; }.listHeading p { font-size:12px; color:var(--creatoros-text-muted); }
+.listHeading { font-size:17px; font-weight:600; }
 .page :global([data-slot="projects-controls-row"]) { grid-column:2; grid-row:1; justify-content:flex-end; }
 .page :global([data-slot="status-tabs"]) { display:none; }
 .page :global([data-slot="project-list"]) { grid-column:1/-1; overflow:visible; border:0; border-radius:0; background:transparent; }

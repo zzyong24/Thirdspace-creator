@@ -287,7 +287,7 @@ describe("独立预览的定位专用对话", () => {
   it("显示定位语境与真实入口，不夹带通用脚本指令", async () => {
     openPositioning();
     expect(screen.getByRole("dialog", {name:"定位对话"})).toBeVisible();
-    expect(screen.getByText("账号组级定位 · 无需关联项目")).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "定位对话内容" })).toBeVisible();
     expect(screen.getByRole("button", {name:/继续深入当前账号/})).toBeVisible();
     expect(screen.queryByRole("button", {name:"生成脚本"})).toBeNull();
     expect(screen.getByRole("button", {name:"历史记录"})).toBeVisible();
@@ -1153,23 +1153,23 @@ it.each(['pi','codex'] as const)('BC003 实际封面chip预填按当前%s引擎�
 
 
 describe("T1302 当前真实宿主的精简输入区",()=>{
- const commonPlaceholder='描述目标，或输入 @ 引用项目';
+
  const embed={surface:'project',selection:{kind:'project',id:'current-project',title:'当前稿件'},persistKey:'project:current-project'};
  const state=(owner='wechat_article'):any=>({target:null,outputId:'current-output',generation:1,dirty:false,preparation:{scopeKey:'group:fixture-valid-empty-group',projectId:'current-project',outputId:'current-output',owner,versionId:'saved-version',documentFingerprint:'current-document',selection:{kind:'article_sections',sectionIds:[]}}});
  let coordinator:ReturnType<typeof useDraftChatRequest>;
  function Registry({value}:{value:any}){const chat=useDraftChatRequest();coordinator=chat;React.useEffect(()=>value?chat.registerEditor({readState:()=>value,prepareForTurn:async()=>undefined as any,previewCandidate:async()=>null,adoptCandidate:async()=>({status:'adopted'})}):undefined,[chat.registerEditor,value]);return null;}
  function Composer({value,host=embed}:{value:any;host?:any}){return <DraftChatRequestProvider><Registry value={value}/><AICopilotContent embed={host}/></DraftChatRequestProvider>;}
- it.each([['wechat_article','告诉我这篇文章需要怎么调整'],['graphic_post','告诉我这份图文需要怎么调整']])('T1302 匹配当前%s只隐藏内层chips，保输入附件发送清空和项目身份',async(owner,placeholder)=>{
-  render(<Composer value={state(owner)}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveAttribute('placeholder',placeholder);expect(document.querySelector('[data-slot="suggested-action-chips"]')).not.toBeNull();expect(document.querySelector('[data-slot="copilot-attachment-picker"]')).not.toBeNull();expect(screen.getByRole('button',{name:'提交提示给 Copilot'})).toBeVisible();expect(screen.getByText('当前稿件',{exact:true})).toBeVisible();await userEvent.setup().type(screen.getByRole('textbox',{name:'我能帮你做什么'}),'保留自然输入');expect(screen.getByRole('button',{name:'清空输入'})).toBeVisible();await userEvent.setup().click(screen.getByRole('button',{name:'清空输入'}));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveValue('');
+ it.each(['wechat_article','graphic_post'])('T1302 匹配当前%s只隐藏内层chips，保输入附件发送清空和项目身份',async(owner)=>{
+  render(<Composer value={state(owner)}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).not.toHaveAttribute('placeholder');expect(document.querySelector('[data-slot="suggested-action-chips"]')).not.toBeNull();expect(document.querySelector('[data-slot="copilot-attachment-picker"]')).not.toBeNull();expect(screen.getByRole('button',{name:'提交提示给 Copilot'})).toBeVisible();expect(screen.getByText('当前稿件',{exact:true})).toBeVisible();await userEvent.setup().type(screen.getByRole('textbox',{name:'我能帮你做什么'}),'保留自然输入');expect(screen.getByRole('button',{name:'清空输入'})).toBeVisible();await userEvent.setup().click(screen.getByRole('button',{name:'清空输入'}));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveValue('');
  });
  it.each(['global','no-preparation','no-editor','script','video','project','output','empty-output','scope','selection-kind'])('T1302 %s保持通用chips与placeholder，不借历史request猜宿主',async mode=>{
   let value=state(),host:any={...embed,request:{nonce:0,prefill:'旧文章指令',selection:{kind:'content_output',id:'current-output'}}};
   if(mode==='global')host=undefined;if(mode==='no-preparation')delete value.preparation;if(mode==='no-editor'||mode==='script')value=null;if(mode==='video')value.preparation.owner='production';if(mode==='project')value.preparation.projectId='other-project';if(mode==='output')value.outputId='other-output';if(mode==='empty-output')value.outputId='';if(mode==='scope')value.preparation.scopeKey='group:other-group';if(mode==='selection-kind')host.selection={kind:'content_output',id:'current-project'};
   // global显式不传embed，避免测试组件default值代替undefined。
-  render(mode==='global'?<DraftChatRequestProvider><Registry value={value}/><AICopilotContent/></DraftChatRequestProvider>:<Composer value={value} host={host}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveAttribute('placeholder',commonPlaceholder);expect(protocol.send).not.toHaveBeenCalled();
+  render(mode==='global'?<DraftChatRequestProvider><Registry value={value}/><AICopilotContent/></DraftChatRequestProvider>:<Composer value={value} host={host}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6));expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).not.toHaveAttribute('placeholder');expect(protocol.send).not.toHaveBeenCalled();
  });
  it('T1302 registry注册/注销及当前scope切换立即重新判定，保停止控件',async()=>{
-  const view=render(<Composer value={null}/>);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);const current=state();view.rerender(<Composer value={current}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0));protocol.status='streaming';view.rerender(<Composer value={current}/>);expect(screen.getByRole('button',{name:'停止生成'})).toBeVisible();expect(document.querySelector('[data-slot="prompt-send-hint"]')).not.toBeNull();protocol.status='ready';const {writeCurrentGroupId}=await import('@/lib/http-transport');await act(async()=>writeCurrentGroupId('next-group'));await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6));view.rerender(<Composer value={null}/>);expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).toHaveAttribute('placeholder',commonPlaceholder);expect(coordinator.readEditorState()).toBeNull();
+  const view=render(<Composer value={null}/>);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);const current=state();view.rerender(<Composer value={current}/>);await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0));protocol.status='streaming';view.rerender(<Composer value={current}/>);expect(screen.getByRole('button',{name:'停止生成'})).toBeVisible();expect(document.querySelector('[data-slot="prompt-send-hint"]')).toBeNull();protocol.status='ready';const {writeCurrentGroupId}=await import('@/lib/http-transport');await act(async()=>writeCurrentGroupId('next-group'));await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6));view.rerender(<Composer value={null}/>);expect(screen.getByRole('textbox',{name:'我能帮你做什么'})).not.toHaveAttribute('placeholder');expect(coordinator.readEditorState()).toBeNull();
  });
 });
 
@@ -1314,7 +1314,6 @@ describe("T1308 真实SDK历史意图归属",()=>{
 
 describe("T1340 文章异步就绪的真实助手消费",()=>{
  const project="t1340-project",output="t1340-output";
- const title="告诉我这份成稿需要怎么调整",hint="审阅候选后采纳。";
  const empty={schemaVersion:1 as const,title:"",summary:"",sections:[],factItems:[],visualBriefs:[],imageUses:[]};
  const body="原脚本的第一段。\n\n原脚本的第二段。";
  const resource={projectId:project,outputId:output,artifactId:"t1340-artifact",currentVersionId:"t1340-v1",current:empty,versions:[{id:"t1340-v1",versionNumber:1,createdAt:"2026-10-17T00:00:00Z",changeSummary:"初稿"}],scriptContext:{state:"ready",scriptRef:{kind:"project_script",id:"t1340-script",versionId:"t1340-script-v2"},scriptText:body,metadata:{title:"原稿",summary:"",tags:[]},message:""}};
@@ -1338,22 +1337,21 @@ describe("T1340 文章异步就绪的真实助手消费",()=>{
   expect(current!.readEditorState()?.dirty).toBe(true);
   expect(current!.readEditorState()?.preparation).toMatchObject({projectId:project,outputId:output,owner:"wechat_article"});
   // 目标RED：真实异步文章已读到，而消费方仍停留在首注册的未就绪状态。
-  await waitFor(()=>expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).toHaveAttribute("placeholder","告诉我这篇文章需要怎么调整"),{timeout:120000});
-  expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0);
+  await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0),{timeout:120000});
   expect(screen.getByTestId("t1340-preparation")).toHaveTextContent(output);
-  expect(screen.getByText(title)).toBeVisible();expect(screen.getByText(hint)).toBeVisible();
+  expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).toBeVisible();
   const actualReads=requests.map(row=>({id:row.id,method:Object.values(ENDPOINTS).find(endpoint=>endpoint.id===row.id)?.method??null}));
   if(process.env.T1340_OBSERVATION_DIR){mkdirSync(process.env.T1340_OBSERVATION_DIR,{recursive:true});writeFileSync(path.join(process.env.T1340_OBSERVATION_DIR,"ACTUAL_DISPATCH_READS.json"),JSON.stringify(actualReads,null,2));}
   for(const row of actualReads){expect(row.method,`未知或非只读端点：${row.id}`).toBe("GET");}
   expect(protocol.send).not.toHaveBeenCalled();expect(protocol.fetch).not.toHaveBeenCalled();
  },180000);
- it.each(["wechat_article","graphic_post"])("T1340 已有合法%s只显示平台空态且通用对话保持",async owner=>{
+ it.each(["wechat_article","graphic_post"])("T1340 已有合法%s保留对话输入且不显示通用指令",async owner=>{
   const state:any={target:null,outputId:output,generation:1,dirty:false,preparation:{scopeKey:"group:fixture-valid-empty-group",projectId:project,outputId:output,owner,versionId:"saved-version",documentFingerprint:"original-document",selection:{kind:"article",sectionIds:[]}}};
   function Current(){const chat=useDraftChatRequest();React.useEffect(()=>chat.registerEditor({readState:()=>state,prepareForTurn:async()=>undefined as any,previewCandidate:async()=>null,adoptCandidate:async()=>({status:"adopted"})}),[chat.registerEditor]);return null;}
   render(<DraftChatRequestProvider><Current/><AICopilotContent embed={{surface:"project",selection:{kind:"project",id:project,title:"成稿"},persistKey:"project:"+project}}/></DraftChatRequestProvider>);
   await waitFor(()=>expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0),{timeout:120000});
-  expect.soft(screen.queryByText(title)).toBeVisible();expect.soft(screen.queryByText(hint)).toBeVisible();
-  expect(screen.queryByText(/也可选择下方指令/)).toBeNull();expect(protocol.send).not.toHaveBeenCalled();
+  expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).toBeVisible();
+  expect(screen.getByRole("button",{name:"提交提示给 Copilot"})).toBeVisible();expect(protocol.send).not.toHaveBeenCalled();
  },120000);
 
  it.each(["output","scope","unmount","reject"] as const)("T1340 late-load %s：真实旧文章晚回不污染当前正文或助手",async mode=>{
@@ -1375,7 +1373,7 @@ describe("T1340 文章异步就绪的真实助手消费",()=>{
    const {writeCurrentGroupId}=await import("@/lib/http-transport");
    await act(async()=>{if(mode==="scope")writeCurrentGroupId("t1340-next-group");view.rerender(<Scene next/>);});
    await waitFor(()=>expect(screen.getByTestId("t1340-current-owner")).toHaveTextContent(nextOutput),{timeout:120000});
-   expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).toHaveAttribute("placeholder","告诉我这篇文章需要怎么调整");
+   expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).not.toHaveAttribute("placeholder");
    await act(async()=>resolveOld(Response.json({data:resource,meta:{requestId:"t1340-late"}})));
    expect(current!.readEditorState()?.preparation).toMatchObject({projectId:nextProject,outputId:nextOutput,scopeKey:mode==="scope"?"group:t1340-next-group":"group:fixture-valid-empty-group"});
    expect(document.querySelector('[aria-label="T1340原生成稿宿主"] p')?.textContent).toBe(nextBody);expect(document.body.textContent).not.toContain(body);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(0);
@@ -1383,7 +1381,7 @@ describe("T1340 文章异步就绪的真实助手消费",()=>{
    if(mode==="unmount")view.rerender(<Scene show={false}/>);
    await act(async()=>{if(mode==="reject")rejectOld(Error("原文章读取失败"));else resolveOld(Response.json({data:resource,meta:{requestId:"t1340-unmounted"}}));});
    expect(current!.readEditorState()?.preparation).toBeUndefined();expect(screen.getByTestId("t1340-current-owner")).toHaveTextContent("not-ready");expect(document.body.textContent).not.toContain(body);expect(document.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);
-   expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).toHaveAttribute("placeholder",expect.stringContaining("描述目标"));if(mode==="reject")expect(screen.getByRole("alert")).toHaveTextContent("原文章读取失败");
+   expect(screen.getByRole("textbox",{name:"我能帮你做什么"})).toBeVisible();if(mode==="reject")expect(screen.getByRole("alert")).toHaveTextContent("原文章读取失败");
   }
   for(const row of requests)expect(Object.values(ENDPOINTS).find(endpoint=>endpoint.id===row.id)?.method,`未知或非只读端点：${row.id}`).toBe("GET");expect(protocol.send).not.toHaveBeenCalled();expect(protocol.fetch).not.toHaveBeenCalled();
  },120000);

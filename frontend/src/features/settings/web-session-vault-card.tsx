@@ -310,12 +310,12 @@ export function WebSessionVaultCard() {
   return (
     <SectionCard
       title="网站登录保管库"
-      description="登录一次网站,编导就能读你登录后才看到的正文（ChatGPT 分享 / 知乎 / 公众号等）。登录态只存本机、绝不外传。"
+      description="登录态只存本机、绝不外传。"
     >
       <div data-slot="web-session-vault" className="flex flex-col gap-3">
         {loaded && sessions.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            还没登录过任何网站。粘一个网站链接登录一次,之后编导读它的内容就能带上登录态。
+            还没登录过任何网站。
           </p>
         ) : (
           <div

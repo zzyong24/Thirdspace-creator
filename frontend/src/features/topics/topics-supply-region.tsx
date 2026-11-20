@@ -108,9 +108,6 @@ export function TodayTopicsStrip({
             {today.length}
           </Badge>
         ) : null}
-        <span className="text-[11px] text-text-subtle">
-          按新增时间汇总
-        </span>
       </div>
       {today.length === 0 ? (
         <p

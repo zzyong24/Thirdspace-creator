@@ -19,8 +19,7 @@
  *   └── SearchSideRail
  *       ├── SearchFilters
  *       ├── QuickActions
- *       ├── SearchHistory
- *       └── SearchTips
+ *       └── SearchHistory
  *
  * Layout invariants (page-specs §15, D-003, D-005):
  *  - The route is a global resource-center route. There is no
@@ -36,7 +35,7 @@
  *  - AssetResultSection and VideoResultSection render thumbnails
  *    in a horizontal layout.
  *  - SearchSideRail order is exactly:
- *      SearchFilters → QuickActions → SearchHistory → SearchTips.
+ *      SearchFilters → QuickActions → SearchHistory.
  *  - The page exposes `?q=...` + `?type=...` URL state: the query is
  *    reflected in the TopHeader's `HeaderGlobalSearch` island and the
  *    type facet narrows which result group renders ([T-051 2d] the
@@ -275,7 +274,6 @@ export function SearchPage({
           initialQuery={initialQuery}
           quickActions={vm.quickActions}
           history={vm.history}
-          tips={vm.tips}
         />
       </div>
     </main>
@@ -470,31 +468,22 @@ function KnowledgeResultSection({
                 knowledge center list rather than fabricate a detail URL. */}
             <Link
               href="/knowledge"
-              className="flex items-start gap-2 rounded-md border border-border bg-surface-subtle p-2 text-sm transition-colors hover:border-brand/50 hover:bg-surface"
+              className="flex min-w-0 flex-col gap-0.5 rounded-md border border-border bg-surface-subtle p-2 text-sm transition-colors hover:border-brand/50 hover:bg-surface"
             >
-              <span
-                aria-hidden="true"
-                data-slot="knowledge-result-icon"
-                className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-[9px] font-semibold text-brand"
-              >
-                {row.typeLabel.slice(0, 1)}
-              </span>
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-[12px] font-medium text-foreground">
-                    {row.title}
-                  </span>
-                  <span className="shrink-0 text-[10px] text-muted-foreground">
-                    {row.typeLabel}
-                  </span>
-                </div>
-                <p className="line-clamp-1 text-[10px] text-muted-foreground">
-                  {row.excerpt}
-                </p>
-                <span className="font-mono text-[9px] text-muted-foreground">
-                  {row.updatedAt}
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate text-[12px] font-medium text-foreground">
+                  {row.title}
+                </span>
+                <span className="shrink-0 text-[10px] text-muted-foreground">
+                  {row.typeLabel}
                 </span>
               </div>
+              <p className="line-clamp-1 text-[10px] text-muted-foreground">
+                {row.excerpt}
+              </p>
+              <span className="font-mono text-[9px] text-muted-foreground">
+                {row.updatedAt}
+              </span>
             </Link>
           </li>
         ))}
@@ -612,13 +601,6 @@ function VideoThumb({ item }: { item: VideoResult }) {
   const hue = parseInt((item.token ?? "0").slice(-2), 16) * 12;
   const safeHue = Number.isFinite(hue) ? hue % 360 : 220;
   const safeHue2 = (safeHue + 45) % 360;
-  // Derive a deterministic fake duration string from the token so
-  // the thumbnail overlay always shows a `MM:SS` style label
-  // (matching the design reference) without using `Date.now` or
-  // `Math.random`.
-  const minutes = 1 + (parseInt((item.token ?? "0").slice(-1), 16) % 28);
-  const seconds = (parseInt((item.token ?? "0").slice(-3, -1), 16) * 13) % 60;
-  const duration = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   return (
     // No per-video detail route exists yet — link to the publishing center.
     <Link
@@ -637,12 +619,6 @@ function VideoThumb({ item }: { item: VideoResult }) {
       >
         <span className="absolute left-1.5 top-1.5 inline-flex">
           <PlatformIcon platform={item.platform} size="xs" />
-        </span>
-        <span
-          data-slot="video-result-duration"
-          className="absolute right-1.5 bottom-1.5 rounded bg-black/55 px-1 text-[9px] font-mono leading-tight text-white/90 backdrop-blur-sm"
-        >
-          {duration}
         </span>
       </div>
       <span className="flex flex-col gap-0.5 text-[11px]">
@@ -663,12 +639,10 @@ function SearchSideRail({
   initialQuery,
   quickActions,
   history,
-  tips,
 }: {
   readonly initialQuery: string;
   readonly quickActions: ReadonlyArray<QuickAction>;
   readonly history: ReadonlyArray<HistoryItem>;
-  readonly tips: ReadonlyArray<string>;
 }) {
   return (
     <aside
@@ -686,7 +660,6 @@ function SearchSideRail({
       <SearchFacetsPanel initialQuery={initialQuery} />
       <QuickActions actions={quickActions} />
       <SearchHistory items={history} />
-      <SearchTips tips={tips} />
     </aside>
   );
 }
@@ -707,13 +680,10 @@ function QuickActions({ actions }: { actions: ReadonlyArray<QuickAction> }) {
           >
             <a
               href={action.href}
-              className="flex flex-col rounded-md border border-border bg-surface-subtle px-3 py-2 text-sm hover:bg-surface"
+              className="block rounded-md border border-border bg-surface-subtle px-3 py-2 text-sm hover:bg-surface"
             >
               <span className="font-medium text-foreground">
                 {action.label}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {action.description}
               </span>
             </a>
           </li>
@@ -758,30 +728,6 @@ function SearchHistory({ items }: { items: ReadonlyArray<HistoryItem> }) {
           ))}
         </ul>
       )}
-    </SectionCard>
-  );
-}
-
-function SearchTips({ tips }: { tips: ReadonlyArray<string> }) {
-  return (
-    <SectionCard title="搜索技巧">
-      {/* §297 Search-tips rows — decorative per roadmap §4 (static syntax tips). */}
-      <ul
-        data-slot="search-tips"
-        className="flex flex-col gap-1 text-xs text-muted-foreground"
-        aria-label="搜索技巧"
-      >
-        {tips.map((tip, index) => (
-          <li
-            key={index}
-            data-slot="search-tip-row"
-            data-tip-index={index}
-            className="rounded-md bg-surface-subtle px-2 py-1.5"
-          >
-            {tip}
-          </li>
-        ))}
-      </ul>
     </SectionCard>
   );
 }

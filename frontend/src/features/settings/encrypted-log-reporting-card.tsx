@@ -55,7 +55,6 @@ export function EncryptedLogReportingCard() {
   return (
     <SectionCard
       title="运行诊断共享"
-      description="按用途选择；软件运行且空闲时，每天最多上报一轮。"
     >
       <div className="space-y-4" data-slot="encrypted-log-reporting">
         <p className="text-sm text-muted-foreground">

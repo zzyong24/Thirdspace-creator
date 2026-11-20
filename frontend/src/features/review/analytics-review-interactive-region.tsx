@@ -253,7 +253,6 @@ export function AnalyticsReviewInteractiveRegion({
           // 复盘编辑/记录等真 op 面照常可用。
           <EmptyState
             title="该作品暂无明细数据"
-            description="还没有这个作品的详细数据。去「自动化」里同步一次明细数据,回来即可看到指标和图表。"
           />
         ) : (
           <>
@@ -528,9 +527,6 @@ function CommentsSection({
           <p className="text-[12px] font-medium text-foreground">
             未采集该作品评论
           </p>
-          <p className="text-[11px] text-muted-foreground">
-            去自动化配「抓我作品评论」采集，评论回收后会显示在这里。
-          </p>
         </div>
       ) : (
         <ul
@@ -710,14 +706,7 @@ function CurrentPeriodLearnings({
       className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-card"
     >
       <header className="flex items-start justify-between gap-2 px-1">
-        <div className="flex flex-col gap-0.5">
-          <h3 className="text-[13px] font-semibold text-foreground">
-            本期经验 · 可采纳沉淀
-          </h3>
-          <p className="text-[11px] text-muted-foreground">
-            来源:「帮我复盘」从本期评论/指标提炼,待你裁决;采纳后沉淀进知识库的经验区
-          </p>
-        </div>
+        <h3 className="text-[13px] font-semibold text-foreground">本期经验</h3>
         {/* [T-356③] 常驻再跑入口(原「AI 要点」卡下架后,非空态也要能再复盘)。 */}
         {!reviewEvidenceReady || isEmpty ? null : (
           <ReviewAnalyzeButton
@@ -736,10 +725,10 @@ function CurrentPeriodLearnings({
           className="rounded-lg border border-dashed border-border bg-surface px-3 py-4"
         >
           <p className="text-[12px] font-medium text-foreground">
-            暂无可沉淀的效果经验，仍可诊断内容
+            暂无可沉淀的效果经验
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-            当前项目还没有可核验的指标或观众评论。可先检查稿件，效果结论需等待真实数据。
+            当前项目还没有可核验的指标或观众评论。
           </p>
         </div>
       ) : isEmpty && conclusionBlock ? (
@@ -759,9 +748,6 @@ function CurrentPeriodLearnings({
         >
           <p className="text-[12px] font-medium text-foreground">
             本条视频还没有可裁决的经验候选
-          </p>
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            点「帮我复盘」让编导从本期评论 / 指标提炼(复盘会同时产要点 + 经验候选)。
           </p>
           <ReviewAnalyzeButton
             analysisScope={analysisScope}
@@ -818,7 +804,6 @@ function ReviewHistoryCard({
     >
       <header className="flex flex-col gap-1">
         <h3 className="text-md font-semibold text-foreground">复盘记录</h3>
-        <p className="text-xs text-muted-foreground">历史复盘条目</p>
       </header>
       {items.length === 0 ? (
         // [T-329] 诚实空态:还没有任何复盘记录(编辑面板首次「添加洞察」会自动创建)。
@@ -826,7 +811,7 @@ function ReviewHistoryCard({
           data-slot="review-history-empty"
           className="rounded-md border border-dashed border-border bg-surface-subtle px-3 py-3 text-xs text-muted-foreground"
         >
-          还没有复盘记录 —— 在上方「复盘编辑」添加第一条洞察即可开始。
+          还没有复盘记录
         </p>
       ) : null}
       <ul
@@ -1106,13 +1091,9 @@ function ReviewAuthoringPanel({
     Boolean(wiring) &&
     activeReviewId !== null &&
     (insightCount > 0 || resumedReview);
-  const completeHint = !wiring
-    ? null // 无 wiring 的原因统一显示在面板底部,不重复
-    : activeReviewId === null
-      ? "添加第 1 条洞察后会自动创建本次复盘，随后可完成"
-      : !canComplete
-        ? "需先添加至少 1 条洞察才能完成复盘"
-        : null;
+  const completeHint = wiring && activeReviewId !== null && !canComplete
+    ? "需先添加至少 1 条洞察才能完成复盘"
+    : null;
 
   const completeReview = React.useCallback(() => {
     if (!wiring || busy || !canComplete || !activeReviewId) return;
@@ -1147,20 +1128,7 @@ function ReviewAuthoringPanel({
       aria-label="复盘编辑"
       className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-card-gap shadow-card"
     >
-      <header className="flex flex-col gap-1">
-        <h3 className="text-md font-semibold text-foreground">复盘编辑</h3>
-        <p className="text-xs text-muted-foreground">
-          {resumedReview
-            ? "继续进行中的复盘：记录洞察，随时完成"
-            : "直接记录洞察（首次添加自动创建复盘），随时完成"}
-        </p>
-      </header>
-      <p
-        data-slot="review-storage-note"
-        className="rounded-lg border border-brand/15 bg-brand-soft/25 px-2.5 py-2 text-[11px] leading-relaxed text-muted-foreground"
-      >
-        手动洞察保存在本次复盘记录，不会直接进入知识库。完成后可点上方「帮我复盘」提炼经验，采纳后进入知识库。
-      </p>
+      <h3 className="text-md font-semibold text-foreground">复盘编辑</h3>
 
       <div data-slot="add-insight-form" className="flex flex-col gap-1.5">
         <label className="flex flex-col gap-1 text-xs text-muted-foreground">洞察类型
@@ -1184,7 +1152,6 @@ function ReviewAuthoringPanel({
           value={title}
           disabled={!wiring}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="洞察标题"
           className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground disabled:opacity-50"
         />
         </label>
@@ -1194,7 +1161,6 @@ function ReviewAuthoringPanel({
           value={description}
           disabled={!wiring}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="补充说明（可选）"
           className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground disabled:opacity-50"
         />
         </label>

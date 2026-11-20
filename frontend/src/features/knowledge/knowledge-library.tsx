@@ -592,11 +592,6 @@ function KnowledgeLibraryWorkspace({
                 <p className="font-medium text-foreground">
                   {vm.items.length ? "没有匹配的资料" : "书架还是空的"}
                 </p>
-                <p className="mt-2 leading-6">
-                  {vm.items.length
-                    ? "试试其他类别或清除搜索。"
-                    : "从一段笔记或一份文件开始。"}
-                </p>
                 {vm.items.length > 0 ? (
                   <Button
                     variant="link"
@@ -811,16 +806,12 @@ function KnowledgeLibraryWorkspace({
                 />
               </div>
             </>
-          ) : (
+          ) : rows.length ? (
             <div className="flex h-full min-h-72 flex-col items-center justify-center px-8 py-12 text-center">
               <BookOpen className="mb-5 size-9 text-text-subtle" />
-              <h2 className="text-lg font-medium">
-                {rows.length
-                  ? "选择一份资料，阅读完整原文"
-                  : "添加资料后，在这里阅读原文"}
-              </h2>
+              <h2 className="text-lg font-medium">选择一份资料</h2>
             </div>
-          )}
+          ) : null}
         </section>
       </div>
       <div className="shrink-0 empty:hidden" aria-live="polite">
@@ -845,6 +836,7 @@ function KnowledgeLibraryWorkspace({
         }}
       >
         <DialogContent
+          {...(modal !== "archive" ? { "aria-describedby": undefined } : {})}
           showCloseButton={!busy}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
@@ -867,17 +859,11 @@ function KnowledgeLibraryWorkspace({
                     ? "用到项目"
                     : "归档资料"}
           </DialogTitle>
-          <DialogDescription>
-            {modal === "add"
-              ? "完整原文直接保存，也可以导入文件。"
-              : modal === "edit"
-                ? "保存为新版本，保留之前的正文。"
-                : modal === "reference"
-                  ? "选择已有项目，创作时可直接查看这份资料。"
-                  : modal === "archive"
-                    ? "归档后从书架隐藏，原文、版本和项目引用仍保留。"
-                    : "把相关资料放在一起，方便下次找到。"}
-          </DialogDescription>
+          {modal === "archive" && (
+            <DialogDescription>
+              归档后从书架隐藏，原文、版本和项目引用仍保留。
+            </DialogDescription>
+          )}
           {error && (
             <p role="alert" className="text-destructive">
               {error}

@@ -82,7 +82,7 @@ function relateResponse(candidates: unknown[], ok = true, status = 200) {
 }
 
 describe("KnowledgeGraphView", () => {
-  it("stats 条渲全真值计数;稀疏时渲引导语(不生成假边)", () => {
+  it("stats 条渲全真值计数，稀疏时不重复显示操作提示", () => {
     const { container, getByText } = render(
       <KnowledgeGraphView graph={GRAPH} onSelectKnowledge={() => {}} />,
     );
@@ -92,10 +92,10 @@ describe("KnowledgeGraphView", () => {
     expect(getByText("孤立 1 条")).toBeTruthy();
     expect(
       container.querySelector('[data-slot="knowledge-graph-sparse-hint"]'),
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
-  it("[T-260a] 移动端降级:渲 stats 摘要提示(桌面端查看力导向图)", () => {
+  it("[T-260a] 移动端降级保留真实统计摘要", () => {
     const { container } = render(
       <KnowledgeGraphView graph={GRAPH} onSelectKnowledge={() => {}} />,
     );
@@ -103,7 +103,7 @@ describe("KnowledgeGraphView", () => {
       '[data-slot="knowledge-graph-mobile-hint"]',
     );
     expect(hint).not.toBeNull();
-    expect(hint!.textContent ?? "").toContain("桌面端查看");
+    expect(hint!.textContent ?? "").toContain("3 条知识、1 条关联、1 条引用");
   });
 
   it("空库 → 诚实空态,不渲图", () => {
@@ -127,7 +127,7 @@ describe("KnowledgeGraphView", () => {
     expect(container.querySelector('[data-slot="echart"]')).toBeNull();
   });
 
-  it("[T-260a] 关系 0(非空库)→ 诚实引导点『AI 找关联』,不留空白画布", () => {
+  it("[T-260a] 关系 0保留空态和『AI 找关联』按钮", () => {
     const noRel: KnowledgeGraphVm = {
       nodes: [
         { id: "k-1", kind: "knowledge", knowledgeType: "claim", title: "观点A" },
@@ -149,7 +149,7 @@ describe("KnowledgeGraphView", () => {
       '[data-slot="knowledge-graph-no-relations"]',
     );
     expect(guide).not.toBeNull();
-    expect(guide!.textContent ?? "").toContain("AI 找关联");
+    expect(guide!.textContent ?? "").toContain("还没有关联");
     // 「AI 找关联」按钮仍在(引导用户去点它)。
     expect(getByText("AI 找关联")).toBeTruthy();
     // 无 relation 边 → 不渲「已建关联」删边清单(不摆空区)。

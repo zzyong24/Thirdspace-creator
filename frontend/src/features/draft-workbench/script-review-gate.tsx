@@ -279,7 +279,7 @@ export function ScriptReviewGate({
         </Button>
       </div>
 
-      <p data-testid="script-review-rule-scope" className="text-[11px] text-muted-foreground">新增自定义规则仅在当前账号组生效。系统种子和未归组的历史共享规则仍共同生效；改删共享规则需明确确认对所有账号组的影响。</p>
+
       {legacyIncomplete ? (
         <p
           data-testid="script-review-incomplete"
@@ -292,7 +292,7 @@ export function ScriptReviewGate({
           data-testid="script-review-unreviewed"
           className="text-[12px] text-muted-foreground"
         >
-          当前稿未审核。发布前在右栏对话里跑一次合规审(L1 违禁词 + L2 语义审),命中给逐条改写建议。
+          当前稿未审核。
         </p>
       ) : (
         <ReviewReportPanel

@@ -474,18 +474,7 @@ function AccountInformationCard({
   }, [dirty, run, trimmed]);
 
   return (
-    <SectionCard
-      title="账户信息"
-     
-      action={
-        <span
-          data-slot="account-status-badge"
-          className="inline-flex h-6 items-center rounded-md bg-success-soft px-2 text-xs font-medium text-success"
-        >
-          已验证
-        </span>
-      }
-    >
+    <SectionCard title="账户信息">
       <div data-slot="account-information-card" className="flex flex-col gap-3">
         <div
           data-slot="account-identity"
@@ -505,13 +494,6 @@ function AccountInformationCard({
               {viewModel.account.email}
             </span>
             <div className="flex flex-wrap gap-1">
-              {/* 计划 chip is intentionally inert (decorative) — no billing
-                  entity exists in Wave 0 (Module 00, Task 12). */}
-              <TagChip
-                label={`计划：${viewModel.account.planLabel}`}
-                tone="brand"
-                size="sm"
-              />
               {/* 时区 / 语言 chips bind to the REAL identity
                   (`userResource.timezone` / `.locale`). */}
               <TagChip
@@ -530,7 +512,6 @@ function AccountInformationCard({
         <SettingsFormRow
           label="昵称"
           controlId="account-nickname"
-          help="显示名称，保存后立即生效。"
         >
           <div className="flex w-full items-center gap-2">
             <Input
@@ -720,7 +701,6 @@ function AccountBindingCard({
   return (
     <SectionCard
       title="账号绑定"
-      description="连接平台账号,供采集作品数据 / 评论使用"
       action={
         accountRequired ? (
           // [T-332 S4] 未选号 ≠ 连接故障:徽标给绑定引导语义(点下方扫码按钮即绑定)。
@@ -1024,7 +1004,6 @@ function ActivationStatusCard({
     return (
       <SectionCard
         title="激活"
-        description="查看当前产品授权与账号设备连接"
         action={
           <Badge
             data-slot="activation-status-badge"
@@ -1047,14 +1026,7 @@ function ActivationStatusCard({
           >
             <ShieldCheck className="size-5" />
           </div>
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground">
-              激活为桌面端功能
-            </span>
-            <span className="text-xs text-muted-foreground">
-              一机一码激活授权仅在桌面客户端生效。Web 端无需激活,可直接使用。
-            </span>
-          </div>
+          <span className="text-xs text-muted-foreground">Web 端无需激活,可直接使用。</span>
         </div>
       </SectionCard>
     );
@@ -1065,7 +1037,6 @@ function ActivationStatusCard({
   return (
     <SectionCard
       title="激活"
-      description="查看当前产品授权与账号设备连接"
       action={
         <Badge
           data-slot="activation-status-badge"
@@ -1085,7 +1056,6 @@ function ActivationStatusCard({
         <SettingsFormRow
           label="授权类型"
           controlId="activation-license-mode"
-          help="时间型有到期日;永久激活不过期。"
         >
           <span
             id="activation-license-mode"
@@ -1129,7 +1099,6 @@ function ActivationStatusCard({
         <SettingsFormRow
           label="上次在线确认"
           controlId="activation-last-check"
-          help="上次成功与授权服务器确认的时间。买断授权离线不影响使用。"
         >
           <span
             id="activation-last-check"
@@ -1306,7 +1275,6 @@ function CheckUpdateCard() {
     return (
       <SectionCard
         title="软件更新"
-        description="桌面端自动更新"
         action={
           <Badge
             data-slot="check-update-badge"
@@ -1329,14 +1297,7 @@ function CheckUpdateCard() {
           >
             <Download className="size-5" />
           </div>
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground">
-              软件更新为桌面端功能
-            </span>
-            <span className="text-xs text-muted-foreground">
-              桌面客户端支持一键检查并安装新版。Web 端随浏览器加载最新版,无需手动更新。
-            </span>
-          </div>
+          <span className="text-xs text-muted-foreground">Web 端随浏览器加载最新版,无需手动更新。</span>
         </div>
       </SectionCard>
     );
@@ -1345,7 +1306,6 @@ function CheckUpdateCard() {
   return (
     <SectionCard
       title="软件更新"
-      description="在应用内检查是否有新版"
       action={
         <Badge
           data-slot="check-update-badge"
@@ -1518,7 +1478,6 @@ function DiagnosticLogsCard() {
     return (
       <SectionCard
         title="诊断日志"
-        description="桌面端排障日志"
         action={
           <Badge
             data-slot="diagnostic-logs-badge"
@@ -1541,21 +1500,14 @@ function DiagnosticLogsCard() {
           >
             <FileText className="size-5" />
           </div>
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground">
-              诊断日志为桌面端功能
-            </span>
-            <span className="text-xs text-muted-foreground">
-              桌面客户端把运行日志落盘到本地,撞 bug 时可一键导出发给开发者。Web 端无本地日志文件。
-            </span>
-          </div>
+          <span className="text-xs text-muted-foreground">Web 端无本地日志文件。</span>
         </div>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard title="诊断日志" description="打开运行日志目录用于排障">
+    <SectionCard title="诊断日志">
       <div
         data-slot="diagnostic-logs-card"
         data-desktop="true"
@@ -1661,7 +1613,6 @@ function PreferenceSettingsCard({
         <SettingsFormRow
           label="默认创作模式"
           controlId="pref-creation-mode"
-          help="新建项目弹窗会按此预选创作模式。"
         >
           <Select
             value={defaultCreationMode}
@@ -1692,7 +1643,6 @@ function PreferenceSettingsCard({
         <SettingsFormRow
           label="自动保存"
           controlId="pref-autosave"
-          help="开启后，脚本编辑器失焦即自动保存未保存的修改。"
         >
           <Switch
             id="pref-autosave"
@@ -1711,7 +1661,6 @@ function PreferenceSettingsCard({
         <SettingsFormRow
           label="新手引导"
           controlId="pref-reopen-onboarding"
-          help="重新打开新手清单引导（即使之前在清单上点过「不再显示」）。"
         >
           <Button
             id="pref-reopen-onboarding"
@@ -1805,7 +1754,6 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
         <SettingsFormRow
           label="主题"
           controlId="sys-theme"
-          help="跟随系统或手动选择浅色、深色。"
         >
           <Select
             value={theme}
@@ -1831,7 +1779,6 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
         <SettingsFormRow
           label="密度"
           controlId="sys-density"
-          help="调整列表与卡片间距。"
         >
           <Select
             value={density}
@@ -1925,7 +1872,6 @@ function StorageUsageCard({
         <SettingsFormRow
           label="存储后端"
           controlId="storage-backend"
-          help="当前媒体字节落地的位置。"
         >
           <Badge
             id="storage-backend"
@@ -1939,7 +1885,7 @@ function StorageUsageCard({
         <SettingsFormRow
           label="媒体路径"
           controlId="storage-root-path"
-          help="素材落盘的根目录;支持 ~ 展开。修改后点保存生效(settings.storage.put)。"
+          help="路径开头的 ~ 表示用户目录。"
         >
           <div className="flex w-full items-center gap-2">
             <Input
@@ -1947,7 +1893,6 @@ function StorageUsageCard({
               data-slot="storage-root-path-input"
               value={rootPath}
               disabled={pending}
-              placeholder="~/media"
               onChange={(event) => setRootPath(event.target.value)}
               aria-label="媒体存储路径"
             />

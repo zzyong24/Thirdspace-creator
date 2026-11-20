@@ -52,22 +52,10 @@ export function ZeroAccountGuidance() {
       data-testid="zero-account-guidance"
       className="flex min-h-[60vh] flex-col items-center justify-center gap-3 p-8 text-center"
     >
-      <span
-        aria-hidden="true"
-        className="inline-flex size-12 items-center justify-center rounded-full bg-brand-soft text-xl text-brand"
-      >
-        @
-      </span>
-      <h1 className="font-heading text-xl font-semibold text-foreground">
-        先创建账号组，再开始创作
-      </h1>
-      <p className="max-w-md text-sm text-muted-foreground">
-        每个账号组是一位创作者的工作区。先建组即可管理定位、选题、项目和素材；绑定平台账号后再采集作品与分发内容。
-      </p>
       <Link
         href="/accounts"
         data-testid="zero-account-bind-link"
-        className="mt-2 inline-flex h-10 items-center justify-center rounded-card bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+        className="inline-flex h-10 items-center justify-center rounded-card bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
       >
         创建账号组与绑定账号
       </Link>
@@ -77,7 +65,7 @@ export function ZeroAccountGuidance() {
         data-testid="zero-account-home-link"
         className="text-xs font-medium text-brand underline-offset-4 hover:underline"
       >
-        或回首页看完整上手引导
+        返回首页
       </Link>
     </main>
   );

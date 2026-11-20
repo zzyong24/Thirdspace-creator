@@ -49,11 +49,7 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
 
   // 状态可读提示:到期 vs 从未激活,措辞不同。
   const heading =
-    check.status === "expired" ? "产品授权已到期" : "开始使用产品";
-  const subtitle =
-    check.status === "expired"
-      ? "续费后可以重新领取，也可以输入新的激活码。"
-      : "如果你已经购买，可输入激活码；已有账号的产品可通过手机号连接。";
+    check.status === "expired" ? "产品授权已到期" : "产品授权";
   const entitlementClaimEnabled =
     process.env.CREATOROS_ENTITLEMENT_CLAIM_ENABLED === "1";
 
@@ -63,23 +59,12 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
       className="flex min-h-screen items-center justify-center bg-background px-4"
     >
       <div className="flex w-full max-w-md flex-col gap-6 rounded-xl bg-card p-4 sm:p-8 text-card-foreground ring-1 ring-foreground/10">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-xl font-semibold">{heading}</h1>
-          <p className="text-base text-muted-foreground">{subtitle}</p>
-        </div>
+        <h1 className="text-xl font-semibold">{heading}</h1>
         <EntitlementClaimPanel enabled={entitlementClaimEnabled} />
         <OwnedDevicePanel enabled={process.env.CREATOROS_OWNED_DEVICES_ENABLED === "1"} />
-        <div className="grid gap-2">
-          {entitlementClaimEnabled ? (
-            <p className="text-center text-base text-muted-foreground">
-              或使用已有激活码
-            </p>
-          ) : null}
-          <ActivateForm />
-        </div>
+        <ActivateForm />
         {channelSupportUrl ? (
-          <p className="text-center text-base text-muted-foreground">
-            激活码由购买时的服务方提供，遇到问题请
+          <p className="text-center text-base">
             <a
               href={channelSupportUrl}
               target="_blank"
@@ -88,10 +73,8 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
             >
               联系服务方
             </a>
-            。
           </p>
         ) : (
-          // 中性降级(SPEC §7 操作定义):纯文案,无链接无按钮。
           <p className="text-center text-base text-muted-foreground">
             没有激活码时，请联系购买时的服务方。
           </p>

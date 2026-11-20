@@ -147,7 +147,6 @@ export function ResetWorkspaceCard() {
     return (
       <SectionCard
         title="重置工作区"
-        description="桌面端数据重置"
         action={
           <Badge
             data-slot="reset-workspace-badge"
@@ -170,14 +169,7 @@ export function ResetWorkspaceCard() {
           >
             <RotateCcw className="size-5" />
           </div>
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground">
-              重置工作区为桌面端功能
-            </span>
-            <span className="text-xs text-muted-foreground">
-              桌面客户端可一键归档本机数据目录、从零开始。Web 端无本机数据目录。
-            </span>
-          </div>
+          <span className="text-xs text-muted-foreground">Web 端无本机数据目录。</span>
         </div>
       </SectionCard>
     );
@@ -186,7 +178,6 @@ export function ResetWorkspaceCard() {
   return (
     <SectionCard
       title="重置工作区"
-      description="归档本机全部数据,从零开始"
       className="border-destructive/40"
       action={
         <Badge

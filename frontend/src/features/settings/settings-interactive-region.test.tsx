@@ -1373,7 +1373,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     expect(provider.value).toBe("");
     expect(model.value).toBe("");
     expect(baseUrl.value).toBe("");
-    expect(model.placeholder).toBe("mimo-v2.5-asr");
+    expect(model).not.toHaveAttribute("placeholder");
     expect(
       doc.querySelector('[data-slot="multimodal-audio-preset-trigger"]'),
     ).not.toBeNull();

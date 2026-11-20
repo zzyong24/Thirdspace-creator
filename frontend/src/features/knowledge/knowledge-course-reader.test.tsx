@@ -47,7 +47,7 @@ describe("KnowledgeCourseReader", () => {
     expect(lesson).not.toBeNull();
     render(<KnowledgeCourseReader lesson={lesson} />);
     expect(screen.getByRole("heading", { level: 1, name: lesson!.meta.title })).toBeInTheDocument();
-    expect(screen.getByText("先自测，再看提示")).toBeInTheDocument();
+    expect(screen.queryByText("先自测，再看提示")).not.toBeInTheDocument();
     expect(screen.getByText("现在就做")).toBeInTheDocument();
     expect(screen.getByText("学完你会")).toBeInTheDocument();
     expect(screen.getByText(lesson!.meta.learningGoal)).toBeInTheDocument();

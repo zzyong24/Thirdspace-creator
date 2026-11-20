@@ -568,8 +568,16 @@ describe("ProjectsPage", () => {
   });
 });
 
-it("账号组空项目口径允许继续创作，不再声称按抖音号隔离",async()=>{
- const {buildProjectsViewModel}=await import("@/fixtures/selectors");await renderProjects({viewModel:buildProjectsViewModel([]),groupId:"real-group"});expect(screen.getByText("这个账号组还没有项目")).toBeInTheDocument();expect(screen.getByText(/项目属于当前账号组/)).toBeInTheDocument();expect(screen.queryByText(/项目按抖音号隔离/)).toBeNull();
+it("账号组空项目保留新建和选题立项入口", async () => {
+  const { buildProjectsViewModel } = await import("@/fixtures/selectors");
+  const { container } = await renderProjects({
+    viewModel: buildProjectsViewModel([]),
+    groupId: "real-group",
+  });
+  expect(screen.getByText("这个账号组还没有项目")).toBeInTheDocument();
+  expect(container.querySelector('[data-slot="projects-empty-new"]')).toHaveAttribute("href", "/projects/new");
+  expect(container.querySelector('[data-slot="projects-empty-topics"]')).toHaveAttribute("href", "/topics");
+  expect(screen.queryByText(/按抖音号隔离/)).toBeNull();
 });
 
 it('T1362项目保原列表并提供独立已采集作品入口',async()=>{

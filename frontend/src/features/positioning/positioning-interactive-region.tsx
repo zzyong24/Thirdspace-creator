@@ -283,21 +283,16 @@ function Field({
 function SubsectionHeader({
   icon: Icon,
   title,
-  hint,
 }: {
   readonly icon: LucideIcon;
   readonly title: string;
-  readonly hint?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1 border-t border-border/70 pt-5">
-      <div className="flex items-center gap-2">
-        <span className="flex size-6 items-center justify-center rounded-md bg-brand-soft text-brand">
-          <Icon className="size-3.5" strokeWidth={2.25} />
-        </span>
-        <h4 className="text-sm font-semibold text-foreground">{title}</h4>
-      </div>
-      {hint ? <p className="pl-8 text-xs text-text-subtle">{hint}</p> : null}
+    <div className="flex items-center gap-2 border-t border-border/70 pt-5">
+      <span className="flex size-6 items-center justify-center rounded-md bg-brand-soft text-brand">
+        <Icon className="size-3.5" strokeWidth={2.25} />
+      </span>
+      <h4 className="text-sm font-semibold text-foreground">{title}</h4>
     </div>
   );
 }
@@ -431,11 +426,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("persona")} icon={User}>
                 人设
               </FieldLabel>
-              <Helper>我是谁——一句话标签</Helper>
               <Input
                 id={id("persona")}
                 aria-label="人设"
-                placeholder="例：把论文变成可运行代码的工程创作者"
                 value={persona}
                 onChange={(e) => setPersona(e.target.value)}
               />
@@ -444,11 +437,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("field")} icon={Compass}>
                 领域
               </FieldLabel>
-              <Helper>所在赛道 / 主题边界</Helper>
               <Input
                 id={id("field")}
                 aria-label="领域"
-                placeholder="例：AI 工程 / 应用落地"
                 value={field}
                 onChange={(e) => setField(e.target.value)}
               />
@@ -457,11 +448,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("audience")} icon={Users}>
                 目标人群
               </FieldLabel>
-              <Helper>内容写给谁看</Helper>
               <Input
                 id={id("audience")}
                 aria-label="目标人群"
-                placeholder="例：想用 AI 提效的一线开发者"
                 value={audience}
                 onChange={(e) => setAudience(e.target.value)}
               />
@@ -470,11 +459,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("differentiation")} icon={Sparkles}>
                 差异化视角
               </FieldLabel>
-              <Helper>与同赛道相比的独特锚点</Helper>
               <Input
                 id={id("differentiation")}
                 aria-label="差异化"
-                placeholder="例：从论文到可复现工程"
                 value={differentiation}
                 onChange={(e) => setDifferentiation(e.target.value)}
               />
@@ -487,7 +474,6 @@ export function PositioningProfileForm({
               <Input
                 id={id("capabilities")}
                 aria-label="能力清单"
-                placeholder="例：论文拆解、代码演示、工程化、debug 实录"
                 value={capabilities}
                 onChange={(e) => setCapabilities(e.target.value)}
               />
@@ -497,7 +483,6 @@ export function PositioningProfileForm({
           <SubsectionHeader
             icon={Gem}
             title="定位母版补全"
-            hint="补全后会在首屏「当前定位母版」以彩色 facet 网格展示；留空的格不显示。"
           />
           {/* 6 facet：2 列网格 */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -505,11 +490,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("contentScope")} icon={Compass}>
                 内容范围
               </FieldLabel>
-              <Helper>我会讲什么 / 选题边界</Helper>
               <Textarea
                 id={id("contentScope")}
                 aria-label="内容范围"
-                placeholder="我会覆盖的主题与边界…"
                 value={contentScope}
                 onChange={(e) => setContentScope(e.target.value)}
               />
@@ -518,11 +501,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("avoid")} icon={Ban}>
                 不做什么
               </FieldLabel>
-              <Helper>明确排除的方向</Helper>
               <Textarea
                 id={id("avoid")}
                 aria-label="不做什么"
-                placeholder="我明确不碰的话题 / 形式…"
                 value={avoid}
                 onChange={(e) => setAvoid(e.target.value)}
               />
@@ -531,11 +512,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("corePain")} icon={HeartPulse}>
                 核心痛点
               </FieldLabel>
-              <Helper>受众最痛的问题</Helper>
               <Textarea
                 id={id("corePain")}
                 aria-label="核心痛点"
-                placeholder="受众迫切想解决的问题…"
                 value={corePain}
                 onChange={(e) => setCorePain(e.target.value)}
               />
@@ -544,11 +523,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("coreValue")} icon={Gem}>
                 核心价值
               </FieldLabel>
-              <Helper>我给受众的根本回报</Helper>
               <Textarea
                 id={id("coreValue")}
                 aria-label="核心价值"
-                placeholder="看完我的内容能得到什么…"
                 value={coreValue}
                 onChange={(e) => setCoreValue(e.target.value)}
               />
@@ -557,11 +534,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("tone")} icon={MessageCircle}>
                 表达风格
               </FieldLabel>
-              <Helper>语气 / 调性</Helper>
               <Textarea
                 id={id("tone")}
                 aria-label="表达风格"
-                placeholder="例：硬核、克制、工程师口吻…"
                 value={tone}
                 onChange={(e) => setTone(e.target.value)}
               />
@@ -570,11 +545,9 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("statusNote")} icon={Activity}>
                 当前状态
               </FieldLabel>
-              <Helper>账号此刻所处阶段</Helper>
               <Textarea
                 id={id("statusNote")}
                 aria-label="当前状态"
-                placeholder="例：冷启动期，主攻视频号…"
                 value={statusNote}
                 onChange={(e) => setStatusNote(e.target.value)}
               />
@@ -583,24 +556,16 @@ export function PositioningProfileForm({
         </>
       ) : (
         <>
-          <div className="rounded-lg border border-brand/20 bg-brand-soft/60 px-3.5 py-3">
-            <p className="text-xs leading-relaxed text-foreground/80">
-              以下规则会作为<span className="font-medium text-brand">硬约束</span>
-              注入下游 AI（选题 / 写稿 / 项目…）。写得越具体，AI 越贴合你的定位。
-            </p>
-          </div>
           {/* 5 条规则：单列（规则较长） */}
           <div className="flex flex-col gap-5">
             <Field>
               <FieldLabel htmlFor={id("topicRule")} icon={Lightbulb}>
                 选题规则
               </FieldLabel>
-              <Helper>什么该做 / 不该做——约束选题工作台的候选生成。</Helper>
               <Textarea
                 id={id("topicRule")}
                 aria-label="选题规则"
                 className="min-h-20"
-                placeholder="例：只做能落到可复现代码的选题，不蹭无技术含量的热点…"
                 value={topicRule}
                 onChange={(e) => setTopicRule(e.target.value)}
               />
@@ -609,12 +574,10 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("scriptRule")} icon={PenLine}>
                 写稿规则
               </FieldLabel>
-              <Helper>结构 / 钩子 / 表达约束——注入写稿与改写节点。</Helper>
               <Textarea
                 id={id("scriptRule")}
                 aria-label="写稿规则"
                 className="min-h-20"
-                placeholder="例：前 3 秒抛出可运行 demo，结尾给 GitHub 链接…"
                 value={scriptRule}
                 onChange={(e) => setScriptRule(e.target.value)}
               />
@@ -623,12 +586,10 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("projectRule")} icon={FolderKanban}>
                 项目规则
               </FieldLabel>
-              <Helper>立项 / 节奏约束——约束项目工作台的排期。</Helper>
               <Textarea
                 id={id("projectRule")}
                 aria-label="项目规则"
                 className="min-h-20"
-                placeholder="例：每个项目必须配可运行仓库，周更不破节奏…"
                 value={projectRule}
                 onChange={(e) => setProjectRule(e.target.value)}
               />
@@ -637,12 +598,10 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("forbidRule")} icon={ShieldAlert}>
                 禁止事项
               </FieldLabel>
-              <Helper>绝对红线——任何下游节点都不得越界。</Helper>
               <Textarea
                 id={id("forbidRule")}
                 aria-label="禁止事项"
                 className="min-h-20"
-                placeholder="例：不夸大、不标题党、不碰未验证的结论…"
                 value={forbidRule}
                 onChange={(e) => setForbidRule(e.target.value)}
               />
@@ -651,12 +610,10 @@ export function PositioningProfileForm({
               <FieldLabel htmlFor={id("expressionRule")} icon={Mic2}>
                 表达风格规则
               </FieldLabel>
-              <Helper>统一语气的硬约束——让所有产出口吻一致。</Helper>
               <Textarea
                 id={id("expressionRule")}
                 aria-label="表达风格规则"
                 className="min-h-20"
-                placeholder="例：第一人称、口语化、术语必给白话解释…"
                 value={expressionRule}
                 onChange={(e) => setExpressionRule(e.target.value)}
               />
@@ -756,12 +713,11 @@ export function PositioningStatementForm({
         <FieldLabel htmlFor={id("oneLiner")} icon={Quote}>
           一句话定位
         </FieldLabel>
-        <Helper>我是谁 + 帮谁 + 解决什么 + 怎么表达——保存即追加一条不可变版本。</Helper>
+        <Helper>保存即追加一条不可变版本。</Helper>
         <Textarea
           id={id("oneLiner")}
           aria-label="一句话定位"
           className="min-h-20"
-          placeholder="例：我帮一线开发者把最新 AI 论文变成可运行的工程代码。"
           value={oneLiner}
           onChange={(e) => setOneLiner(e.target.value)}
         />
@@ -815,11 +771,9 @@ export function PositioningStatementForm({
         <FieldLabel htmlFor={id("changeReason")} icon={History}>
           修改原因（可选）
         </FieldLabel>
-        <Helper>记录这次为什么开新版本，便于回看历史决策。</Helper>
         <Textarea
           id={id("changeReason")}
           aria-label="修改原因"
-          placeholder="例：受众从泛开发者收窄到 AI 应用工程师…"
           value={changeReason}
           onChange={(e) => setChangeReason(e.target.value)}
         />
@@ -846,7 +800,7 @@ export interface PositioningDraftDialogProps {
   readonly triggerIcon?: "plus" | "pencil" | "none";
   /** Dialog title + subtitle. */
   readonly title: string;
-  readonly description: string;
+  readonly description?: string;
   /** Pre-fill the statement form (复制为草稿 from a history row). */
   readonly statementSeed?: PositioningStatementSeed;
   /** 入口对应的默认页签。规则卡入口直达 rules，避免用户还要猜页签。 */
@@ -937,6 +891,7 @@ export function PositioningDraftDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
+        {...(description ? {} : { "aria-describedby": undefined })}
         showCloseButton
         onPointerDownOutside={(event) => event.preventDefault()}
         className="flex max-h-[85vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 p-0 sm:max-w-3xl"
@@ -944,7 +899,7 @@ export function PositioningDraftDialog({
       >
         <DialogHeader className="gap-1.5 border-b border-border/70 px-6 pt-6 pb-4">
           <DialogTitle className="text-lg">{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          {description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>
 
         {open ? (
@@ -980,9 +935,6 @@ export function PositioningDraftDialog({
                 forceMount
                 className="mt-0 data-[state=inactive]:hidden"
               >
-                <p className="mb-4 text-xs text-text-subtle">
-                  我是谁 / 领域 / 目标人群 / 差异化 / 能力——下游 AI 会以此为约束源。
-                </p>
                 <PositioningProfileForm
                   profile={savedProfile}
                   ctaLabel={savedProfile ? "保存" : "创建定位"}

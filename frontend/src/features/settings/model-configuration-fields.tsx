@@ -56,7 +56,6 @@ export function ProviderPresetRow({
     <SettingsFormRow
       label="供应商预设"
       controlId={`${idPrefix}-preset`}
-      help="选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。"
     >
       <Select
         value={presetId}

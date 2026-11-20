@@ -379,7 +379,7 @@ test("T-1021 首页案例独立浏览、取消无写入，多页模板创建原�
  await expect(page.getByRole("navigation",{name:"创作空间功能"}).getByRole("link",{name:"案例库"})).toHaveAttribute("aria-current","page");
  await page.getByRole("button",{name:"小红书图文",exact:true}).click();
  await page.getByRole("button",{name:/步骤笔记/}).click();
- await page.locator('input[placeholder="这次想表达什么"]').fill("独立库多页创作");
+ await page.getByLabel("本期标题", { exact: true }).fill("独立库多页创作");
  await page.locator('textarea[placeholder="粘贴当前确认稿或本期真实素材"]').fill("用户本期已确认的真实内容");
  await page.getByRole("button",{name:"1:1",exact:true}).click();
  await page.getByRole("button",{name:/用这个模板创作/}).click();

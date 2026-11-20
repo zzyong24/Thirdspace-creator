@@ -643,14 +643,12 @@ export function CreateCandidateForm() {
         }}
       >
         <DialogContent
+          aria-describedby={undefined}
           data-testid="create-candidate-dialog"
           className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-2xl"
         >
           <DialogHeader className="border-b px-5 py-4">
             <DialogTitle>新建选题卡</DialogTitle>
-            <DialogDescription>
-              标题必填;其余可选——可只填标题先建,后续在详情栏补全。
-            </DialogDescription>
           </DialogHeader>
           <form
             data-testid="create-candidate-form"
@@ -668,7 +666,6 @@ export function CreateCandidateForm() {
                 <FieldRow label="选题标题" required>
                   <Input
                     aria-label="选题标题"
-                    placeholder="一句话说清这条拍什么"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     autoFocus
@@ -677,7 +674,6 @@ export function CreateCandidateForm() {
                 <FieldRow label="切入角度">
                   <Input
                     aria-label="切入角度"
-                    placeholder="从什么角度切入（可空）"
                     value={angle}
                     onChange={(e) => setAngle(e.target.value)}
                   />
@@ -995,7 +991,7 @@ function CandidateDetailPanel({
       id="topics-review"
       className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
     >
-      <div className={styles.reviewHeading}><TopicWorkflowStep step={3} label="核对选题"/><a href="#topics-pick" className={styles.backToPool}>返回候选</a></div>
+      <div className={styles.reviewHeading}><TopicWorkflowStep label="核对选题"/><a href="#topics-pick" className={styles.backToPool}>返回候选</a></div>
 
       {/* 详情体可能较长 → 框内独立滚动 (列内裁切而非整页滚)。 */}
       <div tabIndex={0} role="region" aria-label="选题卡详情" className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
@@ -1022,7 +1018,7 @@ function CandidateDetailPanel({
             </p>
             <SourceReferenceLinks candidate={candidate} />
             <p className="text-sm text-muted-foreground">
-              这条还没有选题卡。升级为项目后，会在项目里自动补全一句话选题、观众痛点、推荐结构等。
+              这条还没有选题卡。
             </p>
 
           </div>
@@ -1054,12 +1050,11 @@ function CandidateProjectActions({candidate}:{readonly candidate:CandidateResour
     finally{if(current())inFlight.current=false;}
   }
   return <section id="topics-create" className={styles.createActions} aria-label="升级为项目">
-    <TopicWorkflowStep step={4} label="升级为项目"/>
-    <p className="text-xs leading-5 text-muted-foreground">选定方案后创建项目；准备进度、补充来源和候选采纳在项目页处理。</p>
+    <TopicWorkflowStep label="升级为项目"/>
     {candidate?<div className="flex flex-wrap items-center gap-2">
       {candidate.status==="promoted"||visible?.projectId?<span className="text-xs text-muted-foreground">项目已创建</span>:null}
       <Button type="button" size="sm" className="h-8 gap-1 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90" disabled={visible?.pending} onClick={()=>void promote()}><Rocket className="size-3.5"/>{visible?.pending?"正在读取项目…":candidate.status==="promoted"||visible?.projectId?"查看项目":"升级为项目"}</Button>
-    </div>:<p>先选择一条候选，再进入创作。</p>}
+    </div>:null}
     {visible?.error?<p role="alert" className="mt-2 text-sm text-destructive">{visible.error}</p>:null}
   </section>;
 }
@@ -1234,8 +1229,6 @@ export function IdeaDraftForm({
         <Input
           id={inputId}
           aria-label="一句话起选题"
-          aria-describedby={`${inputId}-hint`}
-          placeholder="说说你想做的内容"
           value={idea}
           onChange={(e) => setIdea(e.target.value)}
           disabled={phase === "opening"}
@@ -1250,7 +1243,6 @@ export function IdeaDraftForm({
           {phase === "opening" ? "打开对话中…" : "编导起草"}
         </Button>
       </form>
-      <p id={`${inputId}-hint`} className={prepareStyles.ideaHint}>点击后先存为候选，再进入对话补全。</p>
       {phase === "error" ? (
         <p className="mt-1.5 pl-6 text-[11px] text-muted-foreground">
           打开对话出错，请重试。已保存的候选仍在选题池中，可以选定方案后进入项目。
@@ -1286,7 +1278,7 @@ function PoolColumn({
     <section id="topics-pick" className={styles.pool}>
       <div className="flex shrink-0 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <TopicWorkflowStep step={2} label="挑选候选"/>
+          <TopicWorkflowStep label="挑选候选"/>
           {/* [T-244] 过滤态提示:让用户知道池子当前不是全量,以及在哪取消。 */}
           {sourceFilter ? (
             <button
@@ -1341,12 +1333,11 @@ function PoolColumn({
               </>
             ) : (
               <>
-                还没有候选。<a href="#topics-prepare" className="text-brand underline">前往“补充选题”</a>，用一句话起草或选择 AI 出题依据。
+                还没有候选。<a href="#topics-prepare" className="text-brand underline">前往“补充选题”</a>
                 {/* [T-332 S4·§6.2] 新号无信号的诚实引导:候选为空可能是「这个号的采集
                     作业还没跑 / 跑了但还没攒出信号」——给「跑一次采集」入口,别让用户
                     以为功能坏了。 */}
                 <span className="mt-2 block text-xs text-muted-foreground">
-                  新账号提示:选题信号来自这个号的采集数据。若还没跑过采集,先到
                   <a
                     href="/automations"
                     data-testid="candidate-empty-run-ingestion"
@@ -1354,7 +1345,6 @@ function PoolColumn({
                   >
                     自动化中心跑一次采集
                   </a>
-                  ,攒到评论/爆款信号后编导出题更准。
                 </span>
               </>
             )}

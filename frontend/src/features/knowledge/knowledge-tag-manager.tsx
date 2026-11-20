@@ -255,13 +255,11 @@ export function KnowledgeTagManager() {
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
           data-slot="tag-manager-panel"
+          aria-describedby={undefined}
           className="max-w-lg gap-3"
         >
           <DialogHeader>
             <DialogTitle>管理标签</DialogTitle>
-            <DialogDescription>
-              重命名、删除标签,或查看并移除标签在实体上的挂载。
-            </DialogDescription>
           </DialogHeader>
 
           {loadError !== null ? (

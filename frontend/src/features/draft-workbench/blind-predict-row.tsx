@@ -195,11 +195,7 @@ export function BlindPredictRow({
       className="mt-2.5 flex flex-col gap-1.5 border-t border-border/60 pt-2.5"
     >
       {prediction === null ? (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-            <Crosshair className="size-3.5 shrink-0 text-brand" />
-            发布前先盲预测:在对话里让编导逐维度盲评,锁一份预测分,发布后用真实数据对照校准。
-          </span>
+        <div>
           {/* [gate-F1] 硬门切换点:如需强制,加 disabled={report?.verdict !== "pass"} —— 一行改动,当前按主案软门实现 */}
           <Button
             type="button"

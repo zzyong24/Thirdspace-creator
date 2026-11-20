@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, MessageCircleMore, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, MessageCircleMore } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -80,31 +80,16 @@ export function PositioningDiscoveryWorkflow({
             <span className="flex size-9 items-center justify-center rounded-control bg-brand-soft text-brand">
               <MessageCircleMore className="size-5" />
             </span>
-            <div>
-              <h2 className="text-base font-semibold text-foreground">
-                定位对话
-              </h2>
-            </div>
+            <h2 className="text-base font-semibold text-foreground">
+              定位对话
+            </h2>
           </div>
 
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            无需登录抖音，先聊你的经历、优势和创作目标。每轮只问一个关键问题，文案和资料可以稍后补充。
-          </p>
-
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
-            <Badge variant="outline" data-slot="positioning-login-optional">默认无需抖音登录</Badge>
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
-              <Sparkles className="size-3.5" /> 随时可说“先给我一版”
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
-              <ShieldCheck className="size-3.5" /> 未采纳前不改当前母版
-            </span>
-            {initialSession ? (
-              <Badge variant="outline">
-                已恢复 {savedCount} 条旧前采信息 · {SOURCE_MODE_LABELS[initialSession.sourceMode]}
-              </Badge>
-            ) : null}
-          </div>
+          {initialSession ? (
+            <Badge variant="outline" className="mt-3">
+              已恢复 {savedCount} 条旧前采信息 · {SOURCE_MODE_LABELS[initialSession.sourceMode]}
+            </Badge>
+          ) : null}
         </div>
 
         <Link

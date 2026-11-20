@@ -285,7 +285,7 @@ describe("T-482 内容雷达工作区", () => {
     const stub=api();
     stub.ensureProject=vi.fn().mockResolvedValue({project:{id:"real-project"},sourceReferences:[],preparationTaskId:null,reused:false});
     render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[{item:detail.item,latestMetric:null,sourceCount:1}]} initialDetail={detail} api={stub}/>);
-    expect(screen.getByRole("heading",{name:"04 选定方案"})).toBeInTheDocument();
+    expect(screen.getByRole("heading",{name:"选定方案"})).toBeInTheDocument();
     expect(screen.queryByRole("button",{name:/AI 转写/})).toBeNull();
     expect(screen.queryByRole("button",{name:/生成我的改写稿/})).toBeNull();
     expect(screen.queryByRole("button",{name:/添加逐字稿|替换逐字稿/})).toBeNull();
@@ -335,7 +335,7 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
-    expect(screen.getByText("101 条真实内容")).toBeInTheDocument();
+    expect(screen.getByText("101 条内容")).toBeInTheDocument();
     await userEvent.click(
       screen.getByRole("button", { name: /继续加载.*已显示 100.*共 101/ }),
     );
@@ -602,10 +602,10 @@ describe("T-482 内容雷达工作区", () => {
       .parentElement;
     expect(detailRegion).not.toHaveClass("xl:col-span-2");
     expect(detailRegion).toHaveAttribute("data-slot", "radar-detail-pane");
-    const sourceStep=screen.getByRole("heading",{name:"01 来源与采集"});
-    const pickStep=screen.getByRole("heading",{name:"02 挑选内容"});
-    const readStep=screen.getByRole("heading",{name:"03 阅读核对"});
-    const createStep=screen.getByRole("heading",{name:"04 选定方案"});
+    const sourceStep=screen.getByRole("heading",{name:"来源与采集"});
+    const pickStep=screen.getByRole("heading",{name:"挑选内容"});
+    const readStep=screen.getByRole("heading",{name:"阅读核对"});
+    const createStep=screen.getByRole("heading",{name:"选定方案"});
     expect(sourceStep.compareDocumentPosition(pickStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(pickStep.compareDocumentPosition(readStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(readStep.compareDocumentPosition(createStep)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -798,7 +798,7 @@ describe("T-482 内容雷达工作区", () => {
     );
     expect(await screen.findAllByText("黑马作品")).toHaveLength(2);
     expect(screen.queryByText("真实作品")).not.toBeInTheDocument();
-    expect(screen.getByText("1 条真实内容")).toBeInTheDocument();
+    expect(screen.getByText("1 条内容")).toBeInTheDocument();
 
     await userEvent.click(
       within(
@@ -826,7 +826,7 @@ describe("T-482 内容雷达工作区", () => {
       }),
     );
     expect(await screen.findAllByText("真实作品")).toHaveLength(2);
-    expect(screen.getByText("2 条真实内容")).toBeInTheDocument();
+    expect(screen.getByText("2 条内容")).toBeInTheDocument();
   });
 
   it("列表和详情均不渲染历史封面或缺图占位", () => {
@@ -1144,7 +1144,7 @@ describe("T-482 内容雷达工作区", () => {
     );
   });
 
-  it("收藏与黑马发现按分组卡片呈现：说明、计数徽标与真实空态（无假按钮）", () => {
+  it("收藏与黑马发现按分组卡片呈现计数与真实空态", () => {
     const { container } = render(
       <IntelligenceWorkbench
         accountId="account-1"
@@ -1158,8 +1158,6 @@ describe("T-482 内容雷达工作区", () => {
     expect(groups).toHaveLength(2);
     const fav = screen.getByRole("region", { name: "我的收藏分组" });
     const dh = screen.getByRole("region", { name: "黑马发现分组" });
-    expect(within(fav).getByText("抖音收藏夹同步的作品")).toBeInTheDocument();
-    expect(within(dh).getByText("热点宝关键词命中的黑马作品")).toBeInTheDocument();
     expect(within(fav).getByRole("button", { name: /^我的收藏/ })).toHaveAttribute("aria-pressed", "false");
     expect(fav.querySelector('[data-slot="radar-collection-empty"]')?.textContent).toMatch(/还没有绑定收藏夹/);
     expect(dh.querySelector('[data-slot="radar-collection-empty"]')?.textContent).toMatch(/还没有黑马关键词/);
@@ -1187,9 +1185,6 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByText("我的收藏")).toBeInTheDocument();
     expect(screen.getByText("黑马发现")).toBeInTheDocument();
     expect(screen.getAllByText("未知").length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/升级为项目后，会在项目里自动转写正文/),
-    ).toBeInTheDocument();
   });
 
   it("详情栏可用键盘调整宽度，并记住合法范围", () => {
@@ -2100,7 +2095,7 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByRole("button", { name: "粘贴分享链接" }),
     );
     expect(
-      screen.getByText(/已有博主就把视频归入其作品/),
+      screen.getByRole("dialog", { name: "从抖音分享链接建档" }),
     ).toBeInTheDocument();
     await userEvent.type(
       screen.getByRole("textbox", { name: "抖音分享文本" }),
@@ -2189,7 +2184,7 @@ it("[T-1022] 两个空组切换卸载旧组列表及详情，旧筛选与迟到�
       screen.getByRole("button", { name: "粘贴分享链接" }),
     );
     expect(
-      screen.getByText(/已有博主就把视频归入其作品/),
+      screen.getByRole("dialog", { name: "从抖音分享链接建档" }),
     ).toBeInTheDocument();
     await userEvent.type(
       screen.getByRole("textbox", { name: "抖音分享文本" }),
@@ -2217,7 +2212,7 @@ it("来源管理只展示来源任务，入口仍打开原对话框", async () =
   render(<IntelligenceWorkbench presentation="sources" groupId="sources-only-empty" workspace={workspace} items={[]} initialDetail={null} api={api()}/>);
   expect(screen.getByRole("heading",{name:"真实来源"})).toBeVisible();
   expect(screen.getByRole("heading",{name:"从添加一个来源开始"})).toBeVisible();
-  expect(screen.queryByRole("heading",{name:"02 挑选内容"})).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading",{name:"挑选内容"})).not.toBeInTheDocument();
   expect(screen.queryByRole("textbox",{name:"搜索雷达内容"})).not.toBeInTheDocument();
   expect(screen.queryByRole("separator",{name:"调整作品详情宽度"})).not.toBeInTheDocument();
   for (const [name,title] of [["添加来源","添加真实来源"],["粘贴分享链接","从抖音分享链接建档"],["新建分类","新建监控分类"]]) {

@@ -26,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -152,14 +151,12 @@ function SignalRow({
               }}
             >
               <DialogContent
+                aria-describedby={undefined}
                 data-testid="audience-signal-link-confirm"
                 className="max-w-sm"
               >
                 <DialogHeader>
                   <DialogTitle>把这条信号转为候选?</DialogTitle>
-                  <DialogDescription>
-                    会从这条受众信号孵化一条「需求」来源的选题候选,进入候选池等你评估。
-                  </DialogDescription>
                 </DialogHeader>
                 <p className="line-clamp-3 rounded-control bg-surface-subtle/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
                   {signal.rawText}
@@ -273,14 +270,12 @@ export function AudienceSignalsButton({
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
+          aria-describedby={undefined}
           data-testid="audience-signals-dialog"
           className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-lg"
         >
           <DialogHeader className="border-b px-5 py-4">
             <DialogTitle>受众信号</DialogTitle>
-            <DialogDescription>
-              评论 / 私信 / 咨询里被识别出的真实需求 —— 值得做的可以一键转为选题候选。
-            </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
             {signals === null ? (

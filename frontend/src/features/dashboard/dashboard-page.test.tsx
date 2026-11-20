@@ -81,22 +81,10 @@ describe("DashboardPage", () => {
     cleanup();
   });
 
-  it("renders a welcome heading greeting the current user", async () => {
+  it("renders the home heading and the project link", async () => {
     await renderDashboard();
-    const heading = screen.getByRole("heading", { level: 1 });
-    // The greeting text includes the user name. Loose match keeps the test
-    // robust to small copy changes.
-    expect(heading.textContent ?? "").toMatch(/早上好/);
-  });
-
-  it("greets the real account holder passed via greetingName, not the fixture", async () => {
-    // Bug #1 regression: production passes the session user's displayName
-    // (identity 中性化后 =「创作者」) through the `greetingName` seam. The
-    // greeting must reflect THAT name, never the fixture "Zyong Zhu".
-    await renderDashboard({ greetingName: "创作者" });
-    const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading.textContent ?? "").toBe("早上好, 创作者!");
-    expect(heading.textContent ?? "").not.toMatch(/Zyong/i);
+    expect(screen.getByRole("heading", { level: 1, name: "首页" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "查看项目" })).toHaveAttribute("href", "/projects");
   });
 
   it("组首页展示采集作品与适用指标，系统发布和全组项目分别标明", async () => {
@@ -248,27 +236,24 @@ describe("DashboardPage", () => {
     expect(active.textContent?.trim()).toBe("首页");
   });
 
-  // [FE-M04] 副标题聚合真实待办;有待办时不谎报「全部处理完」。
-  it("有待办但无建议时,副标题反映真实待办,不谎报「所有任务都已处理完」", async () => {
+  it("有待办但无建议时，两张卡片分别显示待办计数和建议空态", async () => {
     const { buildDashboardViewModel } = await import("@/fixtures/selectors");
     const base = buildDashboardViewModel();
     // todos 非空(fixture 有),suggestions 置空 —— 命中原 bug 场景。
     const viewModel = { ...base, suggestions: [] };
     expect(viewModel.todos.length).toBeGreaterThan(0);
-    const { container } = await renderDashboard({ viewModel });
-    const subtext = container.querySelector('[data-slot="dashboard-subtext"]');
-    expect(subtext).not.toBeNull();
-    expect(subtext!.textContent ?? "").toContain("待办");
-    expect(subtext!.textContent ?? "").not.toContain("处理完");
+    await renderDashboard({ viewModel });
+    expect(screen.getByText(`${viewModel.todos.length} 项待处理任务`)).toBeVisible();
+    expect(screen.getByText("暂无创作建议。")).toBeVisible();
   });
 
-  it("待办与建议都为空时,副标题诚实显示「暂无」,不伪造", async () => {
+  it("待办为空时保留零计数和选题入口", async () => {
     const { buildDashboardViewModel } = await import("@/fixtures/selectors");
     const base = buildDashboardViewModel();
     const viewModel = { ...base, todos: [], suggestions: [] };
     const { container } = await renderDashboard({ viewModel });
-    const subtext = container.querySelector('[data-slot="dashboard-subtext"]');
-    expect(subtext!.textContent ?? "").toContain("暂无");
+    expect(screen.getByText("0 项待处理任务")).toBeVisible();
+    expect(container.querySelector('[data-slot="todo-empty"] a')).toHaveAttribute("href", "/topics");
   });
 
   // [FE-M04] 缺平台值显示「未设置」,不伪造「多平台」。

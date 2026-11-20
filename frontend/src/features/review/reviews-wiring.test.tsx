@@ -250,17 +250,12 @@ describe("Reviews authoring wiring ([T-329] 直接可用)", () => {
     });
   });
 
-  it("完成复盘门:无进行中 review 禁用 + 说明;添加 ≥1 洞察后可用 → reviews.complete + refresh", async () => {
+  it("完成复盘门:无进行中 review 禁用;添加 ≥1 洞察后可用 → reviews.complete + refresh", async () => {
     const { container } = await renderIsland(WIRING);
     const completeBtn = container.querySelector<HTMLButtonElement>(
       '[data-slot="complete-review-button"]',
     )!;
-    // 初始禁用 + 说明可见。
     expect(completeBtn.disabled).toBe(true);
-    expect(
-      container.querySelector('[data-slot="complete-review-hint"]')
-        ?.textContent ?? "",
-    ).toContain("自动创建");
     // 加一条洞察 → 门开。
     fillTitle(container);
     fireEvent.click(
@@ -438,10 +433,9 @@ describe("Reviews authoring wiring ([T-329] 直接可用)", () => {
     expect(mockClient.listReviewInsights).not.toHaveBeenCalled();
   });
 
-  it("复盘编辑明确说明手动洞察与知识库的关系", async () => {
+  it("复盘编辑保留手动洞察输入和保存入口", async () => {
     const { container } = await renderIsland(WIRING);
-    const note = container.querySelector('[data-slot="review-storage-note"]');
-    expect(note?.textContent ?? "").toContain("保存在本次复盘");
-    expect(note?.textContent ?? "").toContain("采纳后进入知识库");
+    expect(container.querySelector('[data-slot="insight-title-input"]')).toBeVisible();
+    expect(container.querySelector('[data-slot="add-insight-button"]')).toBeEnabled();
   });
 });

@@ -59,7 +59,7 @@ export function ModelCapabilitySource({renderConfiguration,highlight}:{renderCon
  const stale=Boolean(dirty&&baseline&&routing.resource&&baseline.revision!==routing.resource.revision);
  const save=async()=>{if(!parsed.success||!baseline||routing.saving)return;setSaved(false);try{const resource=await writeModelRouting(parsed.data,baseline.revision);setDraft({...resource.choices!});setDirty(false);setBaseline({revision:resource.revision,choices:JSON.stringify(resource.choices)});setSaved(true);}catch{/* 保存状态与原草稿由同一真值保留。 */}};
  return <div data-slot="model-capability-source" data-highlight="assistant-engine">
-  <SectionCard title="按用途选择模型" description="保存后，新开始的任务会用新的模型；正在进行的任务不受影响。">
+  <SectionCard title="按用途选择模型">
    <div className="flex flex-col gap-4">
     {families.map(family=>{
      const source=draft[family],mixed=family==='image'&&Boolean(draft.vision&&source&&draft.vision!==source),id=`model-source-${family}`,configKey=source?`${family}:${source}`:null;

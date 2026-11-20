@@ -58,7 +58,7 @@ export function ReportingConsentCard() {
       </div>
     </div>;
   };
-  return <SectionCard title="诊断与创作数据共享" description="可按用途和账号分别管理；未确认前不会采集待发数据。">
+  return <SectionCard title="诊断与创作数据共享">
     <div className="space-y-3" data-slot="reporting-settings">
       <p className="text-sm text-muted-foreground">诊断仅包含故障分类、参考编号和时间；创作数据仅包含公开作品的随机别名、播放与互动数字、采集来源和时间。账号级粉丝总量只在有可信来源时提供，目前显示不可用。不会自动发送正文、标题、素材、提示词、账号原始 ID、Cookie 或原始日志。</p>
       <p className="text-sm text-muted-foreground">用途是帮助定位故障、查看账号采集健康与公开作品趋势。计划接收方为 Growth 运营服务；接收服务尚未接通。开启后只在本机加密准备待发数据，最长保留 7 天；此版本不会向外发送。未来启用云端接收前会明确告知云端保留期并请你重新确认。</p>

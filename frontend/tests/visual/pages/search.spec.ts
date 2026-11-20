@@ -92,23 +92,18 @@ test.describe("Global Search page", () => {
         .count(),
     ).toBeGreaterThanOrEqual(2);
 
-    // SearchSideRail order: SearchFilters → QuickActions → History → Tips.
+    // Empty queries only show QuickActions → History.
     const rail = main.locator('[data-slot="search-side-rail"]');
     await expect(rail).toBeVisible();
-    const filters = rail.locator('[data-slot="search-filters"]');
+    await expect(rail.locator('[data-slot="search-filters"]')).toHaveCount(0);
     const quick = rail.locator('[data-slot="search-quick-actions"]');
     const history = rail.locator('[data-slot="search-history"]');
-    const tips = rail.locator('[data-slot="search-tips"]');
-    for (const block of [filters, quick, history, tips]) {
+    for (const block of [quick, history]) {
       await expect(block).toBeVisible();
     }
-    const yFilters = (await filters.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
     const yQuick = (await quick.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
     const yHistory = (await history.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
-    const yTips = (await tips.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
-    expect(
-      yFilters <= yQuick && yQuick <= yHistory && yHistory <= yTips,
-    ).toBe(true);
+    expect(yQuick <= yHistory).toBe(true);
   });
 
   test("URL ?q=... is reflected in the search input value", async ({
@@ -116,6 +111,7 @@ test.describe("Global Search page", () => {
   }) => {
     await page.goto("/search?q=AI");
     const main = page.locator('main[data-page="search"]');
+    await expect(main.locator('[data-slot="search-filters"]')).toBeVisible();
     const input = main.locator('[data-slot="search-page-input"]');
     await expect(input).toHaveValue("AI");
   });

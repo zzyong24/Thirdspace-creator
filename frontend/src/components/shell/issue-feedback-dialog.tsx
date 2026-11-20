@@ -357,20 +357,21 @@ export function IssueFeedbackDialog({
         <DialogHeader>
           <DialogTitle>帮助与反馈</DialogTitle>
           <DialogDescription>
-            这里处理软件使用问题；购买、续费或交付问题，请到设置里的“产品与服务”联系服务方。请先检查下方内容；不会发送日志、附件、截图、激活码或其他内容。
+            仅发送预览内容，不会附带日志、附件、截图或激活码。
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
           <div className="grid gap-1.5">
-            <label htmlFor="issue-feedback-summary" className="font-medium">
-              问题摘要
-            </label>
+            <div className="flex items-baseline gap-2">
+              <label htmlFor="issue-feedback-summary" className="font-medium">问题摘要</label>
+              <span id="issue-feedback-summary-length" className="text-xs text-muted-foreground">5–160 字符</span>
+            </div>
             <Input
               id="issue-feedback-summary"
+              aria-describedby="issue-feedback-summary-length"
               value={summary}
               maxLength={160}
-              placeholder="一句话说明遇到的问题（5–160 字）"
               onChange={(event) => {
                 setSummary(event.target.value);
                 setValidationError(null);
@@ -391,7 +392,6 @@ export function IssueFeedbackDialog({
               value={description}
               maxLength={4000}
               rows={4}
-              placeholder="请说明你做了什么、看到了什么，以及原本期待什么"
               aria-invalid={Boolean(validationError)}
               onChange={(event) => {
                 setDescription(event.target.value);
@@ -413,16 +413,7 @@ export function IssueFeedbackDialog({
           </div>
 
           <div className="grid gap-1.5">
-            <div className="flex items-end justify-between gap-4">
-              <label htmlFor="issue-feedback-preview" className="font-medium">
-                发送内容预览
-              </label>
-              <span className="text-[11px] text-muted-foreground">
-                {directSubmissionAvailable
-                  ? "下面就是应用内实际发送的内容"
-                  : "可复制后粘贴到反馈页"}
-              </span>
-            </div>
+            <label htmlFor="issue-feedback-preview" className="font-medium">发送内容预览</label>
             <div className="rounded-xl border border-border bg-muted/35 p-1">
               <Textarea
                 id="issue-feedback-preview"

@@ -235,7 +235,6 @@ export async function KnowledgePage({
       ) : state === "empty" ? (
         <><KnowledgeCaptureTools /><EmptyState
           title="这个工作区还没有资料或经验"
-          description="添加资料，或展开录入与整理，记录一条创作经验。"
         /></>
       ) : (
         <KnowledgeInteractiveRegion viewModel={vm} captureTools={<KnowledgeCaptureTools />} />

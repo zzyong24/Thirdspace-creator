@@ -15,7 +15,7 @@ test("TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读
  await page.goto("/accounts");
  const panel=page.getByRole("region",{name:"共享资源",exact:true});
  const reRead=panel.getByRole("button",{name:"重新读取",exact:true});
- const empty="当前没有共享授权。整理历史资料时，需要的素材与知识会保留来源并授权给目标组。";
+ const empty="当前没有共享授权。";
  async function settled(){
   await expect(panel).toBeVisible({timeout:120_000});
   await expect(panel.getByText("正在读取共享资源…",{exact:true})).toHaveCount(0,{timeout:120_000});

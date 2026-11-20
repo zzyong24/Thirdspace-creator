@@ -211,7 +211,7 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
   return <div data-slot="account-switcher" data-testid="account-switcher" data-state={state.kind} className={cn("flex flex-col gap-1",collapsed?"items-center":"w-full")}>
     <DropdownMenu>{collapsed?<Tooltip><TooltipTrigger asChild><DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger></TooltipTrigger><TooltipContent side="right">{label}</TooltipContent></Tooltip>:<DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>}
       <DropdownMenuContent align="start" side={collapsed?"right":"top"} className="w-64" data-testid="account-switcher-menu"><DropdownMenuLabel>切换账号组</DropdownMenuLabel>
-        {!groups.length&&state.kind!=="error"&&<div data-testid="account-switcher-empty" className="px-2 py-2 text-sm text-muted-foreground">还没有账号组。先创建工作区，也可以稍后绑定账号。</div>}
+        {!groups.length&&state.kind!=="error"&&<div data-testid="account-switcher-empty" className="px-2 py-2 text-sm text-muted-foreground">还没有账号组。</div>}
         {groups.map(group=><DropdownMenuItem key={group.id} data-testid="account-switcher-item" data-group-id={group.id} data-selected={group.id===currentId?"true":"false"} onSelect={()=>select(group.id)} className="flex gap-2"><Layers className="size-4 shrink-0" aria-hidden="true"/><span className="min-w-0 flex-1 truncate" title={group.name}>{group.name}</span>{group.id===currentId&&<Check className="size-4 text-brand" aria-hidden="true"/>}</DropdownMenuItem>)}
         <DropdownMenuSeparator/><DropdownMenuItem asChild data-testid="account-switcher-bind"><Link href="/accounts" prefetch={false}><Plus className="mr-2 size-4" aria-hidden="true"/>账号组与绑定账号</Link></DropdownMenuItem>
       </DropdownMenuContent>

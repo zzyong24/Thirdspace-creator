@@ -255,8 +255,7 @@ describe("account-manager 组管理视图", () => {
   mockClient.listAccountGroups.mockResolvedValue([]);mockClient.listAccounts.mockResolvedValue([]);
   render(<AccountManagerView viewModel={{accounts:[],groups:[]}}/>);
   const create=await screen.findByRole("button",{name:"创建账号组"});expect(create).toBeVisible();
-  expect(screen.getByText("2 开始定位，无需抖音登录")).toBeVisible();
-  expect(screen.getByText(/平台账号可按需要稍后绑定/)).toBeVisible();
+  expect(screen.getByLabelText("新账号组名称")).toBeVisible();
   expect(create).toBeDisabled();
   fireEvent.change(screen.getByLabelText("新账号组名称"),{target:{value:"免登录定位工作区"}});
   expect(create).toBeEnabled();

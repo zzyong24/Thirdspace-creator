@@ -113,7 +113,6 @@ export function ModelConfigurationCard({
   return (
     <SectionCard
       title="模型配置"
-      description="选择模型服务并填写模型和密钥；特殊接口设置可在高级设置中修改。"
     >
       <div
         data-slot="model-configuration-card"
@@ -129,7 +128,6 @@ export function ModelConfigurationCard({
         <SettingsFormRow
           label="模型"
           controlId="model-name"
-          help="模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。"
         >
           <Input
             id="model-name"
@@ -163,7 +161,6 @@ export function ModelConfigurationCard({
               data-slot="model-secret-input"
               value={secret}
               disabled={pending}
-              placeholder={model.hasSecret ? "已配置(留空不变)" : "粘贴 API Key"}
               onChange={(event) => { testSession?.invalidate(); setSecret(event.target.value); }}
               aria-label="模型密钥"
             />
@@ -197,7 +194,6 @@ export function ModelConfigurationCard({
           <SettingsFormRow
             label="提供商标识"
             controlId="model-provider"
-            help="仅用于识别配置；选择预设时已自动填写。"
           >
             <Input
               id="model-provider"
@@ -224,7 +220,6 @@ export function ModelConfigurationCard({
               data-slot="model-base-url-input"
               value={baseUrl}
               disabled={pending}
-              placeholder="https://example.com/v1"
               onChange={(event) => {
                 testSession?.invalidate();
                 const next = event.target.value;
@@ -273,7 +268,6 @@ export function ModelConfigurationCard({
           <SettingsFormRow
             label="温度"
             controlId="model-temperature"
-            help="一般保持默认即可；较高会让回答更发散。"
           >
             <Input
               id="model-temperature"

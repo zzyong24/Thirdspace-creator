@@ -18,7 +18,7 @@
  *  - AssetResultSection and VideoResultSection render thumbnails in
  *    a horizontal layout.
  *  - SearchSideRail order is exactly:
- *      SearchFilters → QuickActions → SearchHistory → SearchTips.
+ *      SearchFilters → QuickActions → SearchHistory.
  *  - URL `?q=...` is reflected in the search input value and the
  *    result section filters (declarative, two-way data flow).
  *  - The page is wrapped in the shared AppShell with exactly one
@@ -204,8 +204,9 @@ describe("SearchPage", () => {
     ).not.toBeNull();
   });
 
-  it("renders the SearchSideRail in the locked spec order (Facets → QuickActions → History → Tips)", async () => {
-    const { container } = await renderSearchPage();
+  it("keeps facets, quick actions and history in order without unsupported query guidance", async () => {
+    searchParamsRef.current = new URLSearchParams("q=AI");
+    const { container } = await renderSearchPage({ initialQuery: "AI" });
     const rail = container.querySelector(
       '[data-slot="search-side-rail"]',
     ) as HTMLElement;
@@ -217,8 +218,8 @@ describe("SearchPage", () => {
       "search-filters",
       "search-quick-actions",
       "search-history",
-      "search-tips",
     ];
+    expect(rail.querySelector('[data-slot="search-tips"]')).toBeNull();
     const orderedNodes = expectedSlots.map((slot) =>
       rail.querySelector(`[data-slot="${slot}"]`),
     );
@@ -229,6 +230,21 @@ describe("SearchPage", () => {
       const relation = previous.compareDocumentPosition(node);
       expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
+  });
+
+  it("mounts and removes facets as the URL query changes without remounting the page", async () => {
+    const { SearchFacetsPanel } = await import("./search-facets-panel");
+    const { container, rerender } = render(<SearchFacetsPanel />);
+    const facets = () => container.querySelector('[data-slot="search-filters"]');
+    expect(facets()).toBeNull();
+
+    searchParamsRef.current = new URLSearchParams("q=AI");
+    rerender(<SearchFacetsPanel />);
+    expect(facets()).not.toBeNull();
+
+    searchParamsRef.current = new URLSearchParams("");
+    rerender(<SearchFacetsPanel />);
+    expect(facets()).toBeNull();
   });
 
   it("reflects URL ?q=... state into the VISIBLE header search input value", async () => {

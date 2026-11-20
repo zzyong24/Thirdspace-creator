@@ -535,7 +535,7 @@ describe("SettingsPage", () => {
   });
 
   // [T-167] 激活状态卡(账户页签)。desktop 有激活态 → 四态徽章 + 授权类型/到期/机器码;
-  // web/未装配(activation undefined)→ 诚实空态「激活为桌面端功能」,绝不假装已激活。
+  // web/未装配(activation undefined)→ 诚实空态「桌面端专属」,绝不假装已激活。
   describe("ActivationStatusCard (T-167)", () => {
     it("web / 未装配(activation undefined)→ 诚实空态卡「桌面端专属」", async () => {
       await renderSettings();
@@ -547,7 +547,7 @@ describe("SettingsPage", () => {
       );
       expect(badge?.getAttribute("data-status")).toBe("unavailable");
       expect(badge?.textContent).toContain("桌面端专属");
-      expect(card!.textContent).toContain("激活为桌面端功能");
+      expect(card!.textContent).toContain("Web 端无需激活");
     });
 
     it("已激活(active)→ 绿徽章 + 授权类型/到期/机器码/最后在线校验", async () => {

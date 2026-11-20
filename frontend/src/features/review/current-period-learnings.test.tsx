@@ -105,7 +105,7 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
     );
   });
 
-  it("本期经验区标题/副标题 = 可裁决语义 + 采纳去处", () => {
+  it("本期经验区保留标题和真实候选", () => {
     const { container } = render(
       <AnalyticsReviewPage
         projectId={PROJECT_ID}
@@ -115,9 +115,8 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
     const region = container.querySelector<HTMLElement>(
       '[data-slot="current-period-learnings"]',
     )!;
-    expect(region.textContent).toContain("本期经验 · 可采纳沉淀");
-    // [T-356③] 副标题讲清全链路:来源(帮我复盘提炼)→ 裁决 → 采纳后的统一去处(知识库经验区)。
-    expect(region.textContent).toContain("采纳后沉淀进知识库的经验区");
+    expect(region.querySelector("h3")).toHaveTextContent("本期经验");
+    expect(region.querySelector('[data-slot="learning-queue"]')).not.toBeNull();
   });
 
   it("有候选:渲 AdjudicationQueue(采纳/翻案按钮)+ 区头常驻帮我复盘", () => {
@@ -184,7 +183,7 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
     expect(container.querySelector('[data-slot="review-analyze-primary"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="candidate-card"]')).toBeNull();
     expect(container.querySelector('[data-slot="current-period-learnings-cta"]')).toBeNull();
-    expect(container.textContent).toContain("暂无可沉淀的效果经验，仍可诊断内容");
+    expect(container.textContent).toContain("暂无可沉淀的效果经验");
   });
 
   it("[T-739] 复盘候选长依据默认只展示摘要，可按需展开全文", () => {

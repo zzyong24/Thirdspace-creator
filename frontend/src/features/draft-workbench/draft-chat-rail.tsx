@@ -54,7 +54,6 @@ export function DraftChatRail({
             persistKey: `project:${projectId}`,
             title: "编导对话",
             // [T-054 组B] 规范 §2:可见文案不夹生英文机制词,「hook」改「钩子」。
-            subtitle: "候选预览后采纳",
             // [T-103a] 稿面盲预测:诊断卡长确认门,锁定走既有端点链铸 immutable Prediction。
             blindPredict: {
               outputId: outputId ?? null,

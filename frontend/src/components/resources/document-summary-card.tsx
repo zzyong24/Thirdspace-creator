@@ -32,7 +32,7 @@ export function DocumentSummaryCard({ asset }: { asset: ResourceAsset }) {
 
   if (status === "failed") {
     return (
-      <SectionCard title="资料要点" description="AI 抽取" className="gap-1.5">
+      <SectionCard title="资料要点" className="gap-1.5">
         <p
           data-slot="doc-extract-failed"
           className="text-[11px] leading-relaxed text-destructive"
@@ -45,7 +45,7 @@ export function DocumentSummaryCard({ asset }: { asset: ResourceAsset }) {
   }
   if (status === "unsupported") {
     return (
-      <SectionCard title="资料要点" description="AI 抽取" className="gap-1.5">
+      <SectionCard title="资料要点" className="gap-1.5">
         <p
           data-slot="doc-extract-unsupported"
           className="text-[11px] leading-relaxed text-muted-foreground"
@@ -58,7 +58,7 @@ export function DocumentSummaryCard({ asset }: { asset: ResourceAsset }) {
   if (status !== "done") {
     // pending / null:异步抽取尚未回。
     return (
-      <SectionCard title="资料要点" description="AI 抽取" className="gap-1.5">
+      <SectionCard title="资料要点" className="gap-1.5">
         <p
           data-slot="doc-extract-pending"
           className="text-[11px] text-muted-foreground"
@@ -73,7 +73,6 @@ export function DocumentSummaryCard({ asset }: { asset: ResourceAsset }) {
   return (
     <SectionCard
       title="资料要点"
-      description="AI 从这份第一手资料提炼(只提炼原文已有,不编造)"
       className="gap-1.5"
     >
       <div data-slot="doc-material-summary" className="flex flex-col gap-2">
@@ -82,7 +81,7 @@ export function DocumentSummaryCard({ asset }: { asset: ResourceAsset }) {
           <MaterialSummaryList summary={summary} limit={3} />
         ) : (
           <p className="text-[11px] text-muted-foreground">
-            已抽取全文,但未生成要点卡(可在设置页配置文本摘要模型)。
+            已抽取全文,但未生成要点卡。
           </p>
         )}
         {fullText || hasCard ? (

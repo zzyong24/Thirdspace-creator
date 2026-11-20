@@ -181,7 +181,7 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
         )}
       >
         <UploadCloud className="size-4 shrink-0" aria-hidden="true" />
-        把文档、截图、录屏或封面拖进来 —— 统一保存到当前项目，写稿、制作和复盘时都能继续使用
+        上传创作素材
       </div>
       {pending.length > 0 ? (
         <ul data-slot="ammo-dump-pending" className="flex flex-col gap-1">

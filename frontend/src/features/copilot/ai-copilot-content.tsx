@@ -331,7 +331,6 @@ export interface AICopilotContentProps {
     };
     readonly persistKey?: string;
     readonly title?: string;
-    readonly subtitle?: string;
     /**
      * [T-103a] 稿面盲预测锁定上下文 —— 稿面右栏(surface=project)常驻,让对话内的
      * calibration.diagnosis 卡长出「锁定为盲预测」确认门(铁律②)。带项目的 content_output
@@ -2710,9 +2709,6 @@ export function AICopilotContent({
           >
             {embed?.title ?? (positioning ? "账号定位" : "AI 助手")}
           </h2>
-          {embed?.subtitle && <p className="truncate text-[11px] text-muted-foreground">
-            {embed.subtitle}
-          </p>}
         </div>
         {/* 历史记录 + 新对话(SPEC 本切片:占位按钮做实)。历史记录 → 拉过往会话列表,点某条
             切过去 + 读回;新对话 → 清空当前会话(下次发言后端 lazy 建新会话)。 */}
@@ -2806,7 +2802,7 @@ export function AICopilotContent({
 
       {/* [T-055b SPEC §5.1] 上下文 chips —— 常驻显示本会话注入的上下文(项目短标题 + 对象),
           可一键摘除;什么都没带时显式「未关联项目」空态提示(gate-F2:缺失不静默)。 */}
-      <div
+      {(!positioning || activeProjectChip || objectChip) && <div
         data-slot="copilot-context-chips"
         className="flex shrink-0 flex-wrap items-center gap-1.5"
       >
@@ -2837,15 +2833,14 @@ export function AICopilotContent({
               </button>
             ) : null}
           </span>
-        ) : (
+        ) : !positioning ? (
           <span
             data-slot="context-chip-empty"
             className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-subtle"
           >
-            {positioning ? "账号组级定位 · 无需关联项目" : "未关联项目 · 输入 @ 引用一个项目"}
+            未关联项目
           </span>
-        )}
-        {positioning&&<span data-slot="positioning-without-login" className="text-xs text-muted-foreground">无需先登录抖音，可直接描述经历、优势和目标。</span>}
+        ) : null}
         {objectChip ? (
           <span
             data-slot="context-chip"
@@ -2864,7 +2859,7 @@ export function AICopilotContent({
             </button>
           </span>
         ) : null}
-      </div>
+      </div>}
 
       {/* Conversation region (主区,bug #5)—— 消息流 + 输入框。flex-1 占满浮层主体,消息区
           自身滚动,输入框 pin 在底部。对话才是 Copilot 的核心,放大、可读、可滚。
@@ -3749,23 +3744,7 @@ export function AICopilotContent({
                 applyQuickPrompt({ prefill: [base.trim(), choice].filter(Boolean).join("\n\n"), functionKey: "positioning.generate" }, choice);
               }}
             />
-          ) : (
-            // 空对话态:大对话区不留白,给一句引导。
-            <div
-              data-slot="copilot-empty"
-              className="flex h-full flex-col items-center justify-center gap-1.5 text-center"
-            >
-              <span className="inline-flex size-9 items-center justify-center rounded-full bg-brand-soft text-brand">
-                <Sparkles className="size-4" aria-hidden="true" />
-              </span>
-              <p className="text-[13px] font-medium text-foreground">
-                {embeddedContentOwner ? "告诉我这份成稿需要怎么调整" : "描述本次目标"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {embeddedContentOwner ? "审阅候选后采纳。" : "也可选择下方指令。"}
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
         {/* 输入框(pin 底部)—— bug #5:成为对话区的固定主控件,不被次区挤压。 */}
         <Card
@@ -3781,7 +3760,8 @@ export function AICopilotContent({
             className="flex flex-col gap-2.5"
             data-slot="prompt-form"
           >
-            {!hasCreationWorkspace && <p role="status" data-slot="copilot-workspace-required" className="text-sm text-muted-foreground">先选择或创建账号组，再发送新请求。空组也可以创作，无需先绑定平台账号。<Link href="/accounts" onClick={preserveWorkspaceReturnDraft} className="ml-2 text-brand underline underline-offset-4">选择或创建账号组</Link></p>}
+            {!hasCreationWorkspace && <p role="status" data-slot="copilot-workspace-required" className="text-sm text-muted-foreground"><Link href="/accounts" onClick={preserveWorkspaceReturnDraft} className="text-brand underline underline-offset-4">选择或创建账号组</Link></p>}
+            {positioning && positioningAutoAdoptFrom !== null && <p role="status" className="text-xs text-warning">生成的定位会自动采纳为当前定位。</p>}
             {!assistantEngine.checking && !selectedEngineAvailable && (
               <p role="status" data-slot="assistant-engine-status" className="text-sm text-muted-foreground">
                 {assistantEngine.v2&&attachmentState.ids.length>0?"附带内容所需模型当前尚不可用，请核对文本与图片理解设置；输入与附件已保留":assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" onClick={preserveModelSettingsReturnDraft} className="ml-2 text-brand underline underline-offset-4">模型设置</Link>
@@ -3789,7 +3769,7 @@ export function AICopilotContent({
             )}
             {/* @项目引用(T-039b):relative 容器锚定下拉;输入 @ 弹真项目列表,选中插入 chip +
                 注入 chatContext(等价选中态项目)。下拉在 textarea 上方(bottom-full)。 */}
-            {positioning ? <label htmlFor="ai-copilot-prompt" className={positioningStyles.inputLabel}>告诉我你的想法</label> : null}
+            <label htmlFor="ai-copilot-prompt" className={positioning ? positioningStyles.inputLabel : "text-xs font-medium text-foreground"}>{positioning ? "定位对话内容" : "对话内容"}</label>
             <div className="relative" data-slot="prompt-input-wrap">
               {mentionOpen && (
                 <ProjectMentionMenu
@@ -3818,8 +3798,7 @@ export function AICopilotContent({
                 }}
                 rows={2}
                 aria-label={positioning ? "定位对话内容" : "我能帮你做什么"}
-                placeholder={positioning ? "说说你在做什么、想影响谁，或想解决的定位问题。不确定也可以。" : embeddedContentOwner === "wechat_article" ? "告诉我这篇文章需要怎么调整" : embeddedContentOwner === "graphic_post" ? "告诉我这份图文需要怎么调整" : "描述目标，或输入 @ 引用项目"}
-                className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground focus:outline-none"
                 data-slot="prompt-input"
               />
             </div>
@@ -3835,8 +3814,8 @@ export function AICopilotContent({
               className="flex flex-wrap items-center justify-between gap-2"
               data-slot="suggested-action-chips"
             >
-              <div className="flex flex-wrap items-center gap-1.5">
-                {!embeddedContentOwner && !positioning && vm.chips.map((action) => (
+              {!embeddedContentOwner && !positioning && vm.chips.length > 0 && <div className="flex flex-wrap items-center gap-1.5">
+                {vm.chips.map((action) => (
                   <button
                     key={action.id}
                     type="button"
@@ -3852,19 +3831,14 @@ export function AICopilotContent({
                     {action.label}
                   </button>
                 ))}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {/* [T-233] 发送快捷键提示:Enter 已改为换行,明示修饰键才发送(不然用户不知道怎么发)。 */}
-                <span
+              </div>}
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+                {hasPendingApproval && <span
                   data-slot="prompt-send-hint"
-                  className={`whitespace-nowrap text-[10px] ${
-                    hasPendingApproval ? "text-warning" : "text-muted-foreground"
-                  }`}
+                  className="text-xs text-warning"
                 >
-                  {hasPendingApproval
-                    ? "有待确认的本机读取 · 先处理上方授权卡再发"
-                    : "⌘/Ctrl ↩ 发送 · Enter 换行"}
-                </span>
+                  有待确认的本机读取 · 先处理上方授权卡再发
+                </span>}
                 <button
                   type="button"
                   onClick={() => {
@@ -3906,10 +3880,10 @@ export function AICopilotContent({
                     data-slot="submit-button"
                     data-testid="submit-button"
                     aria-label="提交提示给 Copilot"
-                    className="flex size-9 items-center justify-center rounded-full bg-brand text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-brand px-3 text-xs font-medium text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowUp className="size-4" aria-hidden="true" />
-                    <span className={positioning ? "" : "sr-only"}>{positioning ? "发送" : "生成"}</span>
+                    <span>{positioning ? "发送" : "提交"}</span>
                   </button>
                 )}
               </div>

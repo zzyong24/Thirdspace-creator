@@ -212,7 +212,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     mockSearch="copilot=open&surface=positioning";
     render(<AICopilotContent viewModel={VM}/>);
     expect(localStorage.getItem("creatoros:current-account")).toBeNull();
-    expect(screen.getByText("无需先登录抖音，可直接描述经历、优势和目标。")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "定位对话内容" })).toBeVisible();
     expect(sendMessage).not.toHaveBeenCalled();
     expect(screen.getByText("添加文件或图片")).toBeInTheDocument();
     const user=userEvent.setup();await user.type(screen.getByLabelText("定位对话内容"),"我从事家装设计，希望服务首次装修的家庭。");

@@ -151,7 +151,7 @@ test("稿面视频素材双击与键盘均可真实预览，刷新和小窗口�
   await page.goto(`/projects/${project.id}`);
   const card = page.getByRole("button", { name: "预览 编导智能体实拍.mp4" });
   await expect(card).toBeVisible();
-  await expect(card).toContainText("双击预览");
+  await expect(card).toHaveAttribute("tabindex", "0");
   expect(previewUrlRequests).toBe(0);
 
   await card.dblclick();

@@ -175,7 +175,6 @@ export function PublishingCenterPage({
             aria-label="内容日历"
             className="min-w-0 rounded-card border border-border bg-surface p-4 shadow-sm"
           >
-            {groupMode && <p className="mb-4 text-sm text-muted-foreground">账号组创作排期 · 平台筛选仅影响发布记录</p>}
             {calendar ?? <ErrorState error={CALENDAR_NOT_COMPOSED} />}
           </section>
 

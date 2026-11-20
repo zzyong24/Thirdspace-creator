@@ -238,17 +238,17 @@ export function TopicsView({
         </div>
       </header>
 
-      <nav className={styles.journey} aria-label="选题操作步骤"><ol>{["补充选题","挑选候选","核对选题","立项创作"].map((step,index)=><li key={step}><a href={`#${["topics-prepare","topics-pick","topics-review","topics-create"][index]}`}><span>{String(index+1).padStart(2,"0")}</span>{step}</a></li>)}</ol></nav>
+      <nav className={styles.journey} aria-label="选题操作步骤"><ol>{["补充选题","挑选候选","核对选题","立项创作"].map((step,index)=><li key={step}><a href={`#${["topics-prepare","topics-pick","topics-review","topics-create"][index]}`}>{step}</a></li>)}</ol></nav>
 
       <details id="topics-prepare" className={styles.prepare}>
-        <summary data-testid="topics-prepare-toggle"><TopicWorkflowStep step={1} label="补充选题" as="span"/><span>AI 选题 / 一句话起草 / 手动录入</span></summary>
+        <summary data-testid="topics-prepare-toggle"><TopicWorkflowStep label="补充选题" as="span"/></summary>
         <div className={prepareStyles.layout} data-slot="topics-prepare-body">
           <h2 className="sr-only">补充选题方式</h2>
           <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview}/>
           <section className={prepareStyles.entry} data-slot="topics-idea-entry" aria-label="我已有想法">
-            <header><h3>我已有想法</h3><p>先记下想法，再交给编导补全。</p></header>
+            <h3>我已有想法</h3>
             <IdeaDraftForm sort={sort} sourceFilter={sourceFilter}/>
-            <div className={prepareStyles.manual}><span>已有完整选题？</span><CreateCandidateForm/></div>
+            <div className={prepareStyles.manual}><CreateCandidateForm/></div>
           </section>
           <div className={prepareStyles.recent}><TodayTopicsStrip candidates={todayCandidates ?? candidates} dayStartIso={dayStartIso}/></div>
         </div>

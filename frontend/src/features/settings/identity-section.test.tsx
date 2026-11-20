@@ -17,8 +17,6 @@
  *    which writes the identity-owned `users.displayName`, then
  *    refreshes the server read. 单机免登录产品不再暴露邮箱编辑行；
  *    测试会锁定该旧身份控件确实下架。
- *  - the 已验证 badge and plan chip stay intentionally inert
- *    (decorative) — no verification/billing entity exists in Wave 0.
  *
  * Determinism: every visible value comes from the injected view model;
  * no `Date.now` / `Math.random` / network.

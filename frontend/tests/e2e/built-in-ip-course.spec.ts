@@ -76,7 +76,10 @@ test("内置 IP 课程从目录到学习进度形成连续真实旅程", async (
       name: "粉丝经济的核心公式：产品满足需求，人物制造偏好",
     }),
   ).toBeVisible();
-  await expect(lesson).toContainText("先自测，再看提示");
+  const selfCheck = lesson.locator("summary").filter({ hasText: /^Q1\./u }).first();
+  await expect(selfCheck).toBeVisible();
+  await selfCheck.click();
+  await expect(selfCheck.locator("..")).toHaveAttribute("open", "");
   await expect(lesson).toContainText("现在就做");
   await expect(lesson).toContainText("掌握标准");
   await expect(lesson).toContainText("学完你会");

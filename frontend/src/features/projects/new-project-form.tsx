@@ -86,7 +86,6 @@ export function NewProjectForm({includeWorkType = false, multipleWorkTypes = tru
         {includeWorkType && <summary className="cursor-pointer text-sm text-muted-foreground">详细设置（可选）</summary>}
         <div className="mt-2 flex flex-col gap-3.5">
           <ProjectBriefField brief={values.brief} onChange={brief => setValues(prev => ({...prev, brief}))} />
-          <DialogHint />
         </div>
       </details>
     </fieldset>
@@ -134,7 +133,6 @@ function ProjectNameField({ name, onChange, label = "项目名称" }: ProjectNam
         onChange={(event) => onChange(event.target.value)}
         required
         aria-required="true"
-        placeholder="例如：AI Native Browser 深度解析"
         autoComplete="off"
         data-slot="new-project-name-input"
       />
@@ -168,22 +166,10 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
         name="brief"
         value={brief}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="用一句话描述你想创作的内容或解决的问题，AI 会帮你完善和拓展"
         rows={2}
         data-slot="new-project-brief-input"
       />
     </div>
-  );
-}
-
-function DialogHint() {
-  return (
-    <p
-      data-slot="new-project-hint"
-      className="text-[11px] text-muted-foreground"
-    >
-      创建后可在各工作台继续补充内容、调整尺寸和设置发布平台。
-    </p>
   );
 }
 

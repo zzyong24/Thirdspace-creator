@@ -27,7 +27,6 @@ import {
   CircleCheck,
   CircleX,
   FileUp,
-  Inbox,
   LoaderCircle,
   Sparkles,
 } from "lucide-react";
@@ -534,11 +533,6 @@ export function KnowledgeDumpZone({
       >
         {!importOnly && (
           <>
-            <div className="flex items-center gap-2 text-xs text-text-subtle">
-              <Inbox className="size-4 shrink-0" aria-hidden="true" />
-              把笔记、金句、逐字稿整段交给 AI 蒸馏成知识原子 —— 点「AI
-              蒸馏」在对话里粘原文,采纳后进知识库
-            </div>
             <textarea
               data-slot="knowledge-dump-input"
               aria-label="粘贴文本或 URL，也可拖入 PDF、DOCX、Markdown 或 TXT 文件"

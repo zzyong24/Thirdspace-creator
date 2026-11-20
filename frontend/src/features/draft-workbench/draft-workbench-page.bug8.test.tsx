@@ -126,13 +126,11 @@ function baseVm(overrides: Partial<DraftWorkbenchVm> = {}): DraftWorkbenchVm {
 }
 
 describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
-  it("非 imported + versionCount=0 → 老文案(直接开写 / 编导起草)", () => {
+  it("新建空稿只保留编辑区标题", () => {
     render(<DraftWorkbenchPage vm={baseVm()} />);
     const section = screen.getByText(/口播脚本/);
-    // 同一区头下,副行文案应给「自己写的」语义。
     const hint = section.parentElement?.textContent ?? "";
-    expect(hint).toContain("写你的口播稿");
-    expect(hint).not.toContain("本作品从抖音导入");
+    expect(hint).toBe("口播脚本");
   });
 
   it("[Bug-8 T-021 二次] imported + versionCount=0 → 用户视角,透明「系统会处理」+「不想等就现在 AI 起草」,不暴露内部", () => {
@@ -168,7 +166,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
     expect(hint).not.toContain("「拉逐字稿」");
   });
 
-  it("imported + versionCount>0 → 老文案(已有稿,提示「写/存/回滚」)", () => {
+  it("已有稿保留版本号", () => {
     render(
       <DraftWorkbenchPage
         vm={baseVm({
@@ -189,7 +187,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
     const section = screen.getByText(/口播脚本/);
     const hint = section.parentElement?.textContent ?? "";
     expect(hint).toContain("v1");
-    expect(hint).toContain("写你的口播稿");
+
   });
 });
 
@@ -447,8 +445,7 @@ describe("DraftWorkbenchPage — T-387b 缺素材清单", () => {
     const note = container.querySelector('[data-slot="draft-missing-materials"]');
     expect(note).not.toBeNull();
     expect(note!.textContent).toContain("产品操作录屏");
-    expect(note!.textContent).toContain("联网找资料");
-    expect(note!.textContent).toContain("上传 / 管理素材");
+    expect(container.querySelector('[data-slot="draft-missing-materials"] li')).toHaveTextContent("产品操作录屏");
 
     rerender(<DraftWorkbenchPage vm={baseVm()} />);
     expect(

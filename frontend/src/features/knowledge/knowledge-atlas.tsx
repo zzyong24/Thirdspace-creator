@@ -50,7 +50,7 @@ export function KnowledgeAtlas({
           data-slot="knowledge-atlas-empty"
           className="rounded-md border border-border bg-surface-subtle px-3 py-4 text-center text-[12px] text-muted-foreground"
         >
-          还没有可上墙的知识 —— 把材料倒进上方倾倒场,蒸馏出的观点会按主题聚在这里。
+          还没有可上墙的知识
         </p>
       ) : null}
 

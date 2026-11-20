@@ -65,7 +65,7 @@ export function WorkCreationCta({ projectId, primary = true }: { projectId: stri
       className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface-subtle px-3 py-2"
     >
       <Button type="button" variant={primary?"default":"outline"} disabled={creating||submission==='preparing'} onClick={()=>void createPair()} className="min-h-11 gap-2"><Sparkles className="size-4"/>{creating||submission==='preparing'?"正在保存并准备…":submitted?"查看原文章和图文生成":creationError||submission==='not-submitted'?"恢复原请求 · 一键生成文章和图文":"一键生成文章和图文"}</Button>
-      <span className="text-[11px] text-text-subtle">使用上方已保存的脚本，分别生成文章和图文候选，预览后再采纳</span>
+
       <Link href={`/projects/${encodeURIComponent(projectId)}?view=works`} className="text-sm text-primary hover:underline">查看本项目作品</Link>
       {creationError?<p role="alert" className="w-full text-sm text-destructive">{creationError}</p>:null}
     </section>
@@ -184,9 +184,6 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
         <GitBranch className="size-3.5" />
         先梳理观点（可选）
       </Button>
-      <span className="text-[11px] text-text-subtle">
-        复杂观点可先梳理；已有完整逐字稿或简单短口播可直接写稿
-      </span>
     </section>
   );
 }

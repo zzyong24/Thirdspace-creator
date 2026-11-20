@@ -827,9 +827,6 @@ function IntelligenceWorkbenchScope({
             <h1 className="truncate text-lg font-semibold text-foreground">
               内容雷达
             </h1>
-            <p className="text-xs leading-5 text-muted-foreground [overflow-wrap:anywhere]">
-              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿在项目内补充或转写
-            </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -841,9 +838,9 @@ function IntelligenceWorkbenchScope({
       </div>
       )}
       {sourcesOnly ? <div className={styles.actions} aria-label="来源操作">
-        <div>{sourceDialogs.add}<p>持续跟踪主页、网页或订阅源</p></div>
-        <div>{sourceDialogs.import}<p>导入单条抖音作品</p></div>
-        <div>{sourceDialogs.collection}<p>按主题整理来源</p></div>
+        <div>{sourceDialogs.add}</div>
+        <div>{sourceDialogs.import}</div>
+        <div>{sourceDialogs.collection}</div>
       </div> : null}
 
       <SourceRunHistoryDialog
@@ -993,7 +990,7 @@ function IntelligenceWorkbenchScope({
         >
           {!sourcesOnly ? <>
           <div className={cn("shrink-0 border-b border-border/70 p-3", layoutStyles.sourceHeader)}>
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">01</span> 来源与采集</h2>
+            <h2 className="mb-3 text-sm font-semibold">来源与采集</h2>
             <div className="flex flex-wrap gap-2">
               {sourceDialogs.collection}
               {sourceDialogs.import}
@@ -1140,7 +1137,7 @@ function IntelligenceWorkbenchScope({
           aria-busy={itemsLoading}
           className={cn("flex min-h-0 min-w-0 flex-col bg-canvas/55", layoutStyles.itemsPane)}
         >
-          <h2 className="flex shrink-0 items-center gap-2 border-b border-border/70 px-4 py-3 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
+          <h2 className="shrink-0 border-b border-border/70 px-4 py-3 text-sm font-semibold">挑选内容</h2>
           <div className={layoutStyles.filterBar}>
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>逐字稿</span>
@@ -1249,7 +1246,7 @@ function IntelligenceWorkbenchScope({
             <span className="shrink-0 text-xs text-muted-foreground">
               {itemsLoading
                 ? "正在切换…"
-                : `${scopedTotal} 条真实内容`}
+                : `${scopedTotal} 条内容`}
             </span>
           </div>
           <div className={cn("min-h-0 flex-1 overflow-y-auto p-2", layoutStyles.itemList)}>
@@ -1258,7 +1255,7 @@ function IntelligenceWorkbenchScope({
                 role="status"
                 className="rounded-xl border border-dashed border-border/80 px-4 py-10 text-center text-sm text-muted-foreground"
               >
-                正在读取该分类的真实内容…
+                正在读取该分类的内容…
               </div>
             ) : filteredItems.length === 0 ? (
               <RadarEmptyState
@@ -1359,9 +1356,6 @@ function IntelligenceWorkbenchScope({
                   <ChevronRight className="size-5" />
                 </span>
                 <p className="text-sm font-medium">选择一条内容查看完整证据</p>
-                <p className="text-xs leading-5 text-muted-foreground">
-                  这里会显示公开指标、来源快照和逐字稿状态。
-                </p>
               </div>
             )}
           </aside>
@@ -1373,9 +1367,9 @@ function IntelligenceWorkbenchScope({
 }
 
 /** 系统分组（我的收藏 / 黑马发现）的说明与空态文案；只描述真实来源，不提供假入口。 */
-const SYSTEM_COLLECTION_META: Record<string, { icon: typeof Heart; hint: string; empty: string }> = {
-  我的收藏: { icon: Heart, hint: "抖音收藏夹同步的作品", empty: "还没有绑定收藏夹。用上方「添加来源」选择「我的收藏」，验证后会出现在这里。" },
-  黑马发现: { icon: Flame, hint: "热点宝关键词命中的黑马作品", empty: "还没有黑马关键词。用上方「添加来源」选择「黑马关键词」并验证热点宝授权。" },
+const SYSTEM_COLLECTION_META: Record<string, { icon: typeof Heart; empty: string }> = {
+  我的收藏: { icon: Heart, empty: "还没有绑定收藏夹。" },
+  黑马发现: { icon: Flame, empty: "还没有黑马关键词。" },
 };
 
 /** 只按服务返回的 parentId 排目录，不推断内容归类；缺父级或循环仍保留可见条目。 */
@@ -1440,9 +1434,6 @@ function RadarCollectionGroup({
           {count}
         </span>
       </button>
-      {meta ? (
-        <p className="px-3 pb-2 text-xs leading-4 text-muted-foreground">{meta.hint}</p>
-      ) : null}
       {count > 0 ? (
         <div className="border-t border-border/50 pb-1.5" data-slot="radar-collection-sources">{children}</div>
       ) : meta && !filtering ? (
@@ -1658,7 +1649,7 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
   return (
     <div className="flex min-h-full flex-col">
       <div className={cn("border-b border-border/70 p-3", layoutStyles.detailHeader)}>
-        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">03</span> 阅读核对</h2>
+        <h2 className="mb-4 text-sm font-semibold">阅读核对</h2>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-base font-semibold leading-6 text-foreground">
@@ -1730,13 +1721,13 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
             <p className="mt-3 whitespace-pre-wrap rounded-xl bg-muted/60 p-3 text-sm leading-6 text-foreground">
               {detail.transcript.text}
             </p>
-          ) : (
+          ) : transcriptCooling || transcriptBusy ? (
             <div className="mt-2 rounded-lg border border-dashed border-border p-3">
               <p className="text-xs leading-5 text-muted-foreground">
-                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "升级为项目后，会在项目里自动转写正文。"}
+                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续。" : "AI 正在后台转写。"}
               </p>
             </div>
-          )}
+          ) : null}
           {transcriptLocked ? (
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <LockKeyhole className="size-3.5 text-primary" />
@@ -1783,10 +1774,7 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
         </section>
 
         <section data-radar-step="upgrade" className="border-t border-border pt-3">
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><span className="text-primary">04</span> 选定方案</h3>
-          <p className="text-xs leading-5 text-muted-foreground">
-            选中这条作为方案后升级为项目。项目会保留来源；准备进度、补充逐字稿和候选采纳都在项目页处理。
-          </p>
+          <h3 className="mb-2 text-sm font-semibold">选定方案</h3>
           <RadarUpgradeAction
             state={upgradeState}
             submitting={upgradeSubmitting??false}
@@ -1819,13 +1807,6 @@ function RadarEmptyState({
             ? "来源已就绪，尚未同步到内容"
             : "先添加一个真实来源"}
       </h3>
-      <p className="mt-2 max-w-sm text-xs leading-5 text-muted-foreground">
-        {filtered
-          ? "可以清除筛选后查看当前来源中的全部真实内容。"
-          : hasSources
-          ? "点击左侧来源旁的同步按钮。真无新增会显示“无变化”，登录或解析失败会明确提示，不会伪装成 0 条。"
-          : "可以添加抖音博主主页、网页、RSS 或黑马关键词。收藏夹选择器将在登录抖音后提供。"}
-      </p>
       {filtered && onClear ? (
         <Button
           type="button"

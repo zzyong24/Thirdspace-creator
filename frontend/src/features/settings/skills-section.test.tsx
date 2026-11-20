@@ -119,8 +119,8 @@ afterEach(() => {
 });
 
 describe("SkillsSection 列表", () => {
-  it("按组渲染:对话技能 / 创作节点 / 采集分类,行显中文名 + id", () => {
-    const { container, getByText } = render(<SkillsSection skills={SKILLS} />);
+  it("按组渲染中文技能名称并保留行标识", () => {
+    const { container, getByRole, getByText, queryByText } = render(<SkillsSection skills={SKILLS} />);
     const groups = Array.from(
       container.querySelectorAll('[data-slot="skills-group"]'),
     ).map((n) => n.getAttribute("data-group-key"));
@@ -129,8 +129,8 @@ describe("SkillsSection 列表", () => {
     expect(getByText("选题编导")).not.toBeNull();
     expect(getByText("写文案")).not.toBeNull();
     expect(getByText("知识归类")).not.toBeNull();
-    // id 也显(mono 副标)。
-    expect(getByText("script.draft")).not.toBeNull();
+    expect(getByRole("button", { name: /^写文案\s*已定制$/ }).closest('[data-skill-id="script.draft"]')).not.toBeNull();
+    expect(queryByText("script.draft")).toBeNull();
   });
 
   it("「已定制」徽章只在 customized 行显示", () => {

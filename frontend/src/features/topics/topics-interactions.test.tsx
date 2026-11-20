@@ -480,7 +480,7 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(screen.queryByTestId("enrich-button")).toBeNull();
     const actions=screen.getByRole("region",{name:"升级为项目"});
     expect(within(actions).getAllByRole("button")).toHaveLength(1);
-    expect(within(actions).getByText(/准备进度、补充来源和候选采纳在项目页处理/)).toBeVisible();
+    expect(within(actions).getByRole("button", {name:"升级为项目"})).toBeVisible();
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
@@ -754,8 +754,8 @@ describe("选题操作步骤布局",()=>{
     expect(within(prepare).getByRole("textbox",{name:"一句话起选题"})).toBeVisible();
     expect(within(prepare).getByRole("button",{name:"手动详填"})).toBeVisible();
     expect(within(prepare).getAllByRole("link")).toHaveLength(4);
-    expect(screen.getByRole("heading",{name:"02 挑选候选"})).toBeVisible();
-    expect(screen.getByRole("heading",{name:"03 核对选题"})).toBeVisible();
+    expect(screen.getByRole("heading",{name:"挑选候选"})).toBeVisible();
+    expect(screen.getByRole("heading",{name:"核对选题"})).toBeVisible();
     expect(within(screen.getByRole("region",{name:"升级为项目"})).getByRole("button",{name:"升级为项目"})).toBeEnabled();
     expect(mockClient.createCandidate).not.toHaveBeenCalled();
     expect(mockClient.ensureProject).not.toHaveBeenCalled();
@@ -772,13 +772,12 @@ describe("选题操作步骤布局",()=>{
 });
 
 describe("补充选题展开面板",()=>{
-  it("四种AI依据有独立说明，保留原深链与预填，打开不会创建任务",()=>{
+  it("四种AI依据保留原深链与预填，打开不会创建任务",()=>{
     render(<TopicGenerateBand basis={overview().basis}/>);
     expect(screen.getByRole("heading",{name:"让 AI 帮我找选题"})).toBeVisible();
     for(const [basis,label] of [["positioning","基于定位出题"],["comments","基于评论问题"],["knowledge","基于知识库出题"],["trend","基于热点出题"]]){
       const link=screen.getByRole("link",{name:label});
       expect(link).toHaveAttribute("data-basis",basis);
-      expect(link).toHaveAccessibleDescription();
       const url=new URL(link.getAttribute("href")!,"http://localhost/topics");
       expect(url.searchParams.get("fn")).toBe("topic.generate");
       expect(url.searchParams.get("prefill")).toBeTruthy();
@@ -787,13 +786,12 @@ describe("补充选题展开面板",()=>{
     expect(mockClient.createAITask).not.toHaveBeenCalled();
     expect(mockClient.createCandidate).not.toHaveBeenCalled();
   });
-  it("自己补充区域有可见标签与保存提示，空输入禁用，收起不丢未提交内容",()=>{
+  it("自己补充区域有可见标签，空输入禁用，收起不丢未提交内容",()=>{
     render(<TopicsView viewModel={{candidates:[candidate({card:filledCard()})],overview:overview(),sort:"predictedScore",pendingReview:null}}/>);
     fireEvent.click(screen.getByTestId("topics-prepare-toggle"));
     const entry=screen.getByRole("region",{name:"我已有想法"});
     const input=within(entry).getByLabelText("一句话起选题");
     expect(within(entry).getByText("一句话起选题",{selector:"label"})).toBeVisible();
-    expect(input).toHaveAccessibleDescription("点击后先存为候选，再进入对话补全。");
     expect(within(entry).getByRole("button",{name:"编导起草"})).toBeDisabled();
     fireEvent.change(input,{target:{value:"一个未提交的想法"}});
     fireEvent.click(screen.getByTestId("topics-prepare-toggle"));

@@ -34,7 +34,6 @@ import * as React from "react";
 import { Sparkles, X } from "lucide-react";
 
 import { useSearchParams } from "next/navigation";
-import { PositioningConversationGuide } from "@/features/copilot/positioning-conversation";
 import styles from "@/features/copilot/positioning-conversation.module.css";
 
 import { AICopilotContent } from "@/features/copilot/ai-copilot-content";
@@ -83,8 +82,7 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
       </header>
 
       {/* 高度必须通过连续的 flex 容器传到消息区，普通 block 会让长结果撑出面板。 */}
-      <div data-slot="ai-copilot-body" className={positioning ? styles.body : "flex min-h-0 min-w-0 flex-1 flex-col"}>
-        {positioning ? <PositioningConversationGuide /> : null}
+      <div data-slot="ai-copilot-body" className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div data-slot="ai-copilot-content-wrap" className="flex min-h-0 min-w-0 flex-1 flex-col">
           <AICopilotContent />
         </div>

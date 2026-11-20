@@ -200,12 +200,7 @@ function PageHeader({
 }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <h1 className="text-xl font-semibold text-foreground">定位中心</h1>
-        <p className="text-sm text-muted-foreground">
-          明确受众、价值与表达方式。
-        </p>
-      </div>
+      <h1 className="min-w-0 text-xl font-semibold text-foreground">定位中心</h1>
       {isEmpty ? null : (
         <ResetPositioningMasterButton />
       )}
@@ -283,7 +278,6 @@ function HeroMaster({
             triggerSize="sm"
             triggerIcon="pencil"
             title="编辑当前定位"
-            description="更新账号画像，或追加一条新的不可变定位陈述。"
           />
         </div>
       }
@@ -409,8 +403,7 @@ function DownstreamRules({
       data-testid="positioning-downstream"
       className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-card p-5"
     >
-      <div className="flex shrink-0 flex-col gap-0.5">
-        <div className="flex items-center justify-between gap-3">
+      <div className="flex shrink-0 items-center justify-between gap-3">
           <h2 className="text-[15px] font-semibold text-foreground">
             定位规则
           </h2>
@@ -421,13 +414,8 @@ function DownstreamRules({
             triggerSize="sm"
             triggerIcon="pencil"
             title="编辑定位规则"
-            description="修改规则，保存后用于后续 AI 创作。"
             initialTab="rules"
           />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          规则用于后续 AI 创作，保存后生效。
-        </p>
       </div>
 
       {shown.length > 0 ? (
@@ -464,27 +452,7 @@ function DownstreamRules({
           className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 rounded-control border border-dashed border-border/70 bg-surface-subtle/40 px-5 py-8 text-center"
         >
           <IconChip icon={SlidersHorizontal} tone="brand" className="size-11" />
-          <div className="flex flex-col gap-1.5">
-            <p className="text-sm font-semibold text-foreground">
-              还没有定位规则
-            </p>
-            <p className="mx-auto max-w-[15rem] text-xs leading-relaxed text-muted-foreground">
-              规则是下游 AI 的硬约束——填好后，选题 / 写稿 / 项目 / 评分 / Copilot
-              每次生成都照它来。
-            </p>
-          </div>
-          {/* 5 条规则名预览(轻提示要填什么),与规则卡同一套图标语言。 */}
-          <ul className="flex flex-wrap items-center justify-center gap-1.5">
-            {RULE_HINTS.map((hint) => (
-              <li
-                key={hint.label}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] text-muted-foreground"
-              >
-                <hint.icon className="size-3" aria-hidden />
-                {hint.label}
-              </li>
-            ))}
-          </ul>
+          <p className="text-sm font-semibold text-foreground">还没有定位规则</p>
           <PositioningDraftDrawer
             profile={profile}
             triggerLabel="去填定位规则"
@@ -492,7 +460,6 @@ function DownstreamRules({
             triggerSize="sm"
             triggerIcon="pencil"
             title="编辑当前定位"
-            description="填写后续 AI 创作需要遵守的规则。"
             initialTab="rules"
           />
         </div>
@@ -501,14 +468,6 @@ function DownstreamRules({
   );
 }
 
-// [T-154] 空态的 5 条规则名预览(与 DownstreamRules 的 rules 同图标语言,静态提示要填什么)。
-const RULE_HINTS: ReadonlyArray<{ label: string; icon: LucideIcon }> = [
-  { label: "选题规则", icon: Lightbulb },
-  { label: "写稿规则", icon: PenLine },
-  { label: "项目规则", icon: FolderKanban },
-  { label: "禁止事项", icon: ShieldAlert },
-  { label: "表达风格", icon: Mic2 },
-];
 
 // 历史版本紧凑表：有完整快照走真实恢复；旧版缺快照只诚实复制陈述。
 function HistoryTable({
@@ -524,7 +483,6 @@ function HistoryTable({
     <SectionCard
       className="shrink-0"
       title="版本历史"
-      description="恢复会切换到所选版本，不新增重复定位。历史版本保留。"
     >
       <ol
         data-testid="positioning-history"

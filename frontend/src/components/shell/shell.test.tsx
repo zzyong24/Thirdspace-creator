@@ -589,11 +589,11 @@ describe("AppShell", () => {
     }
   });
 
-  it("sidebar user profile shows avatar + name + email + plan label", async () => {
+  it("sidebar user profile omits the static plan badge", async () => {
     const { container } = await renderShell();
     const profile = container.querySelector('[data-slot="sidebar-user-profile"]');
     expect(profile).not.toBeNull();
-    expect(profile?.textContent ?? "").toMatch(/个人版/);
+    expect(profile?.textContent ?? "").not.toMatch(/个人版/);
   });
 
   it("低高度窗口把导航变为可滚动区，并把账号与用户身份固定留在视口内", async () => {

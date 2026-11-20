@@ -67,11 +67,9 @@ export function OnboardingCard() {
 
   if (sessionHidden || state?.preferences?.hidden) return null;
   if (!state) return error ? <section className="mt-14 flex items-center gap-3 rounded-card border p-3 text-sm" aria-label="新手引导"><p role="status">{error}</p><Button variant="outline" size="sm" onClick={refresh}>重试</Button><Button variant="ghost" size="sm" onClick={()=>setSessionHidden(true)}>暂时关闭</Button></section> : null;
-  if(!state.groupId&&!state.accountId)return <section aria-label="新手引导" data-slot="first-group-guidance" className="flex flex-col gap-4 rounded-panel border border-brand/25 bg-brand-soft/20 p-5">
-    <div><h2 className="text-lg font-semibold">{state.needsFirstGroup?"先创建你的第一个账号组":"选择一个账号组，继续创作"}</h2><p className="mt-2 text-sm text-muted-foreground">{state.needsFirstGroup?"一个账号组对应一位创作者或品牌。创建后即可开始定位，无需登录抖音。平台账号可稍后连接。":"你的工作区已有资料，选择已有账号组即可继续。"}</p></div>
-    {state.needsFirstGroup&&<ol aria-label="上手步骤" className="flex flex-wrap gap-4 text-sm"><li className="font-medium text-brand">1 创建账号组</li><li className="text-muted-foreground">2 开始定位</li></ol>}
-    <Button className="self-start" asChild><Link href="/accounts">{state.needsFirstGroup?"创建第一个账号组":"选择账号组"}<ArrowRightIcon className="size-4"/></Link></Button>
-  </section>;
+  if(!state.groupId&&!state.accountId)return <div data-slot="first-group-guidance">
+    <Button asChild><Link href="/accounts">{state.needsFirstGroup?"创建第一个账号组":"选择账号组"}<ArrowRightIcon className="size-4"/></Link></Button>
+  </div>;
   const steps = deriveGuidedSteps(state);
   if (isOnboardingComplete(steps) && !forceOpen) return null;
   const {done,total} = progressOf(steps);
@@ -87,15 +85,14 @@ export function OnboardingCard() {
     </div>
     {error ? <div role="status" className="flex items-center gap-2 text-sm text-destructive">{error}<Button variant="outline" size="sm" onClick={refresh}>重新读取</Button></div> : null}
     <div role="progressbar" aria-label="上手进度" aria-valuenow={Math.round(done/total*100)} aria-valuemin={0} aria-valuemax={100} className="h-1 overflow-hidden rounded-full bg-border"><div className="h-full bg-brand" style={{width:`${done/total*100}%`}}/></div>
-    {isOnboardingComplete(steps) ? <p className="text-sm text-muted-foreground" data-slot="onboarding-reopened-complete">已完成全部引导，可以随时回看。</p> : null}
-    <ol data-slot="onboarding-card-body" className="flex flex-col gap-2">{displayed.map(step=><StepRow key={step.key} step={step} isGroup={Boolean(state.groupId)} current={step.key===current?.key} busy={saving} canConfirm={Boolean(state.groupId)||state.hasImportedWorks===true} onUpdate={patch=>void update(patch)}/>)}</ol>
-    <p className="text-xs text-muted-foreground">无需先登录抖音。引导仅提供建议，你可以直接使用所有功能，或在设置中重新查看。<Link href="/accounts" className="ml-2 text-brand underline underline-offset-2">连接平台账号（可选）</Link></p>
+    {displayed.length > 0 ? <ol data-slot="onboarding-card-body" className="flex flex-col gap-2">{displayed.map(step=><StepRow key={step.key} step={step} isGroup={Boolean(state.groupId)} current={step.key===current?.key} busy={saving} canConfirm={Boolean(state.groupId)||state.hasImportedWorks===true} onUpdate={patch=>void update(patch)}/>)}</ol> : null}
+    <Link href="/accounts" className="self-start text-xs text-brand underline underline-offset-2">连接平台账号（可选）</Link>
   </section>;
 }
 function StepRow({step,current,busy,canConfirm,onUpdate,isGroup}:{isGroup:boolean;step:GuidedStep;current:boolean;busy:boolean;canConfirm:boolean;onUpdate:(patch:OnboardingPatch)=>void}) {
  return <li data-slot="onboarding-step" data-step-key={step.key} data-done={step.done} data-current={current} className={cn("flex flex-wrap items-center gap-3 rounded-control p-3",current ? "bg-brand-soft/50" : "bg-surface-subtle")}>
   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs text-brand">{step.done?<CheckIcon className="size-4"/>:step.order}</span>
-  <div className="min-w-0 flex-1"><p className="text-sm font-medium">{step.title}</p><p className="mt-1 text-xs text-muted-foreground">{step.done?"已完成":step.why}</p></div>
+  <p className="min-w-0 flex-1 text-sm font-medium">{step.title}{step.done ? <span className="ml-2 text-xs text-muted-foreground">已完成</span> : null}</p>
   {!step.done && step.key==="confirm-origin" ? <div className="flex gap-2"><Button size="sm" variant="outline" disabled={busy} onClick={()=>onUpdate({origin:"fresh",completedSteps:["confirm-origin"]})}>{isGroup?"从零开始":"新账号"}</Button><Button size="sm" variant="outline" disabled={busy} onClick={()=>onUpdate({origin:"existing",completedSteps:["confirm-origin"]})}>{isGroup?"已有内容":"已有作品"}</Button></div> : null}
   {!step.done && step.key!=="confirm-origin" ? <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" asChild><Link href={step.href}>{step.ctaLabel}<ArrowRightIcon className="size-3"/></Link></Button>{step.key==="review-imported-projects" ? <Button size="sm" disabled={busy || !canConfirm} onClick={()=>onUpdate({completedSteps:["review-imported-projects"]})}>已查看，完成这一步</Button> : null}</div> : null}
  </li>;

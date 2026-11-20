@@ -14,7 +14,7 @@ import { expect, test } from "../helpers/test-environment";
  *    (项目 / 知识 / 素材 / 视频).
  *  - ProjectResultSection shows three project cards.
  *  - SearchSideRail order: SearchFilters → QuickActions →
- *    SearchHistory → SearchTips.
+ *    SearchHistory.
  *  - The page is wrapped in exactly one AppShell.
  */
 
@@ -99,6 +99,7 @@ test.describe("Global Search page", () => {
 
     // 空查询诚实无搜索结果；真实用户输入后原公共项目成为这三张卡。
     await expect(main.locator('[data-slot="project-result-card"]')).toHaveCount(0);
+    await expect(main.locator('[data-slot="search-filters"]')).toHaveCount(0);
     await page.locator("#app-header-search").fill(query);
     await page.locator("#app-header-search").press("Enter");
     await expect(page).toHaveURL(new RegExp(`[?&]q=${query}`));
@@ -118,14 +119,17 @@ test.describe("Global Search page", () => {
     // SearchSideRail order.
     const rail = main.locator('[data-slot="search-side-rail"]');
     await expect(rail).toBeVisible();
+    await expect(rail.locator('[data-slot="search-filters"]')).toBeVisible();
     for (const slot of [
-      "search-filters",
       "search-quick-actions",
       "search-history",
-      "search-tips",
     ]) {
       await expect(rail.locator(`[data-slot="${slot}"]`)).toBeVisible();
     }
+    await page.locator("#app-header-search").fill("");
+    await page.locator("#app-header-search").press("Enter");
+    await expect(page).toHaveURL(/\/search$/u);
+    await expect(rail.locator('[data-slot="search-filters"]')).toHaveCount(0);
   });
 
   test("URL ?q=... is reflected in the search input value", async ({
@@ -133,6 +137,7 @@ test.describe("Global Search page", () => {
   }) => {
     await page.goto("/search?q=AI");
     const main = page.locator('main[data-page="search"]');
+    await expect(main.locator('[data-slot="search-filters"]')).toBeVisible();
     await expect(main).toHaveCount(1);
     const input = page.locator("#app-header-search");
     await expect(input).toHaveValue("AI");

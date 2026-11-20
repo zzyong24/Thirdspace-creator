@@ -150,7 +150,7 @@ export function PlatformWorkCatalog({ model }: { readonly model: PlatformWorkCat
                   : (VISIBILITY_TEXT[selectedWork.visibility.visibility] ?? "状态未知")}
               </p>
               {selectedWork.directoryState === "unavailable" ? (
-                <p className="mt-2 text-xs text-muted-foreground">下方仅供查看历史数据，作品当前状态尚待平台核实。</p>
+                 <p className="mt-2 text-xs text-muted-foreground">下方仅供查看历史数据。</p>
               ) : null}
               {selectedWork.legacyProjectId ? (
                 <Link href={`/projects/${encodeURIComponent(selectedWork.legacyProjectId)}`} className="mt-2 inline-block text-sm text-primary hover:underline">查看关联项目</Link>
@@ -168,7 +168,7 @@ export function PlatformWorkCatalog({ model }: { readonly model: PlatformWorkCat
               ) : null}
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">选择左侧作品，查看关联项目和真实数据。</p>
+            <p className="text-sm text-muted-foreground">选择左侧作品。</p>
           )}
         </div>
       </section>

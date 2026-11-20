@@ -62,7 +62,7 @@ export function SkillsSection({
   if (skills.length === 0) {
     // 诚实空态:route 未传技能清单(如单测直接渲 SettingsDialog)→ 明说,不渲假行。
     return (
-      <SectionCard title="技能" description="系统内置的 AI 技能清单">
+      <SectionCard title="技能">
         <p
           data-slot="skills-empty"
           className="text-sm text-muted-foreground"
@@ -83,7 +83,6 @@ export function SkillsSection({
         <SectionCard
           key={group.key}
           title={group.label}
-          description={group.description}
         >
           <ul
             data-slot="skills-group"
@@ -145,28 +144,18 @@ function SkillRow({
           aria-hidden="true"
           className="size-4 shrink-0 text-muted-foreground"
         />
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground">
-              {label.name}
-            </span>
-            <span className="font-mono text-[11px] text-muted-foreground">
-              {skill.id}
-            </span>
-            {skill.customized ? (
-              <Badge
-                data-slot="skill-customized-badge"
-                variant="outline"
-                className="border-brand/40 bg-brand-soft text-brand"
-              >
-                已定制
-              </Badge>
-            ) : null}
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <span className="break-all text-sm font-medium text-foreground">
+            {label.name}
           </span>
-          {label.purpose ? (
-            <span className="text-xs text-muted-foreground">
-              {label.purpose}
-            </span>
+          {skill.customized ? (
+            <Badge
+              data-slot="skill-customized-badge"
+              variant="outline"
+              className="border-brand/40 bg-brand-soft text-brand"
+            >
+              已定制
+            </Badge>
           ) : null}
         </span>
       </button>
