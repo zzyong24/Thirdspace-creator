@@ -452,3 +452,27 @@ it('T1406 旧checkpoint没有inputDigest：首次真实空回执等待时补输�
  await f.projects.patchProject(f.ctx,f.project.id,{briefDetail:{coreMessage:'升级后用户明确补充'}});await f.preparation.start(f.ctx,f.project.id,{idempotencyKey:'legacy-input-resume',requestedSteps:['brief']});await f.preparation.tick({shouldStop:()=>false});
  expect(f.submitBrief).toHaveBeenCalledTimes(2);const [after]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.parentId));expect(after!.deadlineAt).toBe(original!.deadlineAt);expect((after!.payload as {inputRevision?:number}).inputRevision).toBe(1);
 });
+
+it.each([
+ {platform:'wechatVideo',errorCode:'CHANNELS_DECRYPT_UNSPECIFIED',reason:'CHANNELS_DECRYPT_UNSPECIFIED'},
+ {platform:'xiaohongshu',errorCode:'NO_PLAYABLE_MEDIA',reason:'TRANSCRIPT_REQUIRES_INPUT'},
+] as const)('$platform 转写失败保留原子任务，独立项目资料步骤可继续',async({platform,errorCode,reason})=>{
+ const f=await fixture(),itemId=nextId('radar');
+ const transcript=await f.tasks.enqueue(f.ctx,{
+  kind:'transcribe',ownerType:'item',ownerId:itemId,idempotencyKey:nextId('transcript'),
+  payload:{itemId,source:{platform,externalId:'1458'},requestedBy:'user'},
+ });
+ f.dispatch.mockImplementation(async(_ctx,{step})=>step==='transcript'
+  ?{status:'child',childTaskId:transcript.id,businessTaskId:null,shared:true,sourceDigest:'fixture-digest'}
+  :{status:'done',reasonCode:'BRIEF_AVAILABLE'});
+ await f.service.start(f.ctx,f.project.id,{idempotencyKey:'platform-source-preparation',requestedSteps:['transcript','brief']});
+ await f.service.tick({shouldStop:()=>false});
+ await db.update(executionTasks).set({status:'failed',lastErrorCode:errorCode}).where(eq(executionTasks.id,transcript.id));
+ clock.value='2026-10-21T01:00:05.000Z';
+ await f.service.tick({shouldStop:()=>false});
+ expect((await f.service.get(f.ctx,f.project.id)).steps).toEqual(expect.arrayContaining([
+  expect.objectContaining({name:'transcript',status:'waiting_user',reasonCode:reason,childTaskId:transcript.id,availableActions:['provide_transcript']}),
+  expect.objectContaining({name:'brief',status:'done'}),
+ ]));
+ expect(await f.tasks.get(f.ctx,transcript.id)).toMatchObject({status:'failed',errorCode});
+});

@@ -1,6 +1,8 @@
 import { EventEmitter } from "node:events";
+import { readFileSync } from "node:fs";
+import { access } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
-import { createTranscribeAudioExtractor, streamAudioFromVideo, TranscribeAudioExtractError } from "./transcribe-audio-extract";
+import { createTranscribeAudioExtractor, extractAudioFromVideoBytes, streamAudioFromVideo, TranscribeAudioExtractError } from "./transcribe-audio-extract";
 const tick = () => new Promise<void>(resolve => setImmediate(resolve));
 function fixture() {
   const children: FakeChild[] = [];
@@ -20,6 +22,22 @@ describe("Worker 独立抽音", () => {
     const run = f.extract(url); f.children[0]!.succeed();
     expect(Array.from(await run)).toEqual([1, 2, 3]);
     expect(f.spawn).toHaveBeenCalledWith("fake-ffmpeg", ["-y", "-hide_banner", "-loglevel", "error", "-headers", "Referer: https://www.douyin.com/\r\n", "-i", url, "-vn", "-ar", "16000", "-ac", "1", "-b:a", "64k", "-f", "mp3", "pipe:1"]);
+  });
+  it("从本机文件读取传入字节，使用同一音频格式并清理临时文件", async () => {
+    const original = Uint8Array.of(1, 2, 3, 4);
+    let inputPath = "";
+    const spawn = vi.fn((_command: string, args: string[]) => {
+      inputPath = args[args.indexOf("-i") + 1]!;
+      expect(new Uint8Array(readFileSync(inputPath))).toEqual(original);
+      expect(args).toContain("-protocol_whitelist");
+      expect(args).not.toContain("-headers");
+      const child = new FakeChild();
+      setImmediate(() => child.succeed());
+      return child;
+    });
+    await expect(extractAudioFromVideoBytes(original, undefined, { spawn, ffmpegPath: "fixture" }))
+      .resolves.toEqual(Uint8Array.of(1, 2, 3));
+    await expect(access(inputPath)).rejects.toMatchObject({ code: "ENOENT" });
   });
   it("预取消不解析、不 spawn", async () => {
     const f = fixture(); const resolveFfmpeg = vi.fn(() => "fake"); const c = new AbortController(); c.abort("用户取消");

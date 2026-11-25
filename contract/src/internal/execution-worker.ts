@@ -5,6 +5,7 @@ import {assetAsrPortInputs} from './asset-asr-ports';
 export * from './asset-asr';
 export * from './asset-asr-ports';
 import {redfoxObservationSchema} from "./redfox";
+import {everyInfraToolObservationSchema} from "./everyinfra";
 import {workbenchCapabilitySchema,workbenchPlanSchema,workbenchResultSchema,type WorkbenchCapability,type WorkbenchResult} from "./agent-workbench";
 export {redfoxInputSchema,redfoxObservationSchema,type RedfoxInput} from "./redfox";
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
@@ -16,10 +17,12 @@ import {transcribeWorkflowPortSchemas} from "./transcribe-workflow";
 export {transcribeWorkflowPortSchemas,transcribeSourceSchema,transcribeItemReceiptSchema} from "./transcribe-workflow";
 import {coverPortInputSchemas} from "./execution-cover";
 export {coverPortInputSchemas,coverImageReadinessSchema,coverImagePreparationSchema,coverReferenceSchema} from "./execution-cover";
-import {transcribeTaskInputSchema} from "./transcribe-task";
-export {transcribeLocalFallbackSchema,transcribeAsrPreparationSchema,transcribeTaskInputSchema,transcribeConfigurationSchema,transcribeAsrPlanSchema,type TranscribeConfiguration} from "./transcribe-task";
+import {transcribeTaskInputSchema,transcribeWorkerTaskInputSchema} from "./transcribe-task";
+import {transcribeAudioKeySchema} from "./transcribe-source";
+export {transcribeLocalFallbackSchema,transcribeAsrPreparationSchema,transcribeTaskInputSchema,transcribePlatformTaskInputSchema,transcribeWorkerTaskInputSchema,transcribeTaskAudioKeys,transcribeConfigurationSchema,transcribeAsrPlanSchema,type TranscribeConfiguration,type TranscribeWorkerTaskInput} from "./transcribe-task";
+export {transcribePlatformSourceSchema,transcribeAudioKey,type TranscribePlatformSource} from "./transcribe-source";
 import {transcribeAudioPortSchemas} from "./execution-transcribe-audio";
-export {transcribeAudioReceiptSchema} from "./execution-transcribe-audio";
+export {transcribeAudioReceiptSchema,TRANSCRIBE_INPUT_MAX_BYTES} from "./execution-transcribe-audio";
 import {asrPortInputSchemas} from "./execution-asr";
 export {asrRequestSchema,asrAudioManifestSchema,asrIdentitySchema,asrTaskInputSchema,asrResultReceiptSchema,type AsrRequest} from "./execution-asr";
 import {assetGenerationInputSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
@@ -130,6 +133,7 @@ export const workerPortSchema = z.enum([
   "resolveAssetCredential", "readAssetReference", "settleAssetCall", "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
   "resolveChatWebReadSearch", "readChatWebReadCache", "failChatWebRead", "prepareChatWebRead", "observeChatWebRead", "restoreChatWebRead", "completeChatWebRead", "readChatWebReadSession", "saveChatWebReadSession",
   "prepareChatRedfox", "settleChatRedfox",
+  "prepareChatEveryInfra", "settleChatEveryInfra",
   "prepareChatResearch", "settleChatResearch",
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
   "failChatScriptDraft", "restoreChatScriptDraft", "prepareChatScriptDraft", "reserveChatScriptDraftModel", "startChatScriptDraftModel", "settleChatScriptDraftModel", "completeChatScriptDraft",
@@ -220,19 +224,19 @@ export const workerPortInputSchemas = {
   ...transcribeWorkflowPortSchemas,
   ...coverPortInputSchemas,
   settleCoverModel:generationSettlementSchema,
-  prepareTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128)}).strict(),
-  readTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128)}).strict(),
-  saveTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128)}).strict(),
-  reserveTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128),operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000)}).strict(),
-  startTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128),callId:operationKeySchema}).strict(),
+  prepareTranscribePostprocess:z.object({awemeId:transcribeAudioKeySchema}).strict(),
+  readTranscribePostprocess:z.object({awemeId:transcribeAudioKeySchema}).strict(),
+  saveTranscribePostprocess:z.object({awemeId:transcribeAudioKeySchema}).strict(),
+  reserveTranscribePostprocess:z.object({awemeId:transcribeAudioKeySchema,operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000)}).strict(),
+  startTranscribePostprocess:z.object({awemeId:transcribeAudioKeySchema,callId:operationKeySchema}).strict(),
   settleTranscribePostprocess:z.discriminatedUnion("status", [
-    generationSettlementSchema.options[0].extend({awemeId:z.string().min(1).max(128)}).strict(),
-    generationSettlementSchema.options[1].extend({awemeId:z.string().min(1).max(128)}).strict(),
-    generationSettlementSchema.options[2].extend({awemeId:z.string().min(1).max(128)}).strict(),
-    generationSettlementSchema.options[3].extend({awemeId:z.string().min(1).max(128)}).strict(),
+    generationSettlementSchema.options[0].extend({awemeId:transcribeAudioKeySchema}).strict(),
+    generationSettlementSchema.options[1].extend({awemeId:transcribeAudioKeySchema}).strict(),
+    generationSettlementSchema.options[2].extend({awemeId:transcribeAudioKeySchema}).strict(),
+    generationSettlementSchema.options[3].extend({awemeId:transcribeAudioKeySchema}).strict(),
   ]),
-  selectTranscribeLocalFallback:z.object({awemeId:z.string().min(1).max(128)}).strict(),
-  prepareTranscribeAsr:z.object({awemeId:z.string().min(1).max(128)}).strict(),
+  selectTranscribeLocalFallback:z.object({awemeId:transcribeAudioKeySchema}).strict(),
+  prepareTranscribeAsr:z.object({awemeId:transcribeAudioKeySchema}).strict(),
   ...transcribeAudioPortSchemas,
   ...asrPortInputSchemas,
   resolveAssetCredential:providerJobReadSchema,
@@ -255,6 +259,8 @@ export const workerPortInputSchemas = {
   saveChatWebReadSession:chatWebReadSessionSaveSchema,
   prepareChatRedfox:z.object({callId:operationKeySchema}).strict(),
   settleChatRedfox:z.object({callId:operationKeySchema,observation:redfoxObservationSchema}).strict(),
+  prepareChatEveryInfra:z.object({callId:operationKeySchema}).strict(),
+  settleChatEveryInfra:z.object({callId:operationKeySchema,observation:everyInfraToolObservationSchema}).strict(),
   prepareChatResearch:z.object({callId:operationKeySchema}).strict(),
   settleChatResearch:z.object({callId:operationKeySchema,observation:chatResearchObservationSchema}).strict(),
   failChatGeneration:z.object({callId:operationKeySchema,outcome:z.enum(["retry_wait","waiting_user","failed"]),errorCode:z.string().min(1).max(128),retryAfterMs:z.number().finite().nonnegative().optional()}).strict(),
@@ -455,7 +461,7 @@ export const scheduledFlywheelTaskInputSchema=z.discriminatedUnion("sourceKind",
 ]);
 /** 用户单条对标转写的真实业务执行标记，不进入项目转写工作流。 */
 export const benchmarkTranscribeTaskInputSchema=z.object({kind:z.literal("benchmark.transcribe"),workId:z.string().min(1),awemeId:z.string().min(1).max(128),sourceId:z.string().min(1),sourceExternalAccountId:z.string(),configuration:transcribeTaskInputSchema.shape.configuration}).strict();
-export const workerTaskInputSchema=z.union([assetAsrInput,benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,intelligenceRewriteInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
+export const workerTaskInputSchema=z.union([assetAsrInput,benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeWorkerTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,intelligenceRewriteInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({

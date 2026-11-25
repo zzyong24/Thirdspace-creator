@@ -1,4 +1,5 @@
 import {assetAsrProviderTiming} from "./asset-asr-timing";
+import {transcribeAudioKeySchema} from "./transcribe-source";
 import { z } from "zod";
 const digest = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 const bytes = z.number().int().positive().max(2147483647);
@@ -14,9 +15,9 @@ export const asrRequestSchema = z.union([cloudIdentitySchema.extend(requestField
 export const asrTaskInputSchema = z.object({ kind: z.literal("transcribe.douyin"), awemeIds: z.array(z.string().min(1).max(128)).min(1).max(10000), identity: asrIdentitySchema }).strict().refine(value => new Set(value.awemeIds).size === value.awemeIds.length, "作品不能重复");
 export const asrTranscriptSchema = z.object({ text: z.string().max(1900000), language: z.string().max(128).optional(),timing:assetAsrProviderTiming.optional() }).strict();
 export const asrResultReceiptSchema = z.object({ schemaVersion: z.literal(1), result: asrTranscriptSchema }).strict();
-const call = z.object({ awemeId: z.string().min(1).max(128), callId: z.string().min(1).max(256) }).strict();
+const call = z.object({ awemeId: transcribeAudioKeySchema, callId: z.string().min(1).max(256) }).strict();
 export const asrPortInputSchemas = {
-    reserveAsrRequest: z.object({ awemeId: z.string().min(1).max(128), request: asrRequestSchema }).strict(),
+    reserveAsrRequest: z.object({ awemeId: transcribeAudioKeySchema, request: asrRequestSchema }).strict(),
     startAsrRequest: call,
     settleAsrRequest: z.discriminatedUnion("status", [
         call.extend({ status: z.literal("settled"), result: asrTranscriptSchema }).strict(),

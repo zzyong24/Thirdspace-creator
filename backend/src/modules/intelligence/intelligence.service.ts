@@ -1,10 +1,11 @@
 import {projectIntakeDigest} from '../projects/project-intake.service';
 import {intelligenceWorkspaceFilter,intelligenceTransformGuardFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
+import { everyInfraEvidenceUrl } from "./everyinfra-item-import";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {platformAccounts} from "../../schema/platform-account";
 import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
 import {requireWorkspace,workspaceKey,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
-import {createContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
+import {createContinuousExecutionBudget,transcribePlatformSourceSchema} from "@creatoros/contract/execution-worker";
 import { createHash, randomUUID } from "node:crypto";
 
 import {
@@ -757,6 +758,7 @@ function toItem(row: ItemRow): IntelligenceItemResource {
     accountId: row.accountId,groupId:row.groupId??null,
     type: row.type as IntelligenceItemResource["type"],
     platform: row.platform,
+    ...(row.captureChannel === "everyinfra" ? { captureChannel: row.captureChannel } : {}),
     externalId: row.externalId,
     canonicalUrl: row.canonicalUrl,
     authorId: row.authorId,
@@ -770,6 +772,14 @@ function toItem(row: ItemRow): IntelligenceItemResource {
     capturedAt: row.capturedAt,
     availability: row.availability as IntelligenceItemResource["availability"],
   };
+}
+
+function itemEvidenceUrl(item: ItemRow, url = item.canonicalUrl): string {
+  return item.captureChannel === "everyinfra" ? everyInfraEvidenceUrl(url) : url;
+}
+
+function itemForGeneration(item: ItemRow) {
+  return { ...toItem(item), canonicalUrl: itemEvidenceUrl(item) };
 }
 
 function toMetric(row: MetricRow) {
@@ -4068,11 +4078,16 @@ export function createIntelligenceService(
       const transcriptHash = text ? `sha256:${hash(text)}` : null;
       // SEMANTIC_BOUNDARY_ALLOW: 仅摘要真实来源版本和正文身份，不判断内容或创作取舍。
       const sourceDigest = `sha256:${hash(JSON.stringify([item.id, selected.id, selected.contentHash, transcriptHash]))}`;
+      const evidenceUrl = item.captureChannel === "everyinfra"
+        ? itemEvidenceUrl(item)
+        : selected.finalUrl || item.canonicalUrl;
+      const projectUrl = item.captureChannel === "everyinfra" && new URL(evidenceUrl).hostname === "creatoros.local"
+        ? "" : evidenceUrl;
       return {
         title: item.title,
         itemId: item.id,
         snapshotId: selected.id,
-        url: selected.finalUrl || item.canonicalUrl,
+        url: projectUrl,
         bodyAvailable: Boolean(text || selected.safeExtract?.trim()),
         sourceDigest,
         transcriptHash,
@@ -4892,7 +4907,7 @@ export function createIntelligenceService(
         return {
           generationMode: "rewrite_only",
           transformId: transform.id,
-          item: toItem(item),
+          item: itemForGeneration(item),
           snapshot: toSnapshot(snapshot),
           positioning: frozenPositioning,
           positioningVersionId: transform.positioningVersionId,
@@ -4959,7 +4974,7 @@ export function createIntelligenceService(
       return {
         generationMode: "strategy_backed",
         transformId: transform.id,
-        item: toItem(item),
+        item: itemForGeneration(item),
         snapshot: toSnapshot(snapshot),
         positioning,
         positioningVersionId: transform.positioningVersionId,
@@ -5219,7 +5234,7 @@ export function createIntelligenceService(
           .set({
             outputSnapshot: {
               ...previous,
-              sourceUrl: (await requireItem(ctx, transform.itemId)).canonicalUrl,
+              sourceUrl: itemEvidenceUrl(await requireItem(ctx, transform.itemId)),
               generationProgress: {
                 rewriteDraft: { status: "completed", completedAt: now() },
               },
@@ -5426,7 +5441,7 @@ export function createIntelligenceService(
             kind: sourceItem.type === "video" ? "original_video" : "source_page",
             platform: sourceItem.platform,
             label: sourceItem.type === "video" ? "原视频" : "来源页面",
-            url: sourceItem.canonicalUrl,
+            url: itemEvidenceUrl(sourceItem),
             intelligenceItemId: transform.itemId,
           }],
         });
@@ -5657,7 +5672,7 @@ export function createIntelligenceService(
                 : "source_page",
             platform: sourceItem.platform,
             label: sourceItem.type === "video" ? "原视频" : "来源页面",
-            url: sourceItem.canonicalUrl,
+            url: itemEvidenceUrl(sourceItem),
             intelligenceItemId: transform.itemId,
           },
         ],
@@ -6059,6 +6074,14 @@ export function createIntelligenceService(
       const skipped: Array<{ itemId: string; reason: string }> = [];
       for (const itemId of ids) {
         const item = await requireItem(ctx, itemId);
+        const everyInfra = item.captureChannel === 'everyinfra';
+        if(everyInfra && item.type==='article'){
+          skipped.push({itemId,reason:item.platform==='xiaohongshu'?'IMAGE_NOTE':'IMAGE_ALBUM'});
+          continue;
+        }
+        const source = everyInfra ? transcribePlatformSourceSchema.parse({
+          platform:item.platform, externalId:item.externalId,
+        }) : null;
         const [transcript] = await db
           .select()
           .from(itemTranscripts)
@@ -6092,7 +6115,7 @@ export function createIntelligenceService(
           idempotencyKey: `${input.idempotencyKey}:${itemId}`,
           payload: {
             itemId,
-            sourceUrl: item.canonicalUrl,
+            ...(source ? {source} : {sourceUrl:item.canonicalUrl}),
             requestedBy: "user",
           },
           priority: 20,

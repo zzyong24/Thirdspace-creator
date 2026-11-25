@@ -1,0 +1,23 @@
+{
+  "id": "fixture-douyin-search",
+  "platform": "douyin",
+  "action": "search",
+  "results": [
+    {
+      "id": "7372024000000000001",
+      "title": "冰手冲冲煮",
+      "text": "用两段注水制作一杯冰手冲。",
+      "author_id": "MS4wFixture",
+      "author_name": "冲煮样例",
+      "cover_image_url": "https://media.example.test/douyin-cover.jpg",
+      "duration_seconds": 37,
+      "posted_at": "2026-10-03T09:10:00Z",
+      "media_type": "video",
+      "like_count": 120,
+      "collect_count": 11,
+      "comment_count": 6
+    }
+  ],
+  "billing": {},
+  "quota": {}
+}

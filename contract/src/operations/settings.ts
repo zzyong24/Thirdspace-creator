@@ -1,5 +1,6 @@
 import {logReportingStatus,logReportingConsent,exceptionCapture} from "../observability";
 import { z } from "zod";
+import { everyInfraHostSchema } from "../internal/everyinfra";
 import { defineEndpoint } from "../endpoint-definition";
 import {modelRoutingPutSchema,modelRoutingResourceSchema} from '../internal/model-routing';
 import {
@@ -20,6 +21,12 @@ import {
 // authenticated user (not a collection); the remaining operations mutate the
 // user's preferences, per-capability model config, and agent configs.
 const redfoxStatus=z.object({provider:z.literal("redfox"),configured:z.boolean(),updatedAt:z.string().nullable()});
+const everyInfraStatus = z.object({
+  provider: z.literal("everyinfra"),
+  configured: z.boolean(),
+  updatedAt: z.string().nullable(),
+  baseUrl: everyInfraHostSchema,
+}).strict();
 // A checked suggestion is never an authorization. Only setReportingConsent can
 // create a grant for the exact scope and account named in its strict body.
 // V1 is local-only; remote delivery requires a new version and fresh consent.
@@ -58,8 +65,19 @@ export const settingsOperations = {
  getOnboarding: defineEndpoint({id:"settings.onboarding.get",method:"GET",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  patchOnboarding: defineEndpoint({id:"settings.onboarding.patch",method:"PATCH",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  getRedfox:defineEndpoint({id:"settings.redfox.get",method:"GET",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),
- putRedfox:defineEndpoint({id:"settings.redfox.put",method:"PUT",path:"/settings/redfox",body:z.object({secret:z.string().trim().min(1).max(4096)}).strict(),response:redfoxStatus,fr:["FR-REDFOX"]}),
- deleteRedfox:defineEndpoint({id:"settings.redfox.delete",method:"DELETE",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),
+ getEveryInfra: defineEndpoint({
+   id: "settings.everyinfra.get", method: "GET", path: "/settings/everyinfra",
+   response: everyInfraStatus, fr: ["FR-EVERYINFRA"],
+ }),
+ putEveryInfra: defineEndpoint({
+   id: "settings.everyinfra.put", method: "PUT", path: "/settings/everyinfra",
+   body: z.object({ secret: z.string().trim().min(1).max(4096).optional(), baseUrl: everyInfraHostSchema }).strict(),
+   response: everyInfraStatus, fr: ["FR-EVERYINFRA"],
+ }),
+ deleteEveryInfra: defineEndpoint({
+   id: "settings.everyinfra.delete", method: "DELETE", path: "/settings/everyinfra",
+   response: everyInfraStatus, fr: ["FR-EVERYINFRA"],
+ }),
   getSettings: defineEndpoint({
     id: "settings.get",
     method: "GET",

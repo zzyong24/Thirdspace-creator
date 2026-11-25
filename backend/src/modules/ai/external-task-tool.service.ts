@@ -43,7 +43,7 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
    if(frozen.executionEngine!=='codex'||typeof tool.execute==='function')return false;
    if(def.execution==='worker.structured-node')return typeof tool.prepareGeneration==='function';
    if(def.execution==='host.task-submit'||def.execution==='worker.script-draft')return typeof tool.prepareTask==='function';
-   return def.execution==='worker.script-hooks'||def.execution==='worker.research'||def.execution==='worker.web-read'||def.execution==='worker.redfox';
+   return def.execution==='worker.script-hooks'||def.execution==='worker.research'||def.execution==='worker.web-read'||def.execution==='worker.redfox'||def.execution==='worker.everyinfra';
   });
  }
  async function reserve(ref:ExecutionRef,request:z.infer<typeof workerPortInputSchemas.executeExternalTaskTool>,tools:Tools){

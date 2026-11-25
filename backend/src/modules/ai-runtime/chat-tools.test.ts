@@ -4573,12 +4573,11 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
    if(node.type==="boolean")return false;
    return null;
   };
-  // redfox.query 用 action 判别联合；把所有动作的字段塞进同一对象是非法样本。
-  const legal=name==="redfox.query"
-   ? {action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02"}
+  // everyinfra.query 的参数受平台和动作约束。
+  const legal=name==="everyinfra.query"
+   ? {platform:"douyin",action:"search",params:{keyword:"咖啡"}}
    : Object.hasOwn(typedSamples,name)?typedSamples[name]:sample(schema);
   expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
-  if(name==="redfox.query")expect(parameters.safeParse({action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02",keyword:"跨动作字段"}).success).toBe(false);
   if(name==="canvas.propose"){
    expect(parameters.safeParse({...canvasSample,baseRevision:0}).success).toBe(false);
    expect(parameters.safeParse({...canvasSample,operations:[{type:"unknown",operationId:"operation-neutral",nodeId:"node-neutral"}]}).success).toBe(false);

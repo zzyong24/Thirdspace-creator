@@ -7,7 +7,7 @@ import {assembleAsrTranscript} from '@creatoros/ai-worker/asr-transcript';
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { and, eq, asc, aiTasks, executionCalls, executionTasks, type Db } from "@creatoros/backend";
-import { transcribeAudioReceiptSchema, transcribeTaskInputSchema, transcribeAsrPlanSchema, asrTaskInputSchema, asrRequestSchema, asrAudioManifestSchema, asrResultReceiptSchema, workerPortInputSchemas, type AsrRequest, type ExecutionRef, type WorkerPort } from "@creatoros/contract/execution-worker";
+import { transcribeAudioReceiptSchema, transcribeWorkerTaskInputSchema, transcribeTaskAudioKeys, transcribeAsrPlanSchema, asrTaskInputSchema, asrRequestSchema, asrAudioManifestSchema, asrResultReceiptSchema, workerPortInputSchemas, type AsrRequest, type ExecutionRef, type WorkerPort } from "@creatoros/contract/execution-worker";
 import { canonicalJson } from "../ai/canonical-json";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -27,7 +27,7 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
         const selected=legacy.success?null:readTranscribeAsrPlan(payload,awemeId);
         const plan=selected?(primaryOnly?selected.primary:selected.plan):null;
         if(!legacy.success&&!plan)throw new ConflictError('缺少原识别选择');
-        const input=legacy.success?legacy.data:{...transcribeTaskInputSchema.parse(resource?resource.input:payload.modelInput),identity:plan!.identity};
+        const input=legacy.success?legacy.data:{awemeIds:transcribeTaskAudioKeys(transcribeWorkerTaskInputSchema.parse(resource?resource.input:payload.modelInput)),identity:plan!.identity};
         if(plan){const audio=transcribeAudioReceiptSchema.parse((payload.transcribeAudioInputs as Record<string,unknown>)?.[awemeId]);if(audio.audioDigest!==plan.audioDigest||audio.audioByteLength!==plan.audioByteLength)throw new ConflictError("实际识别身份与原音频不符");}
         if(!legacy.success){if(!resource)await bindTranscribeAudioExecution(scope,awemeId);if(!input.awemeIds.includes(awemeId))throw new ConflictError("ASR 输入与领域资源不符");}
         else {

@@ -36,11 +36,11 @@ describe("T985 已有封面缓存只读查询", () => {
       item("foreign-user", { externalId: "owned-a", userId: "other-user" }),
       item("foreign-account", { externalId: "owned-a", accountId: "other-account" }),
       item("foreign-platform", { externalId: "owned-a", platform: "web" }),
-      item("foreign-type", { externalId: "owned-a", type: "article" }),
+      item("foreign-type", { externalId: "article-only", type: "article" }),
     ]);
     const select = vi.spyOn(database.db, "select");
     const result = await service.findCachedCovers(ctx, {
-      platform: "douyin", externalIds: ["owned-a", "owned-b", "owned-a", "missing"],
+      platform: "douyin", externalIds: ["owned-a", "owned-b", "owned-a", "article-only", "missing"],
     });
     expect(result).toEqual([
       { externalId: "owned-a", coverUrl: "https://cdn.example/owned-a.jpg", itemId: "owned-a" },
@@ -63,6 +63,7 @@ describe("T985 已有封面缓存只读查询", () => {
   it("旧库重复身份按最新有效记录择新，更新时间相同用 itemId 确定性裁决", async () => {
     // 正常迁移已有唯一约束；仅在本测试内存库模拟历史导入留下重复记录。
     await database.client.exec("DROP INDEX ux_intelligence_item_external");
+    await database.client.exec("DROP INDEX intelligence_items_platform_external_ux");
     await database.db.insert(intelligenceItems).values([
       item("old", { externalId: "same" }),
       item("new-b", { externalId: "same", updatedAt: "2026-09-14T01:00:00.000Z" }),

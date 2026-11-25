@@ -70,7 +70,7 @@ import {createGenerationTaskWake} from "@creatoros/backend/application/generatio
 import {createGraphicPostBusinessAdapters, createGraphicCardBusinessAdapters, createGraphicCoverContextSnapshotter, createWechatArticleTextBusinessAdapters, createPublicationTextBusinessAdapters} from "@creatoros/backend/application/generation/creative-post";
 import {createOutputScriptsService, createOutputScriptCreativeResultAdapter} from "@creatoros/backend/modules/output-scripts";
 import {resolveContextDeps} from "@creatoros/backend/application/context/registry";
-import {getTemplate} from "@creatoros/ai-worker";
+import {extractAudioFromVideoBytes,getTemplate} from "@creatoros/ai-worker";
 import {createMediaBusinessAdapters} from "@creatoros/backend/application/generation/media";
 
 import {createCalibrationScoreReaders} from "@creatoros/backend/application/context/calibration-score";
@@ -231,7 +231,8 @@ import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creato
 import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createFrozenModelRetryPort, createExecutionService, createPersistentTaskService, retireLegacyRadarUpgrades, registerPersistentTaskObserver, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
-import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
+import { createEveryInfraRadar, drainDouyinShareImportQueue, resolveEveryInfraMedia, NO_PLAYABLE_MEDIA } from "@creatoros/backend/modules/intelligence";
+import { EveryInfraClient, EveryInfraError } from "@creatoros/ai-worker/everyinfra-client";
 import type { ContextDeps as ChatContextDeps } from "@creatoros/backend/modules/ai-runtime";
 // [T-184] 声明式 context 注入:CreativeContextDeps = creative-context 的 ContextDeps(facet reader
 // 集合的类型),供中央 reader registry + resolveContextDeps 定型;ProjectBriefReader 供命名 briefReader。
@@ -843,6 +844,7 @@ export interface ChatRuntime {
   readEditorTarget?: (ctx:RequestContext,target:WorkEditorTarget)=>Promise<WorkEditorTarget>;
   workbenchHost?: ChatProductionCompositionDeps["workbenchHost"];
   resolveRedfoxCredential: ReturnType<typeof createIntegrationCredentials>["resolve"];
+  resolveEveryInfraCredential: ReturnType<typeof createIntegrationCredentials>["resolveEveryInfra"];
   readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>Promise<{projectId:string;artifactId:string;currentVersionId:string;contentHash:string;fullText:string}|null>;
   durable: ReturnType<typeof createChatProductionRuntime>;
   localCodexStatus?:ReturnType<typeof createLocalCodexStatusService>["read"];
@@ -4088,6 +4090,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     () => intelligenceService,
     () => projectIntelligenceReferences,
     () => projectScriptCandidates,
+    createEveryInfraRadar(db, {
+      now: deps.now,
+      assertWorkspaceReadable: intelligenceService.assertWorkspaceReadable,
+      async client(ctx) {
+        const credentials = await integrationCredentials.resolveEveryInfra(ctx);
+        if (!credentials) throw new EveryInfraError("EVERYINFRA_NOT_CONFIGURED");
+        return new EveryInfraClient(credentials);
+      },
+    }),
   );
   const fetchIntelligenceFeed = async (url: string, signal?: AbortSignal) => {
     signal?.throwIfAborted();
@@ -5128,7 +5139,22 @@ dispatchIntelligenceRun});
     },
     extractAudio:async(playUrl,signal)=>(await loadDouyinCdp()).streamAudioFromVideo(playUrl,undefined,signal),
   };
-  const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{...asrResourceDeps,entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService});
+  const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{
+    ...asrResourceDeps,entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService,
+    everyInfra:{
+      async readSource(c,source,signal){
+        signal.throwIfAborted();
+        const credentials=await integrationCredentials.resolveEveryInfra(c);
+        if(!credentials)throw new EveryInfraError('EVERYINFRA_NOT_CONFIGURED');
+        signal.throwIfAborted();
+        return resolveEveryInfraMedia(source,source.attemptKey,signal,{client:new EveryInfraClient(credentials)});
+      },
+      async extractAudio(bytes,signal){
+        try{return await extractAudioFromVideoBytes(bytes,signal);}
+        catch{signal.throwIfAborted();throw Object.assign(new Error(NO_PLAYABLE_MEDIA),{code:NO_PLAYABLE_MEDIA});}
+      },
+    },
+  });
   const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,captureConfiguration:captureAsrConfiguration,createTaskWithRoute:createTaskWithFrozenRouting,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath,wake:()=>recoveryWake?.wake("benchmark")});
   const scheduledSignals=new AsyncLocalStorage<AbortSignal>();
   const checkScheduledSignal=()=>scheduledSignals.getStore()?.throwIfAborted();
@@ -5760,7 +5786,7 @@ FAVORITES_PROMOTE_PER_RUN
   // 注入 settings repo 后 model_configurations.secret_value 静态加密(AES-256-GCM),
   // 读出透明解密。web 路径永不崩(降级 key)。
   const settingsRepo = createSettingsRepository(db, { ...deps, masterKey });
-  const redfoxCredentials = createIntegrationCredentials(db, masterKey);
+  const integrationCredentials = createIntegrationCredentials(db, masterKey);
   const settingsServiceFor=(store:typeof db)=>createSettingsService(
     () => store===db?settingsRepo:createSettingsRepository(store,{...deps,masterKey}),
     (ctx) => identity.getCurrentUser(ctx),
@@ -5920,7 +5946,7 @@ FAVORITES_PROMOTE_PER_RUN
       freeze:(capability:string,mode:'text'|'vision')=>freezeSelectedModelRoutes({choices,revision,main:{mode,capability},explicitEngine:input.executionEngine,read})};
   }
   const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id), (ctx, id) => accountGroupService.get(ctx, id));
-  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState,reportingLocal,observability);
+  const settings = createSettingsTransport(() => settingsService, integrationCredentials, onboardingState,reportingLocal,observability);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
       officialSkills: {
@@ -6983,7 +7009,8 @@ FAVORITES_PROMOTE_PER_RUN
     runKnowledgeGeneration:knowledgeGeneration.runKnowledgeGeneration,
     localCodexStatus:localCodexStatus.read,
     ...(workbenchHost?{workbenchHost}:{}),
-    resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
+    resolveRedfoxCredential: ctx => integrationCredentials.resolve(ctx),
+    resolveEveryInfraCredential: ctx => integrationCredentials.resolveEveryInfra(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readConfirmedProjectScript(c,projectId);signal?.throwIfAborted();return result?{projectId:result.projectId,artifactId:result.artifactId,currentVersionId:result.versionId,contentHash:result.sha256,fullText:result.fullText}:null;},
     get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
     ai: aiService,

@@ -581,6 +581,7 @@ export {createDurableAsrRequestExecutor,type DurableAsrPorts} from "./execution/
 export {
   createTranscribeAudioExtractor,
   streamAudioFromVideo,
+  extractAudioFromVideoBytes,
   TranscribeAudioExtractError,
   type StreamAudioDeps,
   type SpawnedAudioProcess,

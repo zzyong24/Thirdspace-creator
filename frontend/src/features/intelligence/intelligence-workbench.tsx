@@ -1,5 +1,5 @@
 "use client";
-import { compactNumber,dateLabel,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
+import { compactNumber,dateLabel,everyInfraTranscriptErrorMessage,isRadarOriginalLink,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
 import styles from "./source-management.module.css";
 import layoutStyles from "./intelligence-workbench.module.css";
 import { SourceManagementOverview } from "./source-management-overview";
@@ -28,6 +28,8 @@ import {radarScopeKey} from "./intelligence-workbench-types";
 import {readRadarView,saveRadarView} from "./radar-view-preferences";
 import * as React from "react";
 import { AddCollectionDialog,ImportDouyinShareDialog } from "./collection-import-dialogs";
+import { EveryInfraSearchPanel } from "./everyinfra-search-panel";
+import { operationKey } from "./radar-operation-key";
 import { AddSourceDialog } from "./source-setup-dialog";
 import { AttachCollectorDialog } from "./attach-collector-dialog";
 import { useSourceRuns } from "./use-source-runs";
@@ -618,6 +620,31 @@ function IntelligenceWorkbenchScope({
     [api],
   );
 
+  async function transcribeEveryInfra(itemId: string) {
+    if (busy) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const { tasks, skipped } = await api.enqueueTranscript({ itemId, idempotencyKey: operationKey("everyinfra-transcribe") });
+      if (tasks.some((task) => task.ownerId === itemId)) {
+        setDetail((current) => current?.item.id === itemId
+          ? { ...current, transcript: { ...current.transcript, status: "queued", errorCode: null } } : current);
+        setScopedItems((items) => items.map((row) => row.item.id === itemId
+          ? { ...row, transcriptState: "processing", progressState: "transcript_processing" } : row));
+      } else if (activeDetailItemId.current === itemId) {
+        const reason = skipped.find((entry) => entry.itemId === itemId)?.reason;
+        setNotice(everyInfraTranscriptErrorMessage(reason) ?? "当前作品暂时无法转写。");
+      }
+    } catch (error) {
+      const { code, details } = (error ?? {}) as { code?: unknown; details?: { domainCode?: unknown } };
+      if (activeDetailItemId.current === itemId) {
+        setNotice(everyInfraTranscriptErrorMessage(details?.domainCode ?? code) ?? "暂时无法启动转写，请稍后重试。");
+      }
+    } finally {
+      if (activeDetailItemId.current === itemId) setBusy(false);
+    }
+  }
+
   const startResize = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       event.preventDefault();
@@ -1140,7 +1167,15 @@ function IntelligenceWorkbenchScope({
           aria-busy={itemsLoading}
           className={cn("flex min-h-0 min-w-0 flex-col bg-canvas/55", layoutStyles.itemsPane)}
         >
-          <h2 className="flex shrink-0 items-center gap-2 border-b border-border/70 px-4 py-3 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/70 px-4 py-2">
+            <h2 className="flex items-center gap-2 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
+            {api.queryEveryInfra && api.addEveryInfraItem ? (
+              <EveryInfraSearchPanel key={scopeKey} query={api.queryEveryInfra} add={api.addEveryInfraItem}
+                onAdded={(itemId) => {
+                  void selectItemScope(null, null).then(() => selectItem(itemId));
+                }} />
+            ) : null}
+          </div>
           <div className={layoutStyles.filterBar}>
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>逐字稿</span>
@@ -1345,6 +1380,7 @@ function IntelligenceWorkbenchScope({
               <ItemDetail
                 detail={detail}
                 busy={busy}
+                onTranscribe={() => void transcribeEveryInfra(detail.item.id)}
                 upgradeState={upgrades.byItem.get(detail.item.id)}
                 upgradeSubmitting={upgrades.submitting.has(detail.item.id)}
                 onUpgrade={api.ensureProject?()=>{
@@ -1644,9 +1680,8 @@ function ItemCard({
   );
 }
 
-function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:RadarItemDetail;busy?:boolean;upgradeState?:RadarProjectState;upgradeSubmitting:boolean;onUpgrade?:()=>void}) {
+function ItemDetail({detail,busy,upgradeState,upgradeSubmitting,onUpgrade,onTranscribe}:{detail:RadarItemDetail;busy?:boolean;upgradeState?:RadarProjectState;upgradeSubmitting:boolean;onUpgrade?:()=>void;onTranscribe?:()=>void}) {
   const latest = detail.metrics[0] ?? null;
-  // 雷达只负责选方案：转写、拆解、写稿全部在「升级为项目」后的项目流水线里自动完成。
   const transcriptCooling=detail.transcript.errorCode==="TRANSCRIBE_SOURCE_COOLDOWN" && detail.transcript.status==="queued";
   const transcriptBusy =
     detail.transcript.status === "queued" ||
@@ -1655,6 +1690,8 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
     (transform) => transform.status === "confirmed",
   );
   const sourceEvidence = groupRadarSourceEvidence(detail.snapshots);
+  const everyInfra = detail.item.captureChannel === "everyinfra";
+  const transcriptError = everyInfra ? everyInfraTranscriptErrorMessage(detail.transcript.errorCode) : null;
   return (
     <div className="flex min-h-full flex-col">
       <div className={cn("border-b border-border/70 p-3", layoutStyles.detailHeader)}>
@@ -1672,14 +1709,12 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
             </p>
 
           </div>
-          <a
-            href={detail.item.canonicalUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-primary hover:underline"
-          >
-            原链接 <Link2 className="size-3" />
-          </a>
+          {isRadarOriginalLink(detail.item.canonicalUrl) ? (
+            <a href={detail.item.canonicalUrl} target="_blank" rel="noreferrer"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-primary hover:underline">
+              原链接 <Link2 className="size-3" />
+            </a>
+          ) : null}
         </div>
       </div>
 
@@ -1733,10 +1768,19 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
           ) : (
             <div className="mt-2 rounded-lg border border-dashed border-border p-3">
               <p className="text-xs leading-5 text-muted-foreground">
-                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "升级为项目后，会在项目里自动转写正文。"}
+                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。"
+                  : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。"
+                  : everyInfra ? transcriptError ?? (detail.item.type === "video" ? "点击转写以提取口播正文。" : "图文内容没有口播可转写。")
+                  : "升级为项目后，会在项目里自动转写正文。"}
               </p>
             </div>
           )}
+          {everyInfra && detail.item.type === "video" && onTranscribe && !transcriptLocked
+            && !transcriptBusy && detail.transcript.status !== "done" ? (
+            <Button type="button" variant="outline" size="sm" className="mt-2" disabled={busy} onClick={onTranscribe}>
+              {detail.transcript.status === "failed" || detail.transcript.status === "blocked" ? "重试转写" : "转写"}
+            </Button>
+          ) : null}
           {transcriptLocked ? (
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <LockKeyhole className="size-3.5 text-primary" />
@@ -1752,14 +1796,9 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
           </h4>
           <div className="mt-3 space-y-2">
             {sourceEvidence.length > 0 ? (
-              sourceEvidence.slice(0, 4).map(({ snapshot, captureCount }) => (
-                <a
-                  key={snapshot.sourceId ?? snapshot.finalUrl}
-                  href={snapshot.finalUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 rounded-xl border border-border/80 px-3 py-2.5 transition hover:border-primary/30"
-                >
+              sourceEvidence.slice(0, 4).map(({ snapshot, captureCount }) => {
+                const className = "flex items-center gap-3 rounded-xl border border-border/80 px-3 py-2.5";
+                const content = <>
                   <Clock3 className="size-4 shrink-0 text-primary" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-medium">
@@ -1772,8 +1811,12 @@ function ItemDetail({detail,upgradeState,upgradeSubmitting,onUpgrade}:{detail:Ra
                         : ""}
                     </span>
                   </span>
-                </a>
-              ))
+                </>;
+                return isRadarOriginalLink(snapshot.finalUrl) ? (
+                  <a key={snapshot.sourceId ?? snapshot.id} href={snapshot.finalUrl} target="_blank" rel="noreferrer"
+                    className={cn(className, "transition hover:border-primary/30")}>{content}</a>
+                ) : <div key={snapshot.sourceId ?? snapshot.id} className={className}>{content}</div>;
+              })
             ) : (
               <p className="text-xs text-muted-foreground">
                 暂无来源快照，下一次成功同步后显示。

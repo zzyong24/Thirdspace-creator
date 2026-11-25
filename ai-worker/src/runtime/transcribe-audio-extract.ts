@@ -1,3 +1,7 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import { resolveFfmpegPath } from "./ffmpeg-path";
 
 /** 保留旧抽音诊断文字；宿主可映射为自己的业务错误，取消仍是 AbortError。 */
@@ -44,7 +48,7 @@ function abortError(): Error {
  */
 export function createTranscribeAudioExtractor(deps: StreamAudioDeps = REAL_SPAWN_DEPS) {
   const unconfirmed = new Set<SpawnedAudioProcess>();
-  return async (playUrl: string, signal?: AbortSignal): Promise<Uint8Array> => {
+  return async (input: string | { localPath: string }, signal?: AbortSignal): Promise<Uint8Array> => {
     if (signal?.aborted) throw abortError();
     if (unconfirmed.size > 0) {
       throw new TranscribeAudioExtractError("streamAudioFromVideo: 上次 ffmpeg 尚未确认退出，暂时无法开始新的抽音");
@@ -56,11 +60,13 @@ export function createTranscribeAudioExtractor(deps: StreamAudioDeps = REAL_SPAW
       throw new TranscribeAudioExtractError(`streamAudioFromVideo: ${err instanceof Error ? err.message : String(err)}`);
     }
     if (signal?.aborted) throw abortError();
-    // 保留原始 Referer 和 argv；URL 作为独立参数，不经过 shell。
+    // 本地原片需支持 seek；限制 FFmpeg 协议，原抖音直链保留 Referer。
+    const inputArgs = typeof input === "string"
+      ? ["-headers", "Referer: https://www.douyin.com/\r\n", "-i", input]
+      : ["-nostdin", "-protocol_whitelist", "file,pipe", "-i", input.localPath];
     const args = [
       "-y", "-hide_banner", "-loglevel", "error",
-      "-headers", "Referer: https://www.douyin.com/\r\n",
-      "-i", playUrl, "-vn", "-ar", "16000", "-ac", "1",
+      ...inputArgs, "-vn", "-ar", "16000", "-ac", "1",
       "-b:a", "64k", "-f", "mp3", "pipe:1",
     ];
     return new Promise<Uint8Array>((resolve, reject) => {
@@ -135,15 +141,41 @@ export function createTranscribeAudioExtractor(deps: StreamAudioDeps = REAL_SPAW
 
 // 保留独立函数调用方式，同时让默认装配及同一 deps 共享清理状态，避免每次调用重置屏障。
 const extractors = new WeakMap<StreamAudioDeps, ReturnType<typeof createTranscribeAudioExtractor>>();
-export function streamAudioFromVideo(
-  playUrl: string,
-  deps: StreamAudioDeps = REAL_SPAWN_DEPS,
-  signal?: AbortSignal,
-): Promise<Uint8Array> {
+function audioExtractor(deps: StreamAudioDeps) {
   let extract = extractors.get(deps);
   if (!extract) {
     extract = createTranscribeAudioExtractor(deps);
     extractors.set(deps, extract);
   }
-  return extract(playUrl, signal);
+  return extract;
+}
+
+export function streamAudioFromVideo(
+  playUrl: string,
+  deps: StreamAudioDeps = REAL_SPAWN_DEPS,
+  signal?: AbortSignal,
+): Promise<Uint8Array> {
+  return audioExtractor(deps)(playUrl, signal);
+}
+
+/** 临时文件只给 ffmpeg 随机读取原片。仅音频字节返回给现有转写任务。 */
+export async function extractAudioFromVideoBytes(
+  bytes: Uint8Array,
+  signal?: AbortSignal,
+  deps: StreamAudioDeps = REAL_SPAWN_DEPS,
+): Promise<Uint8Array> {
+  const timeout = AbortSignal.timeout(executionTimeoutMs());
+  const abort = signal ? AbortSignal.any([timeout, signal]) : timeout;
+  abort.throwIfAborted();
+  const root = await mkdtemp(join(tmpdir(), "creatoros-radar-video-"));
+  try {
+    const localPath = join(root, "source");
+    await writeFile(localPath, bytes, { mode: 0o600, signal: abort });
+    return await audioExtractor(deps)({ localPath }, abort);
+  } catch (error) {
+    abort.throwIfAborted();
+    throw error;
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 }

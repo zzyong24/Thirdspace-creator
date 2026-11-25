@@ -6,6 +6,7 @@ import {runChatGenerationInWorker} from './chat-generation-worker';
 import {runChatTextNodeInWorker} from './chat-text-node-worker';
 import {createChatResearchResources,runChatResearchInWorker} from './chat-research-worker';
 import {createChatWebReadResources} from './chat-web-read-resources';
+import { runChatEveryInfraInWorker } from './chat-everyinfra-worker';
 import {runChatRedfoxInWorker} from './chat-redfox-worker';
 import {modelFor} from '../runtime/provider-factory';
 import {GenerationFailure} from './generation-error';
@@ -33,6 +34,7 @@ export function createExternalChatToolConsumer(input:z.infer<typeof chatWorkerIn
     if(!callId)throw Error('工具入场缺失');
     if(approval.status==='denied')return agenticToolOutcomeSchema.parse({status:'blocked',summary:'用户未允许本次操作',evidence:[],data:{denied:true},error:{code:'permission',retryable:false,recovery:'用户已拒绝，本次不执行。'},continuation:null,sideEffect:'none'});
     if(def.execution==='worker.web-read'){webRead??=createChatWebReadResources(parentSignal,call);return webRead.run(callId,signal);}
+    if(def.execution==='worker.everyinfra')return runChatEveryInfraInWorker(callId,signal,call);
     if(def.execution==='worker.redfox')return runChatRedfoxInWorker(callId,signal,call);
     if(def.execution==='worker.structured-node')return runChatGenerationInWorker(callId,signal,call);
     if(def.execution==='worker.script-hooks'||def.execution==='worker.script-draft'){

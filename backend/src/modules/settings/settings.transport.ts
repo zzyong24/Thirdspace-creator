@@ -1,4 +1,4 @@
-import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
+import { ENDPOINTS, type Endpoint, type RequestContext, type Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
   UnsupportedOperationError,
@@ -30,7 +30,8 @@ export const SETTINGS_OP_IDS = [
   "settings.reporting.get", "settings.reporting.consent.set", "settings.reporting.pending.clear",
   "settings.onboarding.get", "settings.onboarding.patch",
   "settings.onboarding.group.get", "settings.onboarding.group.patch",
-  "settings.redfox.get", "settings.redfox.put", "settings.redfox.delete",
+  "settings.redfox.get",
+  "settings.everyinfra.get", "settings.everyinfra.put", "settings.everyinfra.delete",
   "settings.get",
   // `PATCH /me` (identity.profile.patch) is served HERE rather than by a bare
   // Identity route because Identity owns no dispatch transport — the Settings
@@ -115,10 +116,20 @@ export function createSettingsTransport(
             : await onboarding.patch(ctx,accountId,body as import("@creatoros/contract").OnboardingPatch);
           return {data,meta:{requestId:ctx.requestId}};
         }
-        case "settings.redfox.get": case "settings.redfox.put": case "settings.redfox.delete": {
-          if(!integrations)throw Error("REDFOX_SETTINGS_UNAVAILABLE");
-          const data=endpoint.id==="settings.redfox.get"?await integrations.status(ctx):endpoint.id==="settings.redfox.delete"?await integrations.remove(ctx):await integrations.save(ctx,(body as {secret:string}).secret);
-          return {data,meta:{requestId:ctx.requestId}};
+        case "settings.redfox.get": {
+          if (!integrations) throw new UnsupportedOperationError(endpoint.id);
+          return { data: await integrations.status(ctx), meta: { requestId: ctx.requestId } };
+        }
+        case "settings.everyinfra.get":
+        case "settings.everyinfra.put":
+        case "settings.everyinfra.delete": {
+          if (!integrations) throw new UnsupportedOperationError(endpoint.id);
+          const data = endpoint.id === "settings.everyinfra.get"
+            ? await integrations.statusEveryInfra(ctx)
+            : endpoint.id === "settings.everyinfra.delete"
+              ? await integrations.removeEveryInfra(ctx)
+              : await integrations.saveEveryInfra(ctx, ENDPOINTS.putEveryInfra.body.parse(body));
+          return { data, meta: { requestId: ctx.requestId } };
         }
         case "settings.get": {
           const data = await service.getAccount(ctx);

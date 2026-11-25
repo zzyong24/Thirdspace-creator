@@ -2,7 +2,7 @@ import {transcribePreparationError} from "../execution/transcribe-stage-error";
 import {isDeepStrictEqual} from 'node:util';
 import {and,eq,executionTasks,executionCalls,itemTranscripts,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
-import {isContinuousExecutionBudget,transcribeTaskInputSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
+import {isContinuousExecutionBudget,transcribeTaskAudioKeys,transcribeWorkerTaskInputSchema,workerPortInputSchemas,type ExecutionRef,type TranscribePlatformSource} from '@creatoros/contract/execution-worker';
 import {createClaimedWorkerSupervision} from '../execution/claimed-worker-supervision';
 import {createExecutionLeaseService} from '../execution/execution-lease.service';
 import {createExecutionCallLedgerService} from '../execution/execution-call-ledger.service';
@@ -21,6 +21,10 @@ import {platformAccounts} from '../../schema/platform-account';
 import {OwnershipError} from './intelligence.errors';
 
 type PreparationDeps=Parameters<typeof createExecutionTranscribePreparationService>[1];
+type LegacySourceRead={kind:'image-album'}|{kind:'video';playUrl:string};
+type EveryInfraSource=TranscribePlatformSource & {canonicalUrl:string;attemptKey:string};
+type EveryInfraSourceRead={kind:'image';reason:'IMAGE_NOTE'|'IMAGE_ALBUM'}|{kind:'video';bytes:Uint8Array};
+const sourceSkip=(payload:Record<string,unknown>)=>payload.intelligenceTranscriptSkip==='IMAGE_ALBUM'||payload.intelligenceTranscriptSkip==='IMAGE_NOTE'?payload.intelligenceTranscriptSkip:null;
 export interface IntelligenceTranscriptBridgeDeps {
  entryPath:string|(()=>string);
  tasks:Pick<PersistentTaskService,'heartbeat'>;
@@ -29,8 +33,12 @@ export interface IntelligenceTranscriptBridgeDeps {
  resolveSpec:PreparationDeps['resolveSpec'];
  prepareSpec:PreparationDeps['prepareSpec'];
  /** 保留实际来源读取及抽音服务；端口必须接受当前账号并使用传入取消信号。 */
- readSource(ctx:RequestContext,awemeId:string,signal:AbortSignal):Promise<{kind:'image-album'}|{kind:'video';playUrl:string}>;
+ readSource(ctx:RequestContext,awemeId:string,signal:AbortSignal):Promise<LegacySourceRead>;
  extractAudio(playUrl:string,signal:AbortSignal):Promise<Uint8Array>;
+ everyInfra?:{
+  readSource(ctx:RequestContext,source:EveryInfraSource,signal:AbortSignal):Promise<EveryInfraSourceRead>;
+  extractAudio(bytes:Uint8Array,signal:AbortSignal):Promise<Uint8Array>;
+ };
  now?:()=>string;
 }
 /** 沿原 transcript claim 调度 ASR；原 runner 负责业务逐字稿及任务终态投影。 */
@@ -47,7 +55,7 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
   const verify=()=>leases.withLease(ref,'admission',async scope=>{
    if(scope.context.userId!==ctx.userId||scope.context.accountId!==ctx.accountId)throw new Error('INTELLIGENCE_TRANSCRIPT_OWNER_MISMATCH');
    const bound=await bindIntelligenceTranscript(scope);
-   if(bound.item.id!==target.itemId||bound.item.canonicalUrl!==target.canonicalUrl||bound.item.externalId!==target.externalId)throw new Error('INTELLIGENCE_TRANSCRIPT_SOURCE_CHANGED');
+   if(bound.item.id!==target.itemId||bound.item.externalId!==target.externalId||(bound.captureChannel==='legacy-douyin-cdp'&&bound.item.canonicalUrl!==target.canonicalUrl))throw new Error('INTELLIGENCE_TRANSCRIPT_SOURCE_CHANGED');
    return {...bound,task:scope.task};
   });
   const projectFailure=async(status:string)=>{
@@ -69,7 +77,9 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
    let payload=initial.task.payload as Record<string,unknown>;
    if(!payload.modelInput){
     const configuration=transcribeConfiguration(await deps.resolveSpec(ctx,{ref}));
-    const input=transcribeTaskInputSchema.parse({kind:'transcribe.douyin',awemeIds:[awemeId],language:'zh',configuration});
+    const input=transcribeWorkerTaskInputSchema.parse(initial.captureChannel==='everyinfra'
+     ?{kind:'transcribe.platform',sources:[initial.source],language:'zh',configuration}
+     :{kind:'transcribe.douyin',awemeIds:[awemeId],language:'zh',configuration});
     await leases.withLease(ref,'admission',async scope=>{
      const bound=await bindIntelligenceTranscript(scope);if(bound.awemeId!==awemeId)throw new Error('INTELLIGENCE_TRANSCRIPT_SOURCE_CHANGED');
      const current=scope.task.payload as Record<string,unknown>;
@@ -80,12 +90,14 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
     });
    }
    payload=(await verify()).task.payload as Record<string,unknown>;
-   const input=transcribeTaskInputSchema.parse(payload.modelInput);
-   if(!isDeepStrictEqual(input.awemeIds,[awemeId]))throw new Error('INTELLIGENCE_TRANSCRIPT_PLAN_CHANGED');
+   const input=transcribeWorkerTaskInputSchema.parse(payload.modelInput);
+   if(!isDeepStrictEqual(transcribeTaskAudioKeys(input),[awemeId])
+    ||(initial.captureChannel==='everyinfra'&&(input.kind!=='transcribe.platform'||!isDeepStrictEqual(input.sources,[initial.source])))
+    ||(initial.captureChannel==='legacy-douyin-cdp'&&input.kind!=='transcribe.douyin'))throw new Error('INTELLIGENCE_TRANSCRIPT_PLAN_CHANGED');
    await ledger.initializeBudget(ref);
    readResult=async():Promise<Result|undefined>=>{
     const current=(await verify()).task.payload as Record<string,unknown>;
-    if(current.intelligenceTranscriptSkip==='IMAGE_ALBUM')return skipped('IMAGE_ALBUM');
+    const reason=sourceSkip(current);if(reason)return skipped(reason);
     if(!readTranscribeAsrPlan(current,awemeId).plan)return undefined;
     const receipt=await asr.read(ref,{awemeId});
     const mode=receipt?.identity.protocol==='whisper-local.v1'?'whisper-local':input.configuration.displayModelKey==='channel-managed'?'channel-managed':'configured-cloud';
@@ -101,12 +113,12 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
      if(port==='heartbeat'){await verify();return deps.tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300});}
      if(port==='prepareTranscribeItem'){
       if(workerPortInputSchemas.prepareTranscribeItem.parse(raw).awemeId!==awemeId)throw new Error('INTELLIGENCE_TRANSCRIPT_ITEM_MISMATCH');
-      const current=(await verify()).task.payload as Record<string,unknown>;
-      if(current.intelligenceTranscriptSkip==='IMAGE_ALBUM')return {skippedReason:'IMAGE_ALBUM'};
+      const current=await verify(),reason=sourceSkip(current.task.payload as Record<string,unknown>);
+      if(reason)return {skippedReason:reason};
       if((await audio.read(ref,{awemeId},controller.signal)).status==='missing'){
        // 组任务保留NULL账号；仅取流沿原item的真实来源账号授权，不能打开_default临时档案。
        // SEMANTIC_BOUNDARY_ALLOW: 原作品ID、用户及有效组成员关系的机械核验，不选择创作账号。
-       const sourceContext=await leases.withLease(ref,'admission',async scope=>{
+       const sourceContext=current.captureChannel==='everyinfra'?ctx:await leases.withLease(ref,'admission',async scope=>{
         const bound=await bindIntelligenceTranscript(scope);
         if(ctx.accountId||!ctx.groupId||!bound.item.accountId)return ctx;
         const target={...ctx,accountId:bound.item.accountId,membershipVersion:undefined};
@@ -116,12 +128,20 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
         controller.signal.throwIfAborted();
         return {...target,membershipVersion:frozen.membershipVersion??undefined};
        });
-       const source=await deps.readSource(sourceContext,awemeId,controller.signal).catch(error=>{preparationError=error;throw error;});controller.signal.throwIfAborted();await verify();
-       if(source.kind==='image-album'){
-        await leases.withLease(ref,'admission',async scope=>{await bindIntelligenceTranscript(scope);await scope.tx.update(executionTasks).set({payload:{...scope.task.payload as Record<string,unknown>,intelligenceTranscriptSkip:'IMAGE_ALBUM'}}).where(eq(executionTasks.id,scope.task.id));});
-        return {skippedReason:'IMAGE_ALBUM'};
+       const sourceRequest=current.captureChannel==='everyinfra'
+        ?deps.everyInfra?.readSource(ctx,{...current.source,canonicalUrl:current.item.canonicalUrl,attemptKey:`${ref.executionTaskId}:${ref.attempt}`},controller.signal)
+         ??Promise.reject(new Error('INTELLIGENCE_EVERYINFRA_SOURCE_UNAVAILABLE'))
+        :deps.readSource(sourceContext,awemeId,controller.signal);
+       const source=await sourceRequest.catch(error=>{preparationError=error;throw error;});controller.signal.throwIfAborted();await verify();
+       if(source.kind!=='video'){
+        const skip=source.kind==='image'?source.reason:'IMAGE_ALBUM';
+        await leases.withLease(ref,'admission',async scope=>{await bindIntelligenceTranscript(scope);await scope.tx.update(executionTasks).set({payload:{...scope.task.payload as Record<string,unknown>,intelligenceTranscriptSkip:skip}}).where(eq(executionTasks.id,scope.task.id));});
+        return {skippedReason:skip};
        }
-       const bytes=await deps.extractAudio(source.playUrl,controller.signal).catch(error=>{preparationError=error;throw error;});controller.signal.throwIfAborted();await verify();
+       const extracted='bytes' in source
+        ?(deps.everyInfra?.extractAudio(source.bytes,controller.signal)??Promise.reject(new Error('INTELLIGENCE_BYTES_EXTRACTOR_UNAVAILABLE')))
+        :deps.extractAudio(source.playUrl,controller.signal);
+       const bytes=await extracted.catch(error=>{preparationError=error;throw error;});controller.signal.throwIfAborted();await verify();
        await audio.save(ref,{awemeId,bytes},controller.signal);
       }
       return {skippedReason:null};

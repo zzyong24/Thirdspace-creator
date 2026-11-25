@@ -1,3 +1,4 @@
+import { everyInfraQueryErrorCodeSchema, everyInfraQueryErrorMessages } from "@creatoros/contract/internal/everyinfra";
 import type { RadarItemDetail,RadarItemRow,RadarRun,RadarRunStatus,RadarSource } from "./intelligence-workbench-types";
 export function compactNumber(value: number | null): string {
   if (value === null) return "未知";
@@ -100,6 +101,22 @@ export function transcriptLabel(status: RadarItemDetail["transcript"]["status"])
   return Object.hasOwn(labels, status) ? labels[status] : "状态未知";
 }
 
+export function everyInfraTranscriptErrorMessage(code: unknown): string | null {
+  const providerError = everyInfraQueryErrorCodeSchema.safeParse(code);
+  if (providerError.success) return everyInfraQueryErrorMessages[providerError.data];
+  switch (code) {
+    case "CHANNELS_DECRYPT_UNSPECIFIED":
+      return "视频号原片解密尚未验证，暂无法转写。你可以在项目中手工补充逐字稿。";
+    case "NO_PLAYABLE_MEDIA":
+      return "未能取得可播放的视频，请稍后重试。";
+    case "IMAGE_NOTE":
+    case "IMAGE_ALBUM":
+      return "图文内容没有口播可转写。";
+    default:
+      return null;
+  }
+}
+
 export function progressLabel(
   state: RadarItemRow["progressState"],
 ): string | null {
@@ -115,3 +132,11 @@ export function progressLabel(
   }[state];
 }
 
+export function isRadarOriginalLink(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    return (url.protocol === "https:" || url.protocol === "http:") && url.hostname !== "creatoros.local";
+  } catch {
+    return false;
+  }
+}

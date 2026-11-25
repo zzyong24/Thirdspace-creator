@@ -6,7 +6,7 @@ import {
  projectPreparationStartInput,projectPreparationTranscriptInput,projectPreparationCandidateAcceptInput,projectPreparationResource,projectPreparationStep,
  type RequestContext,type ProjectSource,type ProjectSourceReference,type ProjectPreparationStep,type ProjectPreparationCandidate,type ProjectPreparationResource,type ProjectPreparationAcceptanceReceipt,
 } from '@creatoros/contract';
-import {createContinuousExecutionBudget} from '@creatoros/contract/execution-worker';
+import {createContinuousExecutionBudget,transcribePlatformSourceSchema} from '@creatoros/contract/execution-worker';
 import type {Db} from '../../db';
 import {ConflictError} from '../../errors';
 import {lockWorkspaceMembership} from '../platform-account/membership-lock.service';
@@ -282,6 +282,13 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
        step.status=generated.length?'candidate_ready':'done';if(step.name==='brief'&&!generated.length)step.reasonCode='BRIEF_UNCHANGED';clearStepError(cp,step);step.completedAt=deps.now();step.availableActions=generated.length?['accept_candidate']:[];await save();continue;
       }
       if(['failed','blocked','paused'].includes(child.status)){
+       const transcript=step.name==='transcript'&&child.kind==='transcribe'&&child.status!=='paused'?await states.read(ctx,child.id):undefined;
+       if(transcript&&transcribePlatformSourceSchema.safeParse((transcript.payload as {source?:unknown}|null)?.source).success){
+        const decryptUnavailable=child.errorCode==='CHANNELS_DECRYPT_UNSPECIFIED';
+        step.status='waiting_user';step.reasonCode=decryptUnavailable?'CHANNELS_DECRYPT_UNSPECIFIED':'TRANSCRIPT_REQUIRES_INPUT';step.availableActions=['provide_transcript'];
+        step.lastError={code:'EXECUTION_FAILED',message:decryptUnavailable?'视频号原片解密尚未验证，请手工补充逐字稿':'请在内容雷达查看转写状态，或手工补充逐字稿'};
+        cp.lastError=step.lastError;await save();continue;
+       }
        const control=(claim.payload as {preparationControl?:{id:string;command:string}}).preparationControl;
        const exhausted=child.status==='failed'&&['GENERATION_RECOVERY_EXHAUSTED','RETRY_BUDGET_EXHAUSTED','EXECUTION_DEADLINE'].includes(child.errorCode??'');
        if(!exhausted&&control&&cp.resumedChildren?.[child.id]!==control.id){

@@ -507,13 +507,13 @@ describe("T-944 官方编导方法到聊天读取链路", () => {
     expect(canvas?.effective.methodSystem).toContain("空白文字");
     expect(snapshot.skills.some(item => item.skillId === "chatbox.topic")).toBe(false);
   });
-  it("T-962 新聊天可发现并读取 RedFox 研究和运营复盘方法", async () => {
+  it("新聊天可发现并读取万有引擎研究和运营复盘方法", async () => {
     const bases = listOfficialSkillBases();
     const resolver = createEffectiveSkillSnapshotResolver(deps(bases));
     for (const surface of ["project", "review", "topics"]) {
       const snapshot = await resolver(ctx, requiredSkillIdsForTask("chat.sync", {surface}));
       const library = createChatSkillLibrary(snapshot, ctx);
-      for (const skillId of ["method.redfox.topic-research", "method.redfox.benchmark", "method.operations.review"]) {
+      for (const skillId of ["method.everyinfra.topic-research", "method.everyinfra.benchmark", "method.operations.review"]) {
         expect(library.catalog).toContain(skillId);
         const base = bases.find(item => item.skillId === skillId)!;
         expect(library.read({skillId}).text).toBe([base.methodSystem, base.template].join("\n\n"));

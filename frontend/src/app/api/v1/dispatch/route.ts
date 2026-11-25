@@ -180,6 +180,13 @@ export function validateCliInvocation(
 ): Response | null {
   const supplied = req.headers.get(CLI_ACCESS_HEADER);
   if (!supplied) return null;
+  // 雷达封面只用于当前界面展示，避免把临时地址写入 CLI 回执缓存。
+  if (endpoint.id === "intelligence.everyinfra.query" || endpoint.id === "intelligence.everyinfra.add") {
+    return NextResponse.json(
+      { error: { code: "CLI_RADAR_UI_ONLY", message: "请在内容雷达界面查询并加入万有引擎内容。" } },
+      { status: 403 },
+    );
+  }
   const expected = expectedCliCredential();
   if (!expected || !secretsEqual(supplied, expected.accessToken)) {
     return NextResponse.json(

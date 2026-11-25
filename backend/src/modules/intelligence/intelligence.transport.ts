@@ -7,6 +7,8 @@ import {
 import type { IntelligenceService } from "./intelligence.service";
 import type { ProjectIntelligenceReferenceService } from "./project-reference.service";
 import type { ProjectScriptCandidateService } from "./project-script-candidate.service";
+import type { createEveryInfraRadar } from "./everyinfra-item-import";
+import { ENDPOINTS } from "@creatoros/contract";
 
 export const INTELLIGENCE_OP_IDS = [
   "intelligence.workspace.get",
@@ -27,6 +29,8 @@ export const INTELLIGENCE_OP_IDS = [
   "intelligence.items.list",
   "intelligence.items.get",
   "intelligence.items.importDouyinShare",
+  "intelligence.everyinfra.query",
+  "intelligence.everyinfra.add",
   "intelligence.transcripts.enqueue",
   "intelligence.transcripts.uploadManual",
   "intelligence.transforms.previewTopic",
@@ -66,6 +70,7 @@ export function createIntelligenceTransport(
   serviceFactory: () => IntelligenceTransportService,
   projectReferencesFactory?: () => ProjectIntelligenceReferenceService,
   projectScriptsFactory?: () => ProjectScriptCandidateService,
+  everyInfraRadar?: ReturnType<typeof createEveryInfraRadar>,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, rawCtx) {
@@ -86,6 +91,16 @@ export function createIntelligenceTransport(
       };
 
       switch (endpoint.id) {
+        case "intelligence.everyinfra.query": {
+          if (!everyInfraRadar) throw new UnsupportedOperationError(endpoint.id);
+          const { query, idempotencyKey } = ENDPOINTS.queryEveryInfraRadar.body.parse(body);
+          return { data: await everyInfraRadar.query(ctx, query, idempotencyKey), meta: { requestId } };
+        }
+        case "intelligence.everyinfra.add": {
+          if (!everyInfraRadar) throw new UnsupportedOperationError(endpoint.id);
+          const { importId } = ENDPOINTS.addEveryInfraRadarItem.body.parse(body);
+          return { data: await everyInfraRadar.add(ctx, importId), meta: { requestId } };
+        }
         case "intelligence.workspace.get": {
           const q = (query ?? {}) as { accountId?: string };
           assertAccount(ctx, q.accountId);

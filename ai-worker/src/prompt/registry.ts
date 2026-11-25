@@ -1,7 +1,8 @@
 import { TOPIC_QUERY_PLAN_TEMPLATE } from "./templates/topic-query-plan";
 import {MOMENTS_COMPOSE_TEMPLATE} from "./moments-compose";
 import {PRODUCTION_ROUGH_CUT_TEMPLATE,PRODUCTION_ROUGH_CUT_TEMPLATE_V3} from './templates/production-rough-cut';
-import { REDFOX_METHODS } from "./redfox-methods";
+import { OPERATIONS_REVIEW_METHODS } from "./operations-review-method";
+import { EVERYINFRA_METHODS } from "./everyinfra-methods";
 import { AGENTIC_BUSINESS_TEMPLATES } from "./templates/agentic-business";
 import { BUSINESS_METHOD_TEMPLATES, withBusinessMethod } from "./business-methods";
 import {MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE} from './templates/asset-processing';
@@ -156,7 +157,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CALIBRATION_SCORE_TEMPLATE,
   RESEARCH_GATHER_TEMPLATE,
   RESEARCH_PLAN_TEMPLATE,
-  ...REDFOX_METHODS, ...BUSINESS_METHOD_TEMPLATES,
+  ...EVERYINFRA_METHODS, ...OPERATIONS_REVIEW_METHODS, ...BUSINESS_METHOD_TEMPLATES,
   RECONSTRUCT_PROJECT_TEMPLATE,
   MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE,
   SCRIPT_SOURCE_SIMILARITY_TEMPLATE,

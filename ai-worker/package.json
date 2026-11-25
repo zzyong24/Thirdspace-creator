@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./everyinfra-client": {
+      "types": "./src/execution/everyinfra-client.ts",
+      "default": "./src/execution/everyinfra-client.ts"
+    },
     "./model-identity": {
       "types": "./src/runtime/provider-identity.ts",
       "default": "./src/runtime/provider-identity.ts"

@@ -1,4 +1,5 @@
 "use client";
+import { isRadarOriginalLink } from "./intelligence-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -254,7 +255,7 @@ export function TopicCandidateEditor({
           <span className="text-[11px] font-semibold text-foreground">
             逐字稿结构拆解
           </span>
-          {candidate.sourceUrl ? (
+          {candidate.sourceUrl && isRadarOriginalLink(candidate.sourceUrl) ? (
             <a
               href={candidate.sourceUrl}
               target="_blank"

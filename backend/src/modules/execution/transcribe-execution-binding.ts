@@ -1,5 +1,6 @@
 import {workspaceFilter} from "../../workspace-scope";
 import {bindIntelligenceTranscript} from '../intelligence/transcript-execution-binding';
+import {transcribePlatformTaskInputSchema} from '@creatoros/contract/execution-worker';
 import {z} from 'zod';
 import {and,eq,aiTasks} from '@creatoros/backend';
 import {createExecutionLeaseService} from './execution-lease.service';
@@ -22,8 +23,11 @@ export async function bindTranscribeAudioExecution(scope:TranscribeExecutionScop
   const bound=await bindTranscribeExecution(scope,awemeId);
   return {payload:bound.payload,input:bound.input,credentialIntentId:bound.business.id};
  }
- const bound=await bindIntelligenceTranscript(scope),payload=scope.task.payload as Record<string,unknown>,input=target.parse(payload.modelInput);
- if(bound.awemeId!==awemeId||!isDeepStrictEqual(input.awemeIds,[awemeId]))throw new ConflictError('情报 ASR 与原来源不符');
+ const bound=await bindIntelligenceTranscript(scope),payload=scope.task.payload as Record<string,unknown>;
+ if(bound.awemeId!==awemeId)throw new ConflictError('情报 ASR 与原来源不符');
+ const input=bound.captureChannel==='everyinfra'?transcribePlatformTaskInputSchema.parse(payload.modelInput):target.parse(payload.modelInput);
+ const matches=input.kind==='transcribe.platform'?isDeepStrictEqual(input.sources,[bound.source]):isDeepStrictEqual(input.awemeIds,[awemeId]);
+ if(!matches)throw new ConflictError('情报 ASR 与原来源不符');
  return {payload,input,credentialIntentId:scope.task.id};
 }
 

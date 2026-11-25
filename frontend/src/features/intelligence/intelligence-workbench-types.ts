@@ -1,4 +1,5 @@
 import type { ExecutionTaskResourceV2, ProjectPreparationResource, ProjectEnsureResult, ProjectEnsureInput } from "@creatoros/contract";
+import type { EveryInfraQuery, EveryInfraVideoHit } from "@creatoros/contract/internal/everyinfra";
 export interface RadarScope { groupId?: string; accountId?: string; }
 export type RadarScopeInput = RadarScope | string;
 export function radarScope(input: RadarScopeInput): RadarScope { return typeof input === "string" ? {accountId: input} : input; }
@@ -95,6 +96,7 @@ export interface RadarItem {
   projectId?: string;
   type: "video" | "article" | "trend_signal";
   platform: string;
+  captureChannel?: "legacy-douyin-cdp" | "everyinfra";
   canonicalUrl: string;
   authorName: string | null;
   title: string;
@@ -280,6 +282,10 @@ export interface StartRunResult {
 }
 
 export interface RadarApi {
+  queryEveryInfra?(query: EveryInfraQuery, idempotencyKey: string): Promise<{
+    hits: Array<Omit<EveryInfraVideoHit, "canonicalUrl"> & { importId?: string }>;
+  }>;
+  addEveryInfraItem?(importId: string): Promise<{ itemId: string }>;
   ensureProject?(input:Extract<ProjectEnsureInput,{source:"radar"}>):Promise<ProjectEnsureResult>;
   getProjectPreparation?(projectId:string):Promise<ProjectPreparationResource>;
   listShareImportTasks?(input: RadarScope & {ownerId?: string; page?: number}): Promise<ExecutionTaskResourceV2[]>;
@@ -403,7 +409,7 @@ export interface RadarApi {
   enqueueTranscript(input: {
     itemId: string;
     idempotencyKey: string;
-  }): Promise<unknown>;
+  }): Promise<{ tasks: ExecutionTaskResourceV2[]; skipped: Array<{ itemId: string; reason: string }> }>;
   uploadTranscript(
     input:
       | {

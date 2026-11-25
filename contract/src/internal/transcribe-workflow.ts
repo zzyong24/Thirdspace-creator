@@ -1,5 +1,6 @@
 import {z} from 'zod';
-const item=z.object({awemeId:z.string().min(1).max(128)}).strict();
+import {transcribeAudioKeySchema} from './transcribe-source';
+const item=z.object({awemeId:transcribeAudioKeySchema}).strict();
 export const transcribeSourceSchema=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('video'),playUrl:z.string().url(),coverUrl:z.string().url().optional()}).strict(),
  z.object({kind:z.literal('image-album')}).strict(),
