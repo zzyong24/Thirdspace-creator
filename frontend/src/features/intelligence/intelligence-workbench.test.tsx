@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   act,
   cleanup,
@@ -255,6 +256,22 @@ describe("万有引擎内容雷达", () => {
       initialDetail={{ ...detail, item: { ...detail.item, platform: "xiaohongshu", captureChannel: "everyinfra", type: "article" } }} api={stub} />);
     expect(screen.getByText("图文内容没有口播可转写。")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "转写" })).toBeNull();
+  });
+
+  it("旧缓存的小红书作品和快照只链接到无查询串的公开笔记页", () => {
+    const noteUrl = "https://www.xiaohongshu.com/explore/123456789abc123456789abc";
+    const privateUrl = new URL(noteUrl);
+    privateUrl.searchParams.set("xsec_token", randomUUID());
+    privateUrl.searchParams.set("xsec_source", "fixture");
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]} api={api()}
+      initialDetail={{
+        ...detail,
+        item: { ...detail.item, platform: "xiaohongshu", captureChannel: "everyinfra", canonicalUrl: privateUrl.href },
+        snapshots: [{ id: "stale-note", title: "来源快照", capturedAt: detail.item.capturedAt, finalUrl: privateUrl.href }],
+      }} />);
+    expect(screen.getByRole("link", { name: "原链接" })).toHaveAttribute("href", noteUrl);
+    expect(screen.getByRole("link", { name: /来源快照/ })).toHaveAttribute("href", noteUrl);
+    expect(document.querySelector("[href*='xsec_token']")).toBeNull();
   });
 
   it("用户转写点击后用现有轮询读取完成回执，首读失败也不需要刷新页面", async () => {

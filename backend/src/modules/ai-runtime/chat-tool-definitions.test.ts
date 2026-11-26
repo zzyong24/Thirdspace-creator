@@ -28,8 +28,9 @@ it('T1300 三种旧协议与改动前完整冻结定义逐字节值相同，新o
 });
 
 describe("真实聊天工具定义", () => {
-  it("副作用覆盖所有正式工具，未知名称没有默认值", () => {
-    expect(Object.keys(CHAT_TOOL_EFFECTS).sort()).toEqual([...ALL_CHAT_TOOL_NAMES].sort());
+  it("副作用覆盖所有新回合工具和历史 RedFox，未知名称没有默认值", () => {
+    expect(ALL_CHAT_TOOL_NAMES).not.toContain("redfox.query");
+    expect(Object.keys(CHAT_TOOL_EFFECTS).sort()).toEqual([...ALL_CHAT_TOOL_NAMES, "redfox.query"].sort());
     expect(CHAT_TOOL_EFFECTS["local.read"]).toBe("committed");
     expect(CHAT_TOOL_EFFECTS["web.read"]).toBe("committed");
     expect(CHAT_TOOL_EFFECTS["context.positioning.detail"]).toBe("none");

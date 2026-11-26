@@ -1,7 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { ENDPOINTS, type RequestContext } from "@creatoros/contract";
 import type { EveryInfraQuery, EveryInfraVideoHit } from "@creatoros/contract/internal/everyinfra";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createProjectIntakeApplication } from "../../application/projects/project-intake";
 import { createDb, type Db } from "../../db";
 import { accountGroups } from "../../schema/account-groups";
@@ -15,6 +16,12 @@ const now = () => "2026-11-01T12:00:00.000Z";
 const channelsId = "15039881603147501275";
 const noteId = "abcdef123456abcdef123456";
 const fallbackNoteUrl = `https://www.xiaohongshu.com/explore/${noteId}`;
+function privateNoteUrl() {
+  const url = new URL(fallbackNoteUrl);
+  url.searchParams.set("xsec_token", randomUUID());
+  url.searchParams.set("xsec_source", "fixture");
+  return url.href;
+}
 const search: EveryInfraQuery = { platform: "xiaohongshu", action: "search", params: { keyword: "合成样本" } };
 const note: EveryInfraVideoHit = {
   platform: "xiaohongshu", action: "search", externalId: noteId,
@@ -63,7 +70,7 @@ describe("万有引擎加入内容雷达", () => {
       }, scope);
       return endpoint.response.parse((result as { data: unknown }).data).itemId;
     }
-    return { ctx, query, add, intel, readXiaohongshuNoteUrl };
+    return { ctx, query, add, intel, transport, readXiaohongshuNoteUrl };
   }
 
   it("映射抖音作品、图文小红书及大数字视频号 ID；忽略未知指标与无效数据", () => {
@@ -103,8 +110,8 @@ describe("万有引擎加入内容雷达", () => {
 
   it("同组并发和带新令牌的重复点击复用条目，不写转写队列或带查询的来源快照", async () => {
     const f = await fixture("dedupe");
-    const secondNoteUrl = `${fallbackNoteUrl}?xsec_token=synthetic-v2`;
-    const [firstHit] = await f.query(search, [{ ...note, canonicalUrl: `${fallbackNoteUrl}?xsec_token=synthetic-v1` }]);
+    const secondNoteUrl = privateNoteUrl();
+    const [firstHit] = await f.query(search, [{ ...note, canonicalUrl: privateNoteUrl() }]);
     expect(firstHit).not.toHaveProperty("canonicalUrl");
     const [id1, id2] = await Promise.all([f.add(firstHit!.importId!), f.add(firstHit!.importId!)]);
     const [secondHit] = await f.query(search, [{ ...note, canonicalUrl: secondNoteUrl }]);
@@ -130,11 +137,59 @@ describe("万有引擎加入内容雷达", () => {
     expect(concurrent).toBe(itemId);
     expect(f.readXiaohongshuNoteUrl).toHaveBeenCalledExactlyOnceWith(noteId, expect.objectContaining({ idempotencyKey: expect.any(String) }));
     expect((await f.intel.getItem(f.ctx, itemId)).item.canonicalUrl).toBe(fallbackNoteUrl);
-    const freshUrl = `${fallbackNoteUrl}?xsec_token=synthetic-account`;
+    const freshUrl = privateNoteUrl();
     f.readXiaohongshuNoteUrl.mockResolvedValueOnce(freshUrl);
     const [again] = await f.query(userPosts, [accountHit]);
     expect(await f.add(again!.importId!)).toBe(itemId);
-    expect((await f.intel.getItem(f.ctx, itemId)).item.canonicalUrl).toBe(freshUrl);
+    const [row] = await db.select().from(intelligenceItems).where(eq(intelligenceItems.id, itemId));
+    expect(row?.canonicalUrl).toBe(freshUrl);
+    expect((await f.intel.getItem(f.ctx, itemId)).item.canonicalUrl).toBe(fallbackNoteUrl);
+  });
+
+  it("查询、列表、详情和项目来源接口只投影小红书公开笔记地址", async () => {
+    const f = await fixture("public-note-url");
+    const privateUrl = privateNoteUrl();
+    const publicCoverUrl = "https://cover.example.test/note.webp";
+    const coverUrl = new URL(publicCoverUrl);
+    coverUrl.searchParams.set("XSEC_TOKEN", randomUUID());
+    const [hit] = await f.query(search, [{ ...note, canonicalUrl: privateUrl, coverUrl: coverUrl.href }]);
+    expect(hit).not.toHaveProperty("canonicalUrl");
+    expect(hit).not.toHaveProperty("coverUrl");
+    const itemId = await f.add(hit!.importId!);
+    // 模拟旧快照和封面保留了完整地址。读回时应同样只返回公开地址。
+    await db.update(sourceSnapshots).set({ finalUrl: privateUrl }).where(eq(sourceSnapshots.itemId, itemId));
+    await db.update(intelligenceItems).set({ coverUrl: coverUrl.href }).where(eq(intelligenceItems.id, itemId));
+    const list = await f.transport.request(ENDPOINTS.listIntelligenceItems, {
+      params: undefined, query: { page: 1, pageSize: 10, sort: "newest" }, body: undefined,
+    }, f.ctx);
+    const detail = await f.transport.request(ENDPOINTS.getIntelligenceItem, {
+      params: { itemId }, query: undefined, body: undefined,
+    }, f.ctx);
+    const source = await f.intel.getProjectIntakeSource(f.ctx, itemId);
+    expect(list).toMatchObject({ data: [{ item: { id: itemId, canonicalUrl: fallbackNoteUrl, coverUrl: publicCoverUrl } }] });
+    expect(detail).toMatchObject({
+      data: { item: { canonicalUrl: fallbackNoteUrl, coverUrl: publicCoverUrl }, snapshots: [{ finalUrl: fallbackNoteUrl }] },
+    });
+    expect(source.url).toBe(fallbackNoteUrl);
+    expect(JSON.stringify({ list, detail, source })).not.toMatch(/xsec_token/i);
+  });
+
+  it("数据库写入失败仅返回固定文案，底层错误中的地址不进入接口回执", async () => {
+    const f = await fixture("note-db-error");
+    const [hit] = await f.query(search, [{ ...note, canonicalUrl: privateNoteUrl() }]);
+    await db.execute(sql`CREATE FUNCTION reject_fixture_note() RETURNS trigger AS $$
+      BEGIN RAISE EXCEPTION '%', NEW.canonical_url; END;
+    $$ LANGUAGE plpgsql`);
+    await db.execute(sql`CREATE TRIGGER reject_fixture_note BEFORE INSERT ON intelligence_items
+      FOR EACH ROW EXECUTE FUNCTION reject_fixture_note()`);
+    try {
+      await expect(f.add(hit!.importId!)).rejects.toMatchObject({
+        code: "UnexpectedError", message: "暂时无法加入内容雷达，请稍后重试。",
+      });
+    } finally {
+      await db.execute(sql`DROP TRIGGER reject_fixture_note ON intelligence_items`);
+      await db.execute(sql`DROP FUNCTION reject_fixture_note()`);
+    }
   });
 
   it("视频号账号作品可通过 projects.ensure 升级，内部 URL 不进入项目链接", async () => {

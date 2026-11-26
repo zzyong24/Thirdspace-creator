@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { executionTimeoutMs } from '@creatoros/contract/timeout-policy';
 import { TRANSCRIBE_INPUT_MAX_BYTES, type TranscribePlatformSource } from '@creatoros/contract/execution-worker';
-import { assertUrlAllowed } from '@creatoros/ai-worker/browser/url-guard';
+import { assertUrlAllowed, type LookupFn } from '@creatoros/ai-worker/browser/url-guard';
 import type { EveryInfraClient } from '@creatoros/ai-worker/everyinfra-client';
 import { awaitPreparation } from '../execution/await-preparation';
 import { CHANNELS_DECRYPT_UNSPECIFIED, decryptWechatChannelsMedia } from './wechat-channels-media';
@@ -17,7 +17,7 @@ type MediaDeps = {
   client: Pick<EveryInfraClient, 'request'>;
   maxBytes?: number;
   fetch?: typeof fetch;
-  assertUrl?: typeof assertUrlAllowed;
+  lookup?: LookupFn;
   now?: () => number;
 };
 type Request = Parameters<EveryInfraClient['request']>[0];
@@ -74,14 +74,13 @@ async function download(
   input: { url: unknown; headers?: Headers; platform: MediaTarget['platform']; signal: AbortSignal },
 ): Promise<Uint8Array> {
   const signal = AbortSignal.any([input.signal, AbortSignal.timeout(executionTimeoutMs())]);
-  const validate = deps.assertUrl ?? assertUrlAllowed;
   const fetchMedia = deps.fetch ?? fetch;
   const maxBytes = Math.min(deps.maxBytes ?? TRANSCRIBE_INPUT_MAX_BYTES, TRANSCRIBE_INPUT_MAX_BYTES);
   let url = mediaUrl(input.url, input.platform);
   let headers = input.headers;
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
     signal.throwIfAborted();
-    await awaitPreparation(() => validate(url.href), signal);
+    await awaitPreparation(() => assertUrlAllowed(url.href, { lookup: deps.lookup, requireDnsResolution: true }), signal);
     const response = await fetchMedia(url, { method: 'GET', headers, signal, redirect: 'manual' });
     if (REDIRECTS.has(response.status)) {
       const location = response.headers.get('location');

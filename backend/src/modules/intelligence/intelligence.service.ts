@@ -1,6 +1,7 @@
 import {projectIntakeDigest} from '../projects/project-intake.service';
 import {intelligenceWorkspaceFilter,intelligenceTransformGuardFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
 import { everyInfraEvidenceUrl } from "./everyinfra-item-import";
+import { publicXiaohongshuWorkUrl } from "@creatoros/contract/internal/everyinfra";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {platformAccounts} from "../../schema/platform-account";
 import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
@@ -760,12 +761,12 @@ function toItem(row: ItemRow): IntelligenceItemResource {
     platform: row.platform,
     ...(row.captureChannel === "everyinfra" ? { captureChannel: row.captureChannel } : {}),
     externalId: row.externalId,
-    canonicalUrl: row.canonicalUrl,
+    canonicalUrl: publicXiaohongshuWorkUrl(row.canonicalUrl),
     authorId: row.authorId,
     authorName: row.authorName,
     title: row.title,
     summary: row.summary,
-    coverUrl: row.coverUrl,
+    coverUrl: row.coverUrl === null ? null : publicXiaohongshuWorkUrl(row.coverUrl),
     coverAssetId: row.coverAssetId,
     publishedAt: row.publishedAt,
     durationMs: row.durationMs,
@@ -775,7 +776,7 @@ function toItem(row: ItemRow): IntelligenceItemResource {
 }
 
 function itemEvidenceUrl(item: ItemRow, url = item.canonicalUrl): string {
-  return item.captureChannel === "everyinfra" ? everyInfraEvidenceUrl(url) : url;
+  return item.captureChannel === "everyinfra" ? everyInfraEvidenceUrl(url) : publicXiaohongshuWorkUrl(url);
 }
 
 function itemForGeneration(item: ItemRow) {
@@ -889,7 +890,7 @@ function toSnapshot(row: SnapshotRow) {
     runId: row.runId,
     itemId: row.itemId,
     capturedAt: row.capturedAt,
-    finalUrl: row.finalUrl,
+    finalUrl: publicXiaohongshuWorkUrl(row.finalUrl),
     title: row.title,
     contentHash: row.contentHash,
     safeExtract: row.safeExtract,
@@ -4080,7 +4081,7 @@ export function createIntelligenceService(
       const sourceDigest = `sha256:${hash(JSON.stringify([item.id, selected.id, selected.contentHash, transcriptHash]))}`;
       const evidenceUrl = item.captureChannel === "everyinfra"
         ? itemEvidenceUrl(item)
-        : selected.finalUrl || item.canonicalUrl;
+        : itemEvidenceUrl(item, selected.finalUrl || item.canonicalUrl);
       const projectUrl = item.captureChannel === "everyinfra" && new URL(evidenceUrl).hostname === "creatoros.local"
         ? "" : evidenceUrl;
       return {

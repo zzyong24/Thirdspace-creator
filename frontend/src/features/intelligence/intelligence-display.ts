@@ -1,4 +1,4 @@
-import { everyInfraQueryErrorCodeSchema, everyInfraQueryErrorMessages } from "@creatoros/contract/internal/everyinfra";
+import { everyInfraQueryErrorCodeSchema, everyInfraQueryErrorMessages, publicXiaohongshuWorkUrl } from "@creatoros/contract/internal/everyinfra";
 import type { RadarItemDetail,RadarItemRow,RadarRun,RadarRunStatus,RadarSource } from "./intelligence-workbench-types";
 export function compactNumber(value: number | null): string {
   if (value === null) return "未知";
@@ -132,11 +132,12 @@ export function progressLabel(
   }[state];
 }
 
-export function isRadarOriginalLink(raw: string): boolean {
+export function radarOriginalLink(raw: string): string | null {
+  const href = publicXiaohongshuWorkUrl(raw);
   try {
-    const url = new URL(raw);
-    return (url.protocol === "https:" || url.protocol === "http:") && url.hostname !== "creatoros.local";
+    const url = new URL(href);
+    return (url.protocol === "https:" || url.protocol === "http:") && url.hostname !== "creatoros.local" ? href : null;
   } catch {
-    return false;
+    return null;
   }
 }

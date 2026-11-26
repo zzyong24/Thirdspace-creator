@@ -5,6 +5,21 @@ export const everyInfraHostSchema = z.enum([defaultEveryInfraHost, "https://api-
 export type EveryInfraHost = z.infer<typeof everyInfraHostSchema>;
 export type EveryInfraCredentials = { apiKey: string; baseUrl: EveryInfraHost };
 
+/** 公开笔记地址只携带作品身份，访问参数留给内部读源端口。 */
+export function publicXiaohongshuWorkUrl(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return raw;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return raw;
+  const isNoteHost = url.hostname === "xiaohongshu.com" || url.hostname.endsWith(".xiaohongshu.com");
+  const isNote = isNoteHost && /^\/(?:explore|discovery\/item)\//.test(url.pathname);
+  const hasAccessParam = Array.from(url.searchParams.keys()).some((key) => key.toLowerCase() === "xsec_token");
+  return isNote || hasAccessParam ? `${url.origin}${url.pathname}` : raw;
+}
+
 export const everyInfraPlatformSchema = z.enum(["douyin", "xiaohongshu", "wechatVideo"]);
 export const everyInfraActionSchema = z.enum(["search", "user_posts", "video", "trending"]);
 const identifier = z.string().min(1).max(120).regex(/^[^\s:]+$/);

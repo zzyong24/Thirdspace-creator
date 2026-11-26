@@ -1,5 +1,5 @@
 "use client";
-import { compactNumber,dateLabel,everyInfraTranscriptErrorMessage,isRadarOriginalLink,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
+import { compactNumber,dateLabel,everyInfraTranscriptErrorMessage,radarOriginalLink,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
 import styles from "./source-management.module.css";
 import layoutStyles from "./intelligence-workbench.module.css";
 import { SourceManagementOverview } from "./source-management-overview";
@@ -1690,6 +1690,7 @@ function ItemDetail({detail,busy,upgradeState,upgradeSubmitting,onUpgrade,onTran
     (transform) => transform.status === "confirmed",
   );
   const sourceEvidence = groupRadarSourceEvidence(detail.snapshots);
+  const originalLink = radarOriginalLink(detail.item.canonicalUrl);
   const everyInfra = detail.item.captureChannel === "everyinfra";
   const transcriptError = everyInfra ? everyInfraTranscriptErrorMessage(detail.transcript.errorCode) : null;
   return (
@@ -1709,8 +1710,8 @@ function ItemDetail({detail,busy,upgradeState,upgradeSubmitting,onUpgrade,onTran
             </p>
 
           </div>
-          {isRadarOriginalLink(detail.item.canonicalUrl) ? (
-            <a href={detail.item.canonicalUrl} target="_blank" rel="noreferrer"
+          {originalLink ? (
+            <a href={originalLink} target="_blank" rel="noreferrer"
               className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-primary hover:underline">
               原链接 <Link2 className="size-3" />
             </a>
@@ -1797,6 +1798,7 @@ function ItemDetail({detail,busy,upgradeState,upgradeSubmitting,onUpgrade,onTran
           <div className="mt-3 space-y-2">
             {sourceEvidence.length > 0 ? (
               sourceEvidence.slice(0, 4).map(({ snapshot, captureCount }) => {
+                const evidenceLink = radarOriginalLink(snapshot.finalUrl);
                 const className = "flex items-center gap-3 rounded-xl border border-border/80 px-3 py-2.5";
                 const content = <>
                   <Clock3 className="size-4 shrink-0 text-primary" />
@@ -1812,8 +1814,8 @@ function ItemDetail({detail,busy,upgradeState,upgradeSubmitting,onUpgrade,onTran
                     </span>
                   </span>
                 </>;
-                return isRadarOriginalLink(snapshot.finalUrl) ? (
-                  <a key={snapshot.sourceId ?? snapshot.id} href={snapshot.finalUrl} target="_blank" rel="noreferrer"
+                return evidenceLink ? (
+                  <a key={snapshot.sourceId ?? snapshot.id} href={evidenceLink} target="_blank" rel="noreferrer"
                     className={cn(className, "transition hover:border-primary/30")}>{content}</a>
                 ) : <div key={snapshot.sourceId ?? snapshot.id} className={className}>{content}</div>;
               })

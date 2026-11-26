@@ -1,5 +1,5 @@
 "use client";
-import { isRadarOriginalLink } from "./intelligence-display";
+import { radarOriginalLink } from "./intelligence-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -65,6 +65,7 @@ export function TopicCandidateEditor({
 }) {
   const dirtyFields = React.useRef(new Set<string>());
   const [candidate, setCandidate] = React.useState(() => candidateFromSnapshot(transform.outputSnapshot));
+  const originalLink = candidate.sourceUrl ? radarOriginalLink(candidate.sourceUrl) : null;
   // 同一 transform 的分段检查点持续到达，刷新未编辑字段，保留用户主动改选或清空。
   React.useEffect(() => {
     setCandidate((current) => {
@@ -255,9 +256,9 @@ export function TopicCandidateEditor({
           <span className="text-[11px] font-semibold text-foreground">
             逐字稿结构拆解
           </span>
-          {candidate.sourceUrl && isRadarOriginalLink(candidate.sourceUrl) ? (
+          {originalLink ? (
             <a
-              href={candidate.sourceUrl}
+              href={originalLink}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"

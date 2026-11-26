@@ -13,7 +13,7 @@ import {createIntelligenceTransport} from './intelligence.transport';
 import {createIntelligenceTranscriptBridge} from './intelligence-transcript-bridge';
 import {runIntelligenceTranscriptTask} from './transcript-runner';
 import {resolveEveryInfraMedia} from './everyinfra-media-resolver';
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 
 let temporary:string,entry:string;
 beforeAll(async()=>{
@@ -61,7 +61,7 @@ async function fixture(mode:'group'|'explicit'|'anonymous'='group',videoBaseUrl?
  const mediaFetch=vi.fn(async()=>new Response(bytes,{headers:{'content-type':'video/mp4'}}));
  const extractBytes=vi.fn(async(input:Uint8Array)=>{expect(input).toEqual(bytes);return Uint8Array.of(1,2,3,4);});
  const bridge=createIntelligenceTranscriptBridge(db,{entryPath:entry,tasks,now,budget:{maxCalls:8,maxTokens:10000,deadlineMs:600000},resolveSpec,prepareSpec:async(c,s)=>{expect(c.accountId).toBe(ctx.accountId);return s;},readSource,extractAudio:async()=>{if(!videoBaseUrl)throw Error('图文不抽音');return Uint8Array.from([1,2,3,4]);},everyInfra:{
-  readSource:(_ctx,target,signal)=>resolveEveryInfraMedia(target,target.attemptKey,signal,{client:{request:mediaRequest},fetch:mediaFetch,assertUrl:async()=>{}}),
+  readSource:(_ctx,target,signal)=>resolveEveryInfraMedia(target,target.attemptKey,signal,{client:{request:mediaRequest},fetch:mediaFetch,lookup:async()=>[{address:'93.184.215.14'}]}),
   extractAudio:extractBytes,
  },objectStorageForCtx:async(c)=>{expect(c.accountId).toBe(ctx.accountId);return {createPresignedUpload:async()=>({storageKey:'fixture-audio'}),putObject:async(v:{storageKey:string;bytes:Uint8Array})=>{objects.set(v.storageKey,v.bytes);},getObject:async(key:string)=>{const v=objects.get(key);if(!v)throw Object.assign(Error('missing'),{code:'ENOENT'});return v;}} as never;}});
  return {db,ctx,base,groups,accounts,account,group,tasks,intelligence,api,itemId,task,queued,readSource,resolveSpec,bridge,mediaRequest,mediaFetch,extractBytes,close:async()=>{await bridge.stop();await opened.client.close();}};
@@ -153,9 +153,15 @@ it('T1458 登录失败恢复沿同一NULL账号原任务续接，不制造重复
 });
 
 const xhsId='123456789abc123456789abc';
+const xhsPublicUrl=`https://www.xiaohongshu.com/explore/${xhsId}`;
+function privateXhsUrl(){
+ const url=new URL(xhsPublicUrl);
+ url.searchParams.set('xsec_token',randomUUID());
+ return url.href;
+}
 const crossPlatformFixtures = [
  {platform:'douyin',externalId:'1458',canonicalUrl:'https://www.douyin.com/video/1458'},
- {platform:'xiaohongshu',externalId:xhsId,canonicalUrl:`https://www.xiaohongshu.com/explore/${xhsId}?xsec_token=fixture`},
+ {platform:'xiaohongshu',externalId:xhsId,canonicalUrl:privateXhsUrl()},
  {platform:'wechatVideo',externalId:'15039881603147501275',canonicalUrl:'https://creatoros.local/sources/wechatVideo/15039881603147501275'},
 ] as const;
 
@@ -170,9 +176,10 @@ it.each(crossPlatformFixtures)('$platform 经公开排队、源字节、真实 W
  const address=server.address();if(!address||typeof address==='string')throw Error('缺受控端口');
  const f=await fixture('group',`http://127.0.0.1:${address.port}`,source);
  try{
+  let latestPrivateUrl:string|undefined;
   if(source.platform==='xiaohongshu'){
-   const refreshedUrl=source.canonicalUrl.replace('fixture','refreshed-example');
-   await f.db.update(intelligenceItems).set({canonicalUrl:refreshedUrl}).where(eq(intelligenceItems.id,f.itemId));
+   latestPrivateUrl=privateXhsUrl();
+   await f.db.update(intelligenceItems).set({canonicalUrl:latestPrivateUrl}).where(eq(intelligenceItems.id,f.itemId));
   }
   await runIntelligenceTranscriptTask(f.ctx,{taskId:f.task.id},{tasks:f.tasks,intelligence:f.intelligence,transcript:f.bridge.transcript});
   expect(f.readSource).not.toHaveBeenCalled();
@@ -185,7 +192,14 @@ it.each(crossPlatformFixtures)('$platform 经公开排队、源字节、真实 W
    modelInput:{kind:'transcribe.platform',sources:[{platform:source.platform,externalId:source.externalId}]},
   });
   expect(payload).not.toHaveProperty('sourceUrl');
-  const status=(await f.api.getIntelligenceItem({params:{itemId:f.itemId},query:undefined,body:undefined})).transcript;
+  const detail=await f.api.getIntelligenceItem({params:{itemId:f.itemId},query:undefined,body:undefined});
+  const status=detail.transcript;
+  if(source.platform==='xiaohongshu'){
+   expect(detail.item.canonicalUrl).toBe(xhsPublicUrl);
+   expect(f.mediaRequest).toHaveBeenCalledWith({
+    platform:'xiaohongshu',action:'video',params:{url:latestPrivateUrl},
+   },expect.anything());
+  }
   if(source.platform==='wechatVideo'){
    expect(status).toMatchObject({status:'failed',errorCode:'CHANNELS_DECRYPT_UNSPECIFIED',text:null});
    expect(f.extractBytes).not.toHaveBeenCalled();

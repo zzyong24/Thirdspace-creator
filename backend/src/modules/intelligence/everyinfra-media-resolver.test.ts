@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { TranscribePlatformSource } from '@creatoros/contract/execution-worker';
 import type { EveryInfraClient } from '@creatoros/ai-worker/everyinfra-client';
+import type { LookupFn } from '@creatoros/ai-worker/browser/url-guard';
 import { resolveEveryInfraMedia } from './everyinfra-media-resolver';
 
 const mp4 = Uint8Array.of(0, 0, 0, 16, 102, 116, 121, 112, 105, 115, 111, 109);
@@ -14,14 +15,14 @@ const reply = () => new Response(mp4, { headers: { 'Content-Type': 'video/mp4' }
 function fixture(maxBytes?: number) {
   const request = vi.fn<EveryInfraClient['request']>();
   const fetch = vi.fn<typeof globalThis.fetch>();
-  const assertUrl = vi.fn(async () => {});
+  const lookup = vi.fn<LookupFn>().mockResolvedValue([{ address: '93.184.215.14' }]);
   const run = (source: TranscribePlatformSource & { canonicalUrl: string }) => resolveEveryInfraMedia(
     source,
     'fixture-attempt',
     new AbortController().signal,
-    { client: { request }, fetch, assertUrl, maxBytes, now: () => Date.parse('2026-11-25T00:00:00Z') },
+    { client: { request }, fetch, lookup, maxBytes, now: () => Date.parse('2026-11-25T00:00:00Z') },
   );
-  return { request, fetch, assertUrl, run };
+  return { request, fetch, lookup, run };
 }
 
 describe('万有引擎转写媒体', () => {
@@ -128,7 +129,10 @@ describe('万有引擎转写媒体', () => {
       .mockResolvedValueOnce(new Response(null, { status: 302, headers: { Location: '/fourth' } }))
       .mockResolvedValueOnce(reply());
     await expect(f.run(douyin)).resolves.toEqual({ kind: 'video', bytes: mp4 });
-    expect(f.assertUrl).toHaveBeenCalledTimes(4);
+    expect(f.lookup.mock.calls).toEqual([
+      ['media.example.invalid'], ['media.example.invalid'],
+      ['other.example.invalid'], ['other.example.invalid'],
+    ]);
     expect(new Headers(f.fetch.mock.calls[1]?.[1]?.headers).get('Referer')).toBe('https://fixture.invalid/');
     expect(f.fetch.mock.calls[2]?.[1]?.headers).toBeUndefined();
 
@@ -137,6 +141,38 @@ describe('万有引擎转写媒体', () => {
     loop.fetch.mockImplementation(async () => new Response(null, { status: 302, headers: { Location: '/loop' } }));
     await expect(loop.run(douyin)).rejects.toMatchObject({ code: 'NO_PLAYABLE_MEDIA' });
     expect(loop.fetch).toHaveBeenCalledTimes(8);
+  });
+
+  it.each(['解析报错', '无地址'])('首跳 DNS %s时禁止发起下载', async (failure) => {
+    const f = fixture();
+    if (failure === '解析报错') f.lookup.mockRejectedValue(new Error('fixture DNS failure'));
+    else f.lookup.mockResolvedValue([]);
+    f.request.mockResolvedValue([{ id: '1458', video_url: media }]);
+    f.fetch.mockImplementation(async () => reply());
+
+    await expect(f.run(douyin)).rejects.toMatchObject({ code: 'NO_PLAYABLE_MEDIA', message: 'NO_PLAYABLE_MEDIA' });
+    expect(f.lookup.mock.calls).toEqual([['media.example.invalid'], ['media.example.invalid']]);
+    expect(f.fetch).not.toHaveBeenCalled();
+  });
+
+  it('重定向目标 DNS 失败时不连接该地址', async () => {
+    const f = fixture();
+    const redirect = 'https://redirect.example.invalid/next';
+    f.lookup.mockImplementation(async hostname => {
+      if (hostname === 'redirect.example.invalid') throw new Error('fixture redirect DNS failure');
+      return [{ address: '93.184.215.14' }];
+    });
+    f.request.mockResolvedValue([{ id: '1458', video_url: media }]);
+    f.fetch.mockImplementation(async input => String(input) === media
+      ? new Response(null, { status: 302, headers: { Location: redirect } })
+      : reply());
+
+    await expect(f.run(douyin)).rejects.toMatchObject({ code: 'NO_PLAYABLE_MEDIA', message: 'NO_PLAYABLE_MEDIA' });
+    expect(f.lookup.mock.calls).toEqual([
+      ['media.example.invalid'], ['redirect.example.invalid'],
+      ['media.example.invalid'], ['redirect.example.invalid'],
+    ]);
+    expect(f.fetch.mock.calls.map(([input]) => String(input))).toEqual([media, media]);
   });
 
   it('拒绝超限和伪装成 MP4 的非媒体响应', async () => {

@@ -4,6 +4,7 @@ import { ErrorCode, type RequestContext } from "@creatoros/contract";
 import {
   everyInfraQueryErrorCodeSchema,
   everyInfraQueryErrorMessages,
+  publicXiaohongshuWorkUrl,
   type EveryInfraQuery,
   type EveryInfraVideoHit,
 } from "@creatoros/contract/internal/everyinfra";
@@ -21,6 +22,8 @@ import {
   uniqueIntelligenceRow,
   withIntelligenceWrite,
 } from "./intelligence-workspace-scope";
+import { IntelligenceConflictError, OwnershipError } from "./intelligence.errors";
+import { ConflictError as WorkspaceConflictError } from "../platform-account/platform-account.errors";
 
 type WorkspaceContext = Pick<RequestContext, "userId" | "groupId" | "accountId">;
 type RadarHit = Omit<EveryInfraVideoHit, "canonicalUrl"> & { importId?: string };
@@ -43,11 +46,13 @@ const MAX_TITLE_LENGTH = 200;
 const digest = (text: string) => createHash("sha256").update(text).digest("hex");
 const trimText = (text: string | undefined): string | null => text?.trim() || null;
 
-function notAddable() {
-  return Object.assign(new Error("该结果无法加入内容雷达，请重新查询或选择其他作品"), {
-    code: ErrorCode.ValidationError,
-    details: { domainCode: "EVERYINFRA_HIT_NOT_ADDABLE" },
-  });
+class HitNotAddableError extends Error {
+  readonly code = ErrorCode.ValidationError;
+  readonly details = { domainCode: "EVERYINFRA_HIT_NOT_ADDABLE" };
+
+  constructor() {
+    super("该结果无法加入内容雷达，请重新查询或选择其他作品");
+  }
 }
 
 function isImportable(hit: EveryInfraVideoHit): hit is ImportableHit {
@@ -95,7 +100,7 @@ function storedCount(value: number | undefined): number | null {
 }
 
 export function mapEveryInfraItem(hit: EveryInfraVideoHit) {
-  if (!isImportable(hit)) throw notAddable();
+  if (!isImportable(hit)) throw new HitNotAddableError();
   const summary = trimText(hit.summary);
   const cover = hit.coverUrl && URL.parse(hit.coverUrl);
   const published = hit.publishedAt ? Date.parse(hit.publishedAt) : NaN;
@@ -104,6 +109,7 @@ export function mapEveryInfraItem(hit: EveryInfraVideoHit) {
     captureChannel: "everyinfra" as const,
     externalId: hit.externalId,
     type: hit.type,
+    // 完整笔记入口保存在服务器，供转写取流。作品 DTO 只投影公开地址。
     canonicalUrl: originalUrl(hit),
     title: (trimText(hit.title) ?? summary ?? "").slice(0, MAX_TITLE_LENGTH),
     summary,
@@ -167,7 +173,7 @@ export function createEveryInfraRadar(db: Db, deps: {
         }).onConflictDoNothing().returning();
         item ??= await read();
       }
-      if (!item) throw notAddable();
+      if (!item) throw new HitNotAddableError();
       if (item.canonicalUrl !== input.canonicalUrl) {
         await tx.update(intelligenceItems).set({
           canonicalUrl: input.canonicalUrl,
@@ -233,6 +239,7 @@ export function createEveryInfraRadar(db: Db, deps: {
       return {
         hits: hits.map(({ canonicalUrl, ...hit }): RadarHit => {
           const candidate = { ...hit, canonicalUrl };
+          if (hit.coverUrl && publicXiaohongshuWorkUrl(hit.coverUrl) !== hit.coverUrl) delete hit.coverUrl;
           if (!isImportable(candidate)) return { ...hit, addable: false };
           const importId = randomUUID();
           pending.set(importId, {
@@ -251,7 +258,7 @@ export function createEveryInfraRadar(db: Db, deps: {
 
     async add(ctx: RequestContext, importId: string): Promise<{ itemId: string }> {
       const entry = pending.get(importId);
-      if (!entry || entry.expiresAt <= Date.now() || !sameScope(entry.ctx, ctx)) throw notAddable();
+      if (!entry || entry.expiresAt <= Date.now() || !sameScope(entry.ctx, ctx)) throw new HitNotAddableError();
       await assertWritableWorkspace(db, ctx);
       // 同一加入动作的并发请求共用付费刷新与写入结果。
       const submission = entry.result ??= persist(ctx, entry.hit, importId);
@@ -259,7 +266,12 @@ export function createEveryInfraRadar(db: Db, deps: {
         return await submission;
       } catch (error) {
         if (entry.result === submission) delete entry.result;
-        throw error;
+        if (error instanceof HitNotAddableError || error instanceof OwnershipError
+          || error instanceof IntelligenceConflictError || error instanceof WorkspaceConflictError) throw error;
+        // 存储错误可能携带写入参数，其中包含仅供服务器转写访问的笔记链接。
+        throw Object.assign(new Error("暂时无法加入内容雷达，请稍后重试。"), {
+          code: ErrorCode.UnexpectedError,
+        });
       }
     },
   };

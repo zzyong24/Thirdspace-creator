@@ -6,7 +6,7 @@ import { everyInfraQueryErrorCodeSchema, everyInfraQueryErrorMessages, type Ever
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { compactNumber, isRadarOriginalLink } from "./intelligence-display";
+import { compactNumber, radarOriginalLink } from "./intelligence-display";
 import { operationKey } from "./radar-operation-key";
 import type { RadarApi } from "./intelligence-workbench-types";
 
@@ -152,12 +152,13 @@ export function EveryInfraSearchPanel({ query, add, onAdded }: {
           {results?.length === 0 ? <p role="status" className="text-sm text-muted-foreground">没有找到匹配的内容。</p> : null}
           {results?.map((hit, index) => {
             const imported = hit.importId && added.has(hit.importId);
+            const coverLink = hit.coverUrl ? radarOriginalLink(hit.coverUrl) : null;
             const reason = hit.platform === "wechatVideo" && hit.action === "search"
               ? "搜索结果没有作品 ID，不能加入" : "该结果缺少作品信息，不能加入";
             return (
               <article key={hit.importId ?? index} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface p-2">
-                {hit.coverUrl && isRadarOriginalLink(hit.coverUrl)
-                  ? <img src={hit.coverUrl} width={56} height={56} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-14 rounded-md object-cover" /> : null}
+                {coverLink
+                  ? <img src={coverLink} width={56} height={56} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-14 rounded-md object-cover" /> : null}
                 <div className="min-w-28 flex-1">
                   <h3 className="break-words text-sm font-medium">{hit.title || hit.summary || "未命名内容"}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">

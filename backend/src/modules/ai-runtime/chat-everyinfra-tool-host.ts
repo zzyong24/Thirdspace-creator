@@ -11,7 +11,7 @@ export function createChatEveryInfraTaskToolHost(
 ): NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
   return async (context, input, ref, signal): Promise<Record<string, ChatBackendTool>> => {
     signal.throwIfAborted();
-    if (!input.tools.some(tool => tool.name === toolName)) return {};
+    if (!input.tools?.some(tool => tool.name === toolName)) return {};
     const restored = await reader.read({ ...ref });
     signal.throwIfAborted();
     const frozen = restored.modelInput.tools.find(tool => tool.name === toolName);

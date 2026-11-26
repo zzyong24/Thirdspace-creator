@@ -41,6 +41,8 @@ export type LookupFn = (hostname: string) => Promise<{ address: string }[]>;
 
 export interface UrlGuardOptions {
   lookup?: LookupFn;
+  /** 下载方可要求域名解析成功后才开始连接。 */
+  requireDnsResolution?: boolean;
 }
 
 const realLookup: LookupFn = async (hostname) => {
@@ -200,7 +202,7 @@ function blockedHostnameReason(hostname: string): string | null {
 /**
  * 判一个 URL 是否允许服务端浏览器访问;不允许则抛 UrlBlockedError(message 人话)。
  * 判定顺序:URL 合法性 → 协议白名单 → IP 字面量直接判 → 域名黑名单 → DNS 解析逐地址判。
- * DNS 解析失败 → 放行(解析不到 ≠ 恶意,page.goto 会自己诚实失败;语义详见文件头注释)。
+ * 浏览器默认容忍解析失败。要求验证 DNS 的调用方在解析失败或无地址时拒绝。
  */
 export async function assertUrlAllowed(
   rawUrl: string,
@@ -240,11 +242,15 @@ export async function assertUrlAllowed(
     );
   }
   const lookup = opts.lookup ?? realLookup;
-  let addrs: { address: string }[];
+  let addrs: { address: string }[] | undefined;
   try {
     addrs = await lookup(host);
   } catch {
-    return; // DNS 解析失败放行:page.goto 会以「页面打不开」诚实失败(解析不到 ≠ 恶意)
+    // 由调用方选择是否允许浏览器自行处理解析失败。
+  }
+  if (!addrs?.length) {
+    if (opts.requireDnsResolution) throw new UrlBlockedError("无法验证链接的 DNS 地址");
+    return;
   }
   for (const a of addrs) {
     const reason = blockedIpReason(a.address);
