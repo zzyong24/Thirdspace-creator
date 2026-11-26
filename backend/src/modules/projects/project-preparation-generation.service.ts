@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import type {Db} from '../../db';
 import type {RequestContext,ProjectPreparationCandidate} from '@creatoros/contract';
+import {requireGeneratedDraftBody} from '@creatoros/contract/internal/generated-draft';
 import {projectPreparationGenerationTargetSchema,type ProjectPreparationGenerationTarget} from '@creatoros/contract/execution-worker';
 import {intelligenceTopicDecomposeSchema,intelligenceTopicFromDecompositionSchema} from '@creatoros/ai-worker';
 import {ConflictError} from '../../errors';
@@ -59,11 +60,13 @@ export function createProjectPreparationGenerationService(db:Db,deps:ServiceDeps
   },
   getContext(ctx:RequestContext,claim:PersistentTaskClaim){return withClaim(ctx,claim,async(_tx,_task,target)=>target);},
   async saveCandidate(ctx:RequestContext,claim:PersistentTaskClaim,checkpoint:TopicPreviewCheckpoint){
-   const value=checkpoint.stage==='decomposition'?intelligenceTopicDecomposeSchema.parse(checkpoint.value):checkpoint.stage==='topic'?intelligenceTopicFromDecompositionSchema.parse(checkpoint.value):z.object({contentText:z.string().min(1),templateVersion:z.string().optional()}).parse(checkpoint.value);
+   const value=checkpoint.stage==='decomposition'?intelligenceTopicDecomposeSchema.parse(checkpoint.value):checkpoint.stage==='topic'?intelligenceTopicFromDecompositionSchema.parse(checkpoint.value):z.object({contentText:z.string().transform(requireGeneratedDraftBody),templateVersion:z.string().optional()}).parse(checkpoint.value);
    await withClaim(ctx,claim,async(tx,task,target)=>{const current=object(task.checkpoint);await createPersistentTaskService(tx,deps).saveCheckpoint({taskId:task.id,...claim.lease,checkpoint:{...current,schemaVersion:1,projectId:task.ownerId,sourceDigest:digest(target),stages:{...object(current.stages),[checkpoint.stage]:value}}});});
   },
   async finish(ctx:RequestContext,claim:PersistentTaskClaim,generated:Generated){
-   const result=resultSchema.parse(generated);await withClaim(ctx,claim,async(tx,task,target)=>{await createPersistentTaskService(tx,deps).saveCheckpoint({taskId:task.id,...claim.lease,checkpoint:{...object(task.checkpoint),schemaVersion:1,projectId:task.ownerId,sourceDigest:digest(target),result}});});
+   const parsed=resultSchema.parse(generated);
+   const result={...parsed,adaptedDraft:requireGeneratedDraftBody(parsed.adaptedDraft)};
+   await withClaim(ctx,claim,async(tx,task,target)=>{await createPersistentTaskService(tx,deps).saveCheckpoint({taskId:task.id,...claim.lease,checkpoint:{...object(task.checkpoint),schemaVersion:1,projectId:task.ownerId,sourceDigest:digest(target),result}});});
   },
   async collect(ctx:RequestContext,projectId:string,childTaskId:string):Promise<Array<{candidate:ProjectPreparationCandidate;content:PreparationContent}>>{
    const task=await states.read(ctx,childTaskId),target=projectPreparationGenerationTargetForTask(task,object(task.payload).target),cp=object(task.checkpoint);

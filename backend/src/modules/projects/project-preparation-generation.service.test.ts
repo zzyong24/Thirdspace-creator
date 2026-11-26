@@ -39,3 +39,24 @@ it('跨项目工件、伪造正文摘要与无真实导入事实拒绝；父暂�
  await f.tasks.command(f.ctx,{taskIds:[f.parent.id],command:'pause',idempotencyKey:'pause-parent'});
  await expect(f.service.saveCandidate(f.ctx,claim,{stage:'draft',value:{contentText:'迟到候选'}})).rejects.toThrow();
 });
+it('重放旧生成回执时只保存可用正文，纯思考段不可入库', async () => {
+ const f = await fixture();
+ const {childTaskId} = await f.service.reserve(f.ctx, {
+  parentClaim:f.claim,projectId:f.project.id,referenceId:null,inputRevision:0,target:f.target,
+ });
+ const claim = (await f.tasks.claimTask({taskId:childTaskId,workerId:'model'}))!;
+ const reasoningOnly = '<think>只有思考';
+ await expect(f.service.saveCandidate(f.ctx,claim,{stage:'draft',value:{contentText:reasoningOnly}}))
+  .rejects.toThrow('初稿生成失败');
+ await expect(f.service.finish(f.ctx,claim,{generationMode:'rewrite_only',adaptedDraft:reasoningOnly}))
+  .rejects.toThrow('初稿生成失败');
+ expect((await f.tasks.get(f.ctx,childTaskId)).checkpoint).toBeNull();
+
+ const dirty = '<THINK data-fixture="true">旧回执的思考段</THINK>\n候选正文继续谈思考。';
+ await f.service.saveCandidate(f.ctx,claim,{stage:'draft',value:{contentText:dirty}});
+ await f.service.finish(f.ctx,claim,{generationMode:'rewrite_only',adaptedDraft:dirty});
+ expect((await f.tasks.get(f.ctx,childTaskId)).checkpoint).toMatchObject({
+  stages:{draft:{contentText:'候选正文继续谈思考。'}},
+  result:{adaptedDraft:'候选正文继续谈思考。'},
+ });
+});

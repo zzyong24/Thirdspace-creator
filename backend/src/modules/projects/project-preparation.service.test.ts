@@ -24,6 +24,22 @@ async function fixture(){
  const service=module.createProjectPreparationService(db,{now,nextId,tasks,dispatch});
  return {ctx,project,projects,tasks,service,dispatch};
 }
+async function persistedDraft(text:string){
+ const f=await fixture();
+ const started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'legacy-draft-start',requestedSteps:['source_draft']});
+ const child=await f.tasks.enqueue(f.ctx,{kind:'topic_preview',ownerType:'project',ownerId:f.project.id,idempotencyKey:'legacy-draft-child',payload:{}});
+ const content={kind:'draft' as const,text},candidateId=nextId('legacy-draft');
+ const baseline=await f.service.readBaseline(f.ctx,f.project.id);
+ const candidate={id:candidateId,kind:'draft',sourceTaskId:child.id,transformId:null,checkpointPath:`candidates.${candidateId}`,sourceDigest:'legacy-draft-source',artifactDigest:projectIntakeDigest(content),status:'pending',acceptanceReceipt:null};
+ const childCheckpoint={candidates:{[candidateId]:content}};
+ await db.update(executionTasks).set({status:'succeeded',checkpoint:childCheckpoint}).where(eq(executionTasks.id,child.id));
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,started.preparationTaskId!));
+ await db.update(executionTasks).set({status:'succeeded',checkpoint:{...parent!.checkpoint as object,candidates:[candidate],candidateBaselines:{[candidateId]:baseline}}}).where(eq(executionTasks.id,parent!.id));
+ const {createArtifactsService}=await import('../artifacts/artifacts.service');
+ const artifacts=createArtifactsService({db,now,nextId,assertProjectOwned:(ctx,id)=>f.projects.getProject(ctx,id)});
+ const input={idempotencyKey:'adopt-legacy-draft-once',candidateSourceDigest:candidate.sourceDigest,baseline:{kind:'digest' as const,digest:baseline.digest}};
+ return {...f,artifacts,candidate,child,childCheckpoint,input};
+}
 it('无登记只读；显式start幂等，无配置仍保留已建项目并waiting_user',async()=>{
  const f=await fixture();expect(await f.service.get(f.ctx,f.project.id)).toMatchObject({registration:'not_registered',preparationTaskId:null});
  const input={idempotencyKey:'start-preparation-once',requestedSteps:['source_draft' as const]};
@@ -165,6 +181,46 @@ it('T1382 GET返回核实的候选正文与冻结采纳基线，读取不写正�
  const result=await f.service.get(f.ctx,f.project.id);
  expect(result.candidates[0]).toMatchObject({content,baseline:{kind:'digest',digest:baseline.digest}});
  expect((await f.projects.getProject(f.ctx,f.project.id)).brief).toBe('用户原始资料');
+});
+it.each([false,true])('旧初稿读取及采纳剥离思考段并保留原回执，带编辑正文 %s',async edited=>{
+ const displayed='我认真思考过这件事。\n\n接下来说结论。';
+ const f=await persistedDraft(`<THINK data-stage="draft">需要先组织文字。</THINK>\n\n${displayed}`);
+ const saved=edited?'我仍然认真思考，再说结论。':displayed;
+ const input={...f.input,...(edited?{editedContent:{kind:'draft' as const,text:`<think>需要先改短。</think>\n${saved}`}}:{})};
+
+ const [candidate]= (await f.service.get(f.ctx,f.project.id)).candidates;
+ expect(candidate).toMatchObject({status:'pending',content:{kind:'draft',text:displayed},baseline:input.baseline,artifactDigest:f.candidate.artifactDigest});
+ expect(await f.artifacts.listProjectArtifacts(f.ctx,f.project.id)).toEqual([]);
+
+ const receipt=await f.service.acceptCandidate(f.ctx,f.project.id,f.candidate.id,input);
+ expect(receipt.acceptedDigest).toBe(projectIntakeDigest({kind:'draft',text:saved}));
+ expect(await f.service.acceptCandidate(f.ctx,f.project.id,f.candidate.id,input)).toEqual(receipt);
+ if(edited)await expect(f.service.acceptCandidate(f.ctx,f.project.id,f.candidate.id,{...input,editedContent:{kind:'draft',text:saved}})).rejects.toThrow('采纳幂等键输入不一致');
+ const [formal]=await f.artifacts.listProjectArtifacts(f.ctx,f.project.id);
+ expect((await f.artifacts.listVersions(f.ctx,formal!.id)).find(row=>row.id===formal!.currentVersionId)?.contentText).toBe(saved);
+ expect((await f.service.get(f.ctx,f.project.id)).candidates[0]?.artifactDigest).toBe(f.candidate.artifactDigest);
+ expect((await f.tasks.get(f.ctx,f.child.id)).checkpoint).toEqual(f.childCheckpoint);
+ expect(f.dispatch).not.toHaveBeenCalled();
+});
+it('旧初稿只有未闭合思考段时显示生成失败，无法采纳或改写原回执',async()=>{
+ const f=await persistedDraft('<think>这里没有正文');
+ const [candidate]=(await f.service.get(f.ctx,f.project.id)).candidates;
+ expect(candidate).toMatchObject({contentError:'初稿生成失败：未返回可用正文'});
+ expect(candidate?.content).toBeUndefined();
+ expect(candidate?.baseline).toBeUndefined();
+
+ await expect(f.service.acceptCandidate(f.ctx,f.project.id,f.candidate.id,f.input)).rejects.toThrow('初稿生成失败：未返回可用正文');
+ expect(await f.artifacts.listProjectArtifacts(f.ctx,f.project.id)).toEqual([]);
+ expect((await f.tasks.get(f.ctx,f.child.id)).checkpoint).toEqual(f.childCheckpoint);
+ expect(f.dispatch).not.toHaveBeenCalled();
+});
+it('有可用候选时拒绝只含思考段的编辑版',async()=>{
+ const f=await persistedDraft('这段正文提出了可以继续思考的问题。');
+ expect((await f.service.get(f.ctx,f.project.id)).candidates[0]?.content).toEqual({kind:'draft',text:'这段正文提出了可以继续思考的问题。'});
+ await expect(f.service.acceptCandidate(f.ctx,f.project.id,f.candidate.id,{
+  ...f.input,editedContent:{kind:'draft',text:'<think>只有过程。</think>'},
+ })).rejects.toThrow('初稿生成失败：未返回可用正文');
+ expect(await f.artifacts.listProjectArtifacts(f.ctx,f.project.id)).toEqual([]);
 });
 it('T1382 POST preparation恢复原失败步骤，保父ID期限与已完成步骤',async()=>{
  const f=await fixture(),started=await f.service.start(f.ctx,f.project.id,{idempotencyKey:'retry-original',requestedSteps:['source_draft','brief']});

@@ -5,6 +5,7 @@ import {GenerationFailure,generationFailure} from "./generation-error";
 import {generateText} from "ai";
 import {z} from "zod";
 import {projectPreparationGenerationTargetSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type executionModelSpecSchema} from "@creatoros/contract/execution-worker";
+import { stripDraftReasoning } from "@creatoros/contract/internal/generated-draft";
 import {createDurableGenerationModel} from "./durable-generation-model";
 import {modelFor} from "../runtime/provider-factory";
 import {runWithEffectiveSkillSnapshot,getEffectiveTemplate} from "../prompt/effective-skill-runtime";
@@ -89,7 +90,7 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
    const {system,prompt}=bindPrompt(template,facets);
    // 这条主路径只发起一次普通文本调用；不使用 JSON/schema，也不为缺标题或段落字段重跑。
    const result=await generateText({model,system,prompt,maxOutputTokens:input.maxOutputTokens,maxRetries:0,abortSignal:AbortSignal.any([signal,AbortSignal.timeout(180000)])});
-   const adaptedDraft=result.text.trim();
+   const adaptedDraft=stripDraftReasoning(result.text.trim());
    if(!adaptedDraft)throw new StructuredOutputError("output invalid: adapted draft is empty");
    await save({kind:"checkpoint",stage:"draft",value:{contentText:adaptedDraft,templateVersion:template.version}});
    return save({kind:"result",value:{generationMode:"rewrite_only",adaptedDraft}});
@@ -102,14 +103,15 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   const topic=source.reusableCandidate??parseGeneratedOutput(intelligenceTopicFromDecompositionSchema,(await runStructuredNode({model,...recovery,template:getEffectiveTemplate("intelligence.topic-from-decomposition"),facets:{...facets,decomposition:JSON.stringify(decomposition)},maxRetries:0,maxOutputTokens:2048,signal})).object);
   if(!source.reusableCandidate)await save({kind:"checkpoint",stage:"topic",value:topic});
   const {system,prompt}=bindPrompt(getEffectiveTemplate("intelligence.topic-adapted-draft"),{...facets,decomposition:JSON.stringify(decomposition),topicCandidate:JSON.stringify({title:topic.title,angle:topic.angle,differentiation:topic.differentiation,sourceSummary:topic.sourceSummary,targetAudience:topic.targetAudience,audiencePain:topic.audiencePain,coreConflict:topic.coreConflict,format:topic.format,contentRole:topic.contentRole,contentRoleReason:topic.contentRoleReason}),adaptationStrategy:JSON.stringify(topic.adaptationStrategy),confirmedContext:`【已保存拆解】\n${JSON.stringify(decomposition)}\n【我的选题卡】\n${JSON.stringify(topic)}\n【改写策略】\n${JSON.stringify(topic.adaptationStrategy)}\n依据已确认选题重建表达，执行 keep/replace/add/avoid；不要冒用来源事实。`});
-  let adaptedDraft="";
+  let draftText="";
   for(let attempt=0;(continuous || attempt<2);attempt++){
    signal.throwIfAborted();
    if(attempt>0)console.info(`[intelligence-topic] recovery=empty_draft attempt=${attempt}`);
    const draft=await generateText({model,system,prompt:attempt===0?prompt:`${prompt}\n上一轮响应没有正文，请直接输出口播初稿正文。`,maxOutputTokens:input.maxOutputTokens,maxRetries:0,abortSignal:AbortSignal.any([signal,AbortSignal.timeout(180000)])});
-   adaptedDraft=draft.text.trim();
-   if(adaptedDraft || draft.finishReason==="content-filter")break;
+   draftText=draft.text.trim();
+   if(draftText || draft.finishReason==="content-filter")break;
   }
+  const adaptedDraft=stripDraftReasoning(draftText);
   if(!adaptedDraft)throw new StructuredOutputError("output invalid: adapted draft is empty");
   await save({kind:"checkpoint",stage:"draft",value:{contentText:adaptedDraft}});
   return save({kind:"result",value:{...decomposition,...topic,adaptedDraft}});

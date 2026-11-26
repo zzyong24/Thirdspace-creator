@@ -2,6 +2,7 @@ import {projectIntakeDigest} from '../projects/project-intake.service';
 import {intelligenceWorkspaceFilter,intelligenceTransformGuardFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
 import { everyInfraEvidenceUrl } from "./everyinfra-item-import";
 import { publicXiaohongshuWorkUrl } from "@creatoros/contract/internal/everyinfra";
+import { requireGeneratedDraftBody, stripDraftReasoning } from "@creatoros/contract/internal/generated-draft";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {platformAccounts} from "../../schema/platform-account";
 import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
@@ -5055,6 +5056,7 @@ export function createIntelligenceService(
           "ADAPTATION_STRATEGY_REQUIRED_BEFORE_DRAFT",
         );
       }
+      const draftText = checkpoint.stage === "draft" ? requireGeneratedDraftBody(checkpoint.value.contentText).trim() : "";
       const stamp = now();
       const stagePatch =
         checkpoint.stage === "decomposition"
@@ -5068,7 +5070,7 @@ export function createIntelligenceService(
               ? {
                   adaptedDraft: {
                     generationMode: "rewrite_only" as const,
-                    contentText: checkpoint.value.contentText.trim(),
+                    contentText: draftText,
                     sourceSnapshotId: transform.sourceSnapshotId,
                     generatedFromTranscriptHash: checkpoint.transcriptHash,
                     ...(transform.positioningVersionId ? { positioningVersionId: transform.positioningVersionId } : {}),
@@ -5079,7 +5081,7 @@ export function createIntelligenceService(
                 }
               : {
                 adaptedDraft: {
-                  contentText: checkpoint.value.contentText.trim(),
+                  contentText: draftText,
                   generatedFromTranscriptHash: checkpoint.transcriptHash,
                   strategyHash: adaptationStrategyHash(
                     previousStrategy!,
@@ -5087,12 +5089,6 @@ export function createIntelligenceService(
                   templateVersion: "intelligence-topic-draft-v1",
                 },
               };
-      if (
-        checkpoint.stage === "draft" &&
-        !checkpoint.value.contentText.trim()
-      ) {
-        throw new IntelligenceValidationError("adaptedDraft 不能为空");
-      }
       if (checkpoint.stage === "draft" && rewriteOnly && !checkpoint.value.templateVersion?.trim()) {
         throw new IntelligenceValidationError("改写稿模板版本缺失");
       }
@@ -5198,6 +5194,7 @@ export function createIntelligenceService(
       },
     ) {
       const transform = await requireTransform(ctx, transformId);
+      const requestedDraft = requireGeneratedDraftBody(output.adaptedDraft).trim();
       if (output.generationMode === "rewrite_only") {
         const previous = transform.outputSnapshot && typeof transform.outputSnapshot === "object" && !Array.isArray(transform.outputSnapshot)
           ? transform.outputSnapshot as Record<string, unknown>
@@ -5205,13 +5202,11 @@ export function createIntelligenceService(
         const savedDraft = previous.adaptedDraft && typeof previous.adaptedDraft === "object" && !Array.isArray(previous.adaptedDraft)
           ? previous.adaptedDraft as Record<string, unknown>
           : null;
-        const requestedDraft = output.adaptedDraft.trim();
         if (
           previous.generationMode !== "rewrite_only" ||
           !savedDraft ||
           typeof savedDraft.contentText !== "string" ||
-          !savedDraft.contentText.trim() ||
-          savedDraft.contentText.trim() !== requestedDraft ||
+          stripDraftReasoning(savedDraft.contentText).trim() !== requestedDraft ||
           savedDraft.sourceSnapshotId !== transform.sourceSnapshotId ||
           savedDraft.generatedFromTranscriptHash !== previous.transcriptHash ||
           savedDraft.aiTaskId !== transform.aiTaskId ||
@@ -5235,6 +5230,7 @@ export function createIntelligenceService(
           .set({
             outputSnapshot: {
               ...previous,
+              adaptedDraft: { ...savedDraft, contentText: requestedDraft },
               sourceUrl: itemEvidenceUrl(await requireItem(ctx, transform.itemId)),
               generationProgress: {
                 rewriteDraft: { status: "completed", completedAt: now() },
@@ -5250,7 +5246,6 @@ export function createIntelligenceService(
       for (const [key, value] of Object.entries({
         hook: output.hook,
         reusablePattern: output.reusablePattern,
-        adaptedDraft: output.adaptedDraft,
         sourceUrl: output.sourceUrl,
         transcriptHash: output.transcriptHash,
       })) {
@@ -5299,7 +5294,7 @@ export function createIntelligenceService(
               {}),
             ...output,
             adaptedDraft: {
-              contentText: output.adaptedDraft.trim(),
+              contentText: requestedDraft,
               generatedFromTranscriptHash: output.transcriptHash,
               strategyHash: adaptationStrategyHash(output.adaptationStrategy),
               templateVersion: "intelligence-topic-draft-v1",

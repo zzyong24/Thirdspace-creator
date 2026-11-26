@@ -7,6 +7,7 @@ import {
  type RequestContext,type ProjectSource,type ProjectSourceReference,type ProjectPreparationStep,type ProjectPreparationCandidate,type ProjectPreparationResource,type ProjectPreparationAcceptanceReceipt,
 } from '@creatoros/contract';
 import {createContinuousExecutionBudget,transcribePlatformSourceSchema} from '@creatoros/contract/execution-worker';
+import {stripDraftReasoning} from '@creatoros/contract/internal/generated-draft';
 import type {Db} from '../../db';
 import {ConflictError} from '../../errors';
 import {lockWorkspaceMembership} from '../platform-account/membership-lock.service';
@@ -24,6 +25,12 @@ import {createConfirmedProjectScriptReader} from '../../application/context/conf
 
 export type PreparationStepName=ProjectPreparationStep['name'];
 export type PreparationContent={kind:'brief';brief:string;briefDetail:Record<string,unknown>}|{kind:'draft';text:string};
+function prepareCandidateContent(content:PreparationContent):PreparationContent {
+ if(content.kind!=='draft')return content;
+ const text=stripDraftReasoning(content.text);
+ if(!text.trim())throw new ConflictError('初稿生成失败：未返回可用正文');
+ return {...content,text};
+}
 export type PreparationDispatchResult=
  |{status:'done'|'not_required'|'waiting_user';reasonCode:string;message?:string}
  |{status:'child';childTaskId:string;businessTaskId:string|null;shared:boolean;sourceDigest:string;transformId?:string};
@@ -137,8 +144,9 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
      const content=deps.readCandidate?await deps.readCandidate(ctx,projectId,candidate,db):(child.checkpoint as {candidates?:Record<string,PreparationContent>})?.candidates?.[candidate.id];
      const baseline=cp.candidateBaselines[candidate.id];
      if(!content||projectIntakeDigest(content)!==candidate.artifactDigest||!baseline)throw new ConflictError('候选正文或冻结基线不可读取');
-     return {...candidate,content,baseline:{kind:'digest' as const,digest:baseline.digest}};
-    }catch(error){return {...candidate,contentError:error instanceof Error?error.message:'候选正文读取失败'};}
+     // 先验证原始证据，再清理展示正文。已存回执与候选摘要留在原记录中。
+     return {...candidate,content:prepareCandidateContent(content),baseline:{kind:'digest' as const,digest:baseline.digest}};
+    }catch(error){return {...candidate,content:undefined,baseline:undefined,contentError:error instanceof Error?error.message:'候选正文读取失败'};}
    }));
    return projectPreparationResource.parse({...common,registration:'registered',preparationTaskId:task.id,revision:cp.revision,steps:cp.steps,candidates,availableActions:actions,lastError:cp.lastError});
   },
@@ -386,7 +394,9 @@ export function createProjectPreparationService(db:Db,deps:ProjectPreparationDep
     const child=await createProjectPreparationStateService(tx).read(ctx,candidate.sourceTaskId);if(child.status!=='succeeded'||(child.ownerType==='project'&&child.ownerId!==projectId))throw new ConflictError('候选缺少真实完成的原子任务');
     const original=deps.readCandidate?await deps.readCandidate(ctx,projectId,candidate,tx):((child.checkpoint as {candidates?:Record<string,PreparationContent>})?.candidates?.[candidate.id]);
     if(!original||projectIntakeDigest(original)!==candidate.artifactDigest)throw new ConflictError('候选真实正文与回执摘要不符');
-    const content=input.editedContent??original;if(!content||content.kind!==candidate.kind)throw new ConflictError('候选正文不可读取');
+    const preparedOriginal=prepareCandidateContent(original);
+    const content=input.editedContent?prepareCandidateContent(input.editedContent):preparedOriginal;
+    if(content.kind!==candidate.kind)throw new ConflictError('候选正文不可读取');
     const acceptedDigest=projectIntakeDigest(content);let artifactVersion:number|null=null;
     if(content.kind==='brief')await createProjectsService(createProjectRepository(tx),deps).patchProject(ctx,projectId,{brief:content.brief,briefDetail:content.briefDetail});
     else {const artifacts=artifactsFor(tx),id=await createScriptDraftTargetService(deps).ensure(tx,ctx,projectId),artifact=await artifacts.getArtifact(ctx,id);const saved=await artifacts.createVersion(ctx,id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:content.text,createdByType:'ai',aiTaskId:child.id,adoptionKey:`preparation:${projectIntakeDigest([row.id,input.idempotencyKey])}`,adoptionSourceDigest:`sha256:${projectIntakeDigest([candidate.id,child.id,candidate.sourceDigest,candidate.artifactDigest])}`});artifactVersion=saved.versionNumber;}

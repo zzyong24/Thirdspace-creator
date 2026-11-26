@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createDb, sourceSnapshots } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
+import { MissingGeneratedDraftBodyError } from "@creatoros/contract/internal/generated-draft";
 import { createPersistentTaskService } from "../execution";
 import { createIntelligenceService } from "./intelligence.service";
 import {
@@ -36,6 +37,12 @@ describe("[T-633] 选题卡失败诊断脱敏", () => {
     expect(classifyTopicPreviewFailure({code,message:code}).category).not.toBe('engine_unavailable');
   });
   it('fa 循环cause安全结束',()=>{const error:{cause?:unknown}={};error.cause=error;expect(classifyTopicPreviewFailure(error).category).toBe('unknown');});
+  it("缺少可用初稿正文属于独立的生成失败", () => {
+    expect(classifyTopicPreviewFailure(new MissingGeneratedDraftBodyError())).toMatchObject({
+      category: "empty_draft",
+      errorCode: "TOPIC_PREVIEW_DRAFT_EMPTY",
+    });
+  });
   it("结构化 JSON 截断归类为输出不完整，不再只落一个 Error", () => {
     expect(
       classifyTopicPreviewFailure(
@@ -423,7 +430,7 @@ describe("T-482 内容雷达转为我的选题", () => {
                   add: ["加入本账号实战判断"],
                   avoid: ["不照搬原句"],
                 },
-                adaptedDraft: "很多人以为 AI 项目做不成，是模型参数还不够强。可我复盘了交付现场，真正先出问题的，往往是没人说清输入、判断和责任边界。先把工作流稳定下来，再谈换模型。",
+                adaptedDraft: "<think>模型旧回执的思考段</think>\n很多人以为 AI 项目做不成，是模型参数还不够强。可我复盘了交付现场，真正先出问题的，往往是没人说清输入、判断和责任边界。先把工作流稳定下来，再谈换模型。",
                 sourceSummary: "来源用参数与工作流的反差解释 AI 落地",
               };
               await onCheckpoint({
@@ -447,6 +454,7 @@ describe("T-482 内容雷达转为我的选题", () => {
         title: "参数不重要，工作流才是 AI 落地的分水岭",
         contentRole: "traffic",
         contentRoleReason: expect.stringContaining("本账号可借此触达"),
+        adaptedDraft: { contentText: expect.stringMatching(/^很多人以为/) },
         structureSteps: [
           "指出常见误区",
           "拆解业务输入与责任边界",
