@@ -7,6 +7,7 @@ import {executionTimeoutMs, remainingDeadlineMs} from "@creatoros/contract/timeo
 import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import type {runAssetProcessingInWorker} from "./asset-processing-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
+import type {runBoundAsrStageInWorker} from "./bound-asr-stage-worker";
 import type {runCoverInWorker} from "./cover-worker-run";
 import type {runAssetInWorker} from "./asset-worker-run";
 import type { runChatInWorker } from "./chat-worker-run";
@@ -33,7 +34,7 @@ const modelCheckpointSchema = z.object({
 export interface WorkerDependencies {
   observeException?:(event:{eventId:string;module:"worker";code:string;occurredAt:string;referenceId:string;stack:string;message:string})=>void;
   heartbeatMs?: number;
-  capabilities?: Array<"asset.asr"|"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"intelligence.rewrite-text"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
+  capabilities?: Array<"asset.asr"|"transcribe.douyin"|"transcribe.platform"|"asset.generate"|"model.generate"|"model.structured"|"intelligence.rewrite-text"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
   supportsChatWebRead?:boolean;
   supportsChatResearch?:boolean;
   supportsChatHooks?:boolean;
@@ -43,6 +44,7 @@ export interface WorkerDependencies {
   runAssetProcessing?:typeof runAssetProcessingInWorker;
   runAssetAsr?:typeof runAssetAsrInWorker;
   runTranscribe?:typeof runTranscribeInWorker;
+  runPlatformTranscribe?:typeof runBoundAsrStageInWorker;
   runCover?:typeof runCoverInWorker;
   runVideo?:typeof runVideoDecisionsInWorker;
   runAgentic?: typeof runAgenticInWorker;
@@ -57,7 +59,7 @@ export interface WorkerDependencies {
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate",...(deps.runAssetAsr?["asset.asr"]:[]), ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.generateIntelligenceText ? ["intelligence.rewrite-text"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  const capabilities=["model.generate",...(deps.runAssetAsr?["asset.asr"]:[]), ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runPlatformTranscribe?["transcribe.platform"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.generateIntelligenceText ? ["intelligence.rewrite-text"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   type Active = {execution: ExecutionRef; controller: AbortController;deadlineAt:number|null;receiptProtocol:boolean;nextCallSeq:number};
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void;scope?:Active;callSeq?:number}>();
 
@@ -165,6 +167,11 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       if(input.kind==="transcribe.douyin"){
         if(!deps.runTranscribe)throw new GenerationFailure("waiting_user","TRANSCRIBE_WORKER_UNAVAILABLE");
         const result=await deps.runTranscribe(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+        reason=result.status==="succeeded"?"completed":"failed";return;
+      }
+      if(input.kind==="transcribe.platform"){
+        if(!deps.runPlatformTranscribe)throw new GenerationFailure("waiting_user","TRANSCRIBE_WORKER_UNAVAILABLE");
+        const result=await deps.runPlatformTranscribe(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
         reason=result.status==="succeeded"?"completed":"failed";return;
       }
       if(input.kind==="asset.generate"){

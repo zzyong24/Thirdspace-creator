@@ -1,0 +1,16 @@
+{
+  "id": "fixture-channels-search",
+  "platform": "wechat_channels",
+  "action": "search",
+  "results": [
+    {
+      "title": "桌面手冲步骤",
+      "cover_url": "https://media.example.test/channels-cover.jpg",
+      "duration_seconds": 42,
+      "like_count": 10202,
+      "author_name": "视频号样例"
+    }
+  ],
+  "billing": {},
+  "quota": {}
+}

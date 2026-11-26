@@ -1,10 +1,13 @@
 import {projectIntakeDigest} from '../projects/project-intake.service';
 import {intelligenceWorkspaceFilter,intelligenceTransformGuardFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
+import { everyInfraEvidenceUrl } from "./everyinfra-item-import";
+import { publicXiaohongshuWorkUrl } from "@creatoros/contract/internal/everyinfra";
+import { requireGeneratedDraftBody, stripDraftReasoning } from "@creatoros/contract/internal/generated-draft";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {platformAccounts} from "../../schema/platform-account";
 import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
 import {requireWorkspace,workspaceKey,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
-import {createContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
+import {createContinuousExecutionBudget,transcribePlatformSourceSchema} from "@creatoros/contract/execution-worker";
 import { createHash, randomUUID } from "node:crypto";
 
 import {
@@ -757,19 +760,28 @@ function toItem(row: ItemRow): IntelligenceItemResource {
     accountId: row.accountId,groupId:row.groupId??null,
     type: row.type as IntelligenceItemResource["type"],
     platform: row.platform,
+    ...(row.captureChannel === "everyinfra" ? { captureChannel: row.captureChannel } : {}),
     externalId: row.externalId,
-    canonicalUrl: row.canonicalUrl,
+    canonicalUrl: publicXiaohongshuWorkUrl(row.canonicalUrl),
     authorId: row.authorId,
     authorName: row.authorName,
     title: row.title,
     summary: row.summary,
-    coverUrl: row.coverUrl,
+    coverUrl: row.coverUrl === null ? null : publicXiaohongshuWorkUrl(row.coverUrl),
     coverAssetId: row.coverAssetId,
     publishedAt: row.publishedAt,
     durationMs: row.durationMs,
     capturedAt: row.capturedAt,
     availability: row.availability as IntelligenceItemResource["availability"],
   };
+}
+
+function itemEvidenceUrl(item: ItemRow, url = item.canonicalUrl): string {
+  return item.captureChannel === "everyinfra" ? everyInfraEvidenceUrl(url) : publicXiaohongshuWorkUrl(url);
+}
+
+function itemForGeneration(item: ItemRow) {
+  return { ...toItem(item), canonicalUrl: itemEvidenceUrl(item) };
 }
 
 function toMetric(row: MetricRow) {
@@ -879,7 +891,7 @@ function toSnapshot(row: SnapshotRow) {
     runId: row.runId,
     itemId: row.itemId,
     capturedAt: row.capturedAt,
-    finalUrl: row.finalUrl,
+    finalUrl: publicXiaohongshuWorkUrl(row.finalUrl),
     title: row.title,
     contentHash: row.contentHash,
     safeExtract: row.safeExtract,
@@ -4068,11 +4080,16 @@ export function createIntelligenceService(
       const transcriptHash = text ? `sha256:${hash(text)}` : null;
       // SEMANTIC_BOUNDARY_ALLOW: 仅摘要真实来源版本和正文身份，不判断内容或创作取舍。
       const sourceDigest = `sha256:${hash(JSON.stringify([item.id, selected.id, selected.contentHash, transcriptHash]))}`;
+      const evidenceUrl = item.captureChannel === "everyinfra"
+        ? itemEvidenceUrl(item)
+        : itemEvidenceUrl(item, selected.finalUrl || item.canonicalUrl);
+      const projectUrl = item.captureChannel === "everyinfra" && new URL(evidenceUrl).hostname === "creatoros.local"
+        ? "" : evidenceUrl;
       return {
         title: item.title,
         itemId: item.id,
         snapshotId: selected.id,
-        url: selected.finalUrl || item.canonicalUrl,
+        url: projectUrl,
         bodyAvailable: Boolean(text || selected.safeExtract?.trim()),
         sourceDigest,
         transcriptHash,
@@ -4892,7 +4909,7 @@ export function createIntelligenceService(
         return {
           generationMode: "rewrite_only",
           transformId: transform.id,
-          item: toItem(item),
+          item: itemForGeneration(item),
           snapshot: toSnapshot(snapshot),
           positioning: frozenPositioning,
           positioningVersionId: transform.positioningVersionId,
@@ -4959,7 +4976,7 @@ export function createIntelligenceService(
       return {
         generationMode: "strategy_backed",
         transformId: transform.id,
-        item: toItem(item),
+        item: itemForGeneration(item),
         snapshot: toSnapshot(snapshot),
         positioning,
         positioningVersionId: transform.positioningVersionId,
@@ -5039,6 +5056,7 @@ export function createIntelligenceService(
           "ADAPTATION_STRATEGY_REQUIRED_BEFORE_DRAFT",
         );
       }
+      const draftText = checkpoint.stage === "draft" ? requireGeneratedDraftBody(checkpoint.value.contentText).trim() : "";
       const stamp = now();
       const stagePatch =
         checkpoint.stage === "decomposition"
@@ -5052,7 +5070,7 @@ export function createIntelligenceService(
               ? {
                   adaptedDraft: {
                     generationMode: "rewrite_only" as const,
-                    contentText: checkpoint.value.contentText.trim(),
+                    contentText: draftText,
                     sourceSnapshotId: transform.sourceSnapshotId,
                     generatedFromTranscriptHash: checkpoint.transcriptHash,
                     ...(transform.positioningVersionId ? { positioningVersionId: transform.positioningVersionId } : {}),
@@ -5063,7 +5081,7 @@ export function createIntelligenceService(
                 }
               : {
                 adaptedDraft: {
-                  contentText: checkpoint.value.contentText.trim(),
+                  contentText: draftText,
                   generatedFromTranscriptHash: checkpoint.transcriptHash,
                   strategyHash: adaptationStrategyHash(
                     previousStrategy!,
@@ -5071,12 +5089,6 @@ export function createIntelligenceService(
                   templateVersion: "intelligence-topic-draft-v1",
                 },
               };
-      if (
-        checkpoint.stage === "draft" &&
-        !checkpoint.value.contentText.trim()
-      ) {
-        throw new IntelligenceValidationError("adaptedDraft 不能为空");
-      }
       if (checkpoint.stage === "draft" && rewriteOnly && !checkpoint.value.templateVersion?.trim()) {
         throw new IntelligenceValidationError("改写稿模板版本缺失");
       }
@@ -5182,6 +5194,7 @@ export function createIntelligenceService(
       },
     ) {
       const transform = await requireTransform(ctx, transformId);
+      const requestedDraft = requireGeneratedDraftBody(output.adaptedDraft).trim();
       if (output.generationMode === "rewrite_only") {
         const previous = transform.outputSnapshot && typeof transform.outputSnapshot === "object" && !Array.isArray(transform.outputSnapshot)
           ? transform.outputSnapshot as Record<string, unknown>
@@ -5189,13 +5202,11 @@ export function createIntelligenceService(
         const savedDraft = previous.adaptedDraft && typeof previous.adaptedDraft === "object" && !Array.isArray(previous.adaptedDraft)
           ? previous.adaptedDraft as Record<string, unknown>
           : null;
-        const requestedDraft = output.adaptedDraft.trim();
         if (
           previous.generationMode !== "rewrite_only" ||
           !savedDraft ||
           typeof savedDraft.contentText !== "string" ||
-          !savedDraft.contentText.trim() ||
-          savedDraft.contentText.trim() !== requestedDraft ||
+          stripDraftReasoning(savedDraft.contentText).trim() !== requestedDraft ||
           savedDraft.sourceSnapshotId !== transform.sourceSnapshotId ||
           savedDraft.generatedFromTranscriptHash !== previous.transcriptHash ||
           savedDraft.aiTaskId !== transform.aiTaskId ||
@@ -5219,7 +5230,8 @@ export function createIntelligenceService(
           .set({
             outputSnapshot: {
               ...previous,
-              sourceUrl: (await requireItem(ctx, transform.itemId)).canonicalUrl,
+              adaptedDraft: { ...savedDraft, contentText: requestedDraft },
+              sourceUrl: itemEvidenceUrl(await requireItem(ctx, transform.itemId)),
               generationProgress: {
                 rewriteDraft: { status: "completed", completedAt: now() },
               },
@@ -5234,7 +5246,6 @@ export function createIntelligenceService(
       for (const [key, value] of Object.entries({
         hook: output.hook,
         reusablePattern: output.reusablePattern,
-        adaptedDraft: output.adaptedDraft,
         sourceUrl: output.sourceUrl,
         transcriptHash: output.transcriptHash,
       })) {
@@ -5283,7 +5294,7 @@ export function createIntelligenceService(
               {}),
             ...output,
             adaptedDraft: {
-              contentText: output.adaptedDraft.trim(),
+              contentText: requestedDraft,
               generatedFromTranscriptHash: output.transcriptHash,
               strategyHash: adaptationStrategyHash(output.adaptationStrategy),
               templateVersion: "intelligence-topic-draft-v1",
@@ -5426,7 +5437,7 @@ export function createIntelligenceService(
             kind: sourceItem.type === "video" ? "original_video" : "source_page",
             platform: sourceItem.platform,
             label: sourceItem.type === "video" ? "原视频" : "来源页面",
-            url: sourceItem.canonicalUrl,
+            url: itemEvidenceUrl(sourceItem),
             intelligenceItemId: transform.itemId,
           }],
         });
@@ -5657,7 +5668,7 @@ export function createIntelligenceService(
                 : "source_page",
             platform: sourceItem.platform,
             label: sourceItem.type === "video" ? "原视频" : "来源页面",
-            url: sourceItem.canonicalUrl,
+            url: itemEvidenceUrl(sourceItem),
             intelligenceItemId: transform.itemId,
           },
         ],
@@ -6059,6 +6070,14 @@ export function createIntelligenceService(
       const skipped: Array<{ itemId: string; reason: string }> = [];
       for (const itemId of ids) {
         const item = await requireItem(ctx, itemId);
+        const everyInfra = item.captureChannel === 'everyinfra';
+        if(everyInfra && item.type==='article'){
+          skipped.push({itemId,reason:item.platform==='xiaohongshu'?'IMAGE_NOTE':'IMAGE_ALBUM'});
+          continue;
+        }
+        const source = everyInfra ? transcribePlatformSourceSchema.parse({
+          platform:item.platform, externalId:item.externalId,
+        }) : null;
         const [transcript] = await db
           .select()
           .from(itemTranscripts)
@@ -6092,7 +6111,7 @@ export function createIntelligenceService(
           idempotencyKey: `${input.idempotencyKey}:${itemId}`,
           payload: {
             itemId,
-            sourceUrl: item.canonicalUrl,
+            ...(source ? {source} : {sourceUrl:item.canonicalUrl}),
             requestedBy: "user",
           },
           priority: 20,

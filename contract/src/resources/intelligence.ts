@@ -239,6 +239,7 @@ export const intelligenceItemResource = z
     projectId: id.optional(),
     type: intelligenceItemType,
     platform: z.string().min(1),
+    captureChannel: z.enum(["legacy-douyin-cdp", "everyinfra"]).optional(),
     externalId: z.string().nullable(),
     canonicalUrl: z.string().url(),
     authorId: z.string().nullable(),

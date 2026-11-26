@@ -3,6 +3,8 @@ import {z} from 'zod';
 import {and,eq,executionTasks,projects,projectSourceReferences,intelligenceItems,sourceSnapshots,artifacts,artifactVersions,aiTasks,aiConversations,type Db} from '@creatoros/backend';
 import {workspaceFilter} from '../../workspace-scope';
 import {ConflictError} from './execution.errors';
+import {transcribePlatformTaskInputSchema} from '@creatoros/contract/execution-worker';
+import {bindIntelligenceTranscriptSource} from '../intelligence/transcript-execution-binding';
 type Tx=Parameters<Parameters<Db['transaction']>[0]>[0];
 type Task=typeof executionTasks.$inferSelect;
 type Child=Pick<Task,'kind'|'ownerType'|'ownerId'|'userId'|'accountId'|'groupId'|'groupVersion'|'membershipVersion'|'payload'>;
@@ -25,13 +27,22 @@ export async function assertPreparationSource(tx:Tx,parent:Task,child:Child,refe
  const [project]=await tx.select().from(projects).where(and(eq(projects.id,parent.ownerId),eq(projects.userId,parent.userId),workspaceFilter(projects,scope)));if(!project||project.archivedAt)throw new ConflictError('项目准备项目不可写');
  const [reference]=referenceId?await tx.select().from(projectSourceReferences).where(and(eq(projectSourceReferences.id,referenceId),eq(projectSourceReferences.projectId,project.id))):[];
  if(referenceId&&(!reference||!Array.isArray(payload.sourceReferenceIds)||!payload.sourceReferenceIds.includes(referenceId)))throw new ConflictError('项目准备来源不属于原父任务');
+ const [item]=reference?.sourceKind==='intelligence_item'
+  ?await tx.select({id:intelligenceItems.id,platform:intelligenceItems.platform,externalId:intelligenceItems.externalId,canonicalUrl:intelligenceItems.canonicalUrl,captureChannel:intelligenceItems.captureChannel}).from(intelligenceItems).where(and(eq(intelligenceItems.id,reference.itemId!),eq(intelligenceItems.userId,parent.userId),workspaceFilter(intelligenceItems,scope))):[];
  if(reference?.sourceKind==='intelligence_item'){
-  const [item]=await tx.select({id:intelligenceItems.id}).from(intelligenceItems).where(and(eq(intelligenceItems.id,reference.itemId!),eq(intelligenceItems.userId,parent.userId),workspaceFilter(intelligenceItems,scope)));
   const [snapshot]=await tx.select({id:sourceSnapshots.id}).from(sourceSnapshots).where(and(eq(sourceSnapshots.id,reference.snapshotId!),eq(sourceSnapshots.itemId,reference.itemId!),eq(sourceSnapshots.userId,parent.userId),workspaceFilter(sourceSnapshots,scope)));
   if(!item||!snapshot)throw new ConflictError('项目准备原始作品或快照已失效');
  }
  if(child.kind==='transcribe'&&child.ownerType==='item'){
   if(reference?.sourceKind!=='intelligence_item'||child.ownerId!==reference.itemId||input.itemId!==reference.itemId)throw new ConflictError('项目转写与真实引用不符');
+  if(item&&item.captureChannel==='everyinfra'){
+   const bound=bindIntelligenceTranscriptSource(item,input);
+   if(bound.captureChannel!=='everyinfra')throw new ConflictError('项目转写缺少平台作品 ID');
+   if(input.modelInput!==undefined){
+    const task=transcribePlatformTaskInputSchema.safeParse(input.modelInput);
+    if(!task.success||task.data.sources[0].platform!==bound.source.platform||task.data.sources[0].externalId!==bound.source.externalId)throw new ConflictError('项目转写与真实平台作品不符');
+   }
+  }
  }else if(child.kind==='topic_preview'&&child.ownerType==='transform'){
   if(reference?.sourceKind!=='intelligence_item'||child.ownerId!==reference.itemId||input.itemId!==reference.itemId||input.sourceSnapshotId!==reference.snapshotId)throw new ConflictError('项目拆解与真实引用不符');
  }else if(child.kind==='ai_task'&&child.ownerType==='ai_task'){

@@ -6,6 +6,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1494|万有引擎替换 RedFox|✅|—|—|[SPEC](docs/features/t1494-everyinfra.md)|按确认的四期交付抖音、小红书、视频号查询、加入雷达、手动转写和历史兼容，真实 Key 由用户验收。|
 |T-1493|本地打包并替换当前 macOS 安装|✅|—|—|[SPEC](docs/features/t1493-local-macos-preview.md)|跳过官网验收，从当前源码出本机预览包，移除旧应用并用新包启动，保留用户数据。|
 |T-1492|放大编导生成过程与采纳内容的可读区域|✅|—|—|[SPEC](docs/features/t1492-director-reading-layout.md)|调整项目编导已有过程详情与候选的空间和滚动，保留现有操作与流程。|
 |T-1491|修复项目转写文章混入模型思考|✅|—|—|[SPEC](docs/features/t1491-transcription-article-body.md)|仅清理转写整理与已确认脚本生成文章时混入成稿的模型思考，保留入口、参数、预览、采纳和导出。|

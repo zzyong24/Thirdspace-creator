@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { defineEndpoint } from "../endpoint-definition";
 import { contentRole, id, paginationQuery } from "../primitives";
+import { everyInfraQuerySchema, everyInfraVideoHitSchema } from "../internal/everyinfra";
 import {
   adapterErrorCode,
   executionTaskResourceV2,
@@ -442,6 +443,29 @@ export const intelligenceOperations = {
       .strict(),
     response: z.object({ task: executionTaskResourceV2 }).strict(),
     fr: ["FR-CR-021"],
+  }),
+  queryEveryInfraRadar: defineEndpoint({
+    id: "intelligence.everyinfra.query",
+    method: "POST",
+    path: "/intelligence/everyinfra/query",
+    body: z.object({
+      query: everyInfraQuerySchema,
+      idempotencyKey: z.string().min(1).max(255).regex(/^[!-~]+$/),
+    }).strict(),
+    response: z.object({
+      hits: z.array(everyInfraVideoHitSchema.omit({ canonicalUrl: true }).extend({
+        importId: z.uuid().optional(),
+      }).strict()),
+    }).strict(),
+    fr: ["FR-CR-005"],
+  }),
+  addEveryInfraRadarItem: defineEndpoint({
+    id: "intelligence.everyinfra.add",
+    method: "POST",
+    path: "/intelligence/everyinfra/add",
+    body: z.object({ importId: z.uuid() }).strict(),
+    response: z.object({ itemId: id }).strict(),
+    fr: ["FR-CR-005"],
   }),
   enqueueIntelligenceTranscripts: defineEndpoint({
     id: "intelligence.transcripts.enqueue",

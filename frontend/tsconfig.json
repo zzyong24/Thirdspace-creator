@@ -34,6 +34,8 @@
   "exclude": [
     "node_modules",
     ".next/standalone",
-    "src-tauri"
+    "src-tauri",
+    "tests-t1246-round2-original",
+    "tests-t1246-generated"
   ]
 }

@@ -8,7 +8,7 @@ import {ModelCapabilitySource} from './model-capability-source';
 import {ModelConfigTransferCard} from './model-config-transfer-card';
 import {MultimodalModelCard} from './multimodal-model-configuration';
 import {ModelConfigurationCard} from './text-model-configuration';
-import {RedfoxConfiguration} from './redfox-configuration';
+import {EveryInfraConfiguration} from './everyinfra-configuration';
 import {ModelConfigurationManual} from './model-configuration-manual';
 import {modelConfigurationIdentity,useModelConnectionTest,TestConnectionButton} from './model-connection-test';
 import {useAssistantEngine} from '@/features/copilot/use-assistant-engine';
@@ -47,7 +47,7 @@ export function SettingsModelRegion({viewModel,modelAuthority,highlight}:{viewMo
  return <div data-slot="settings-rail" className="flex flex-col gap-card-gap" data-model-highlight={highlight??undefined}>
   <ModelCapabilitySource renderConfiguration={configuration} highlight={highlight}/>
   <div data-highlight="ai-credits"><AiCreditCenterCard accountStatus={modelAuthority?.managedAccountStatus}/></div>
-  <div data-highlight="redfox"><RedfoxConfiguration/></div>
+  <div data-slot="everyinfra-configuration" data-highlight="everyinfra"><EveryInfraConfiguration/></div>
   {modelAuthority?.services?.filter(service=>service.credentialSource!=='activation_managed').map(service=><ChannelServiceCredentialCard key={service.serviceId} service={service}/>)}
   <ModelConfigTransferCard/>
  </div>;

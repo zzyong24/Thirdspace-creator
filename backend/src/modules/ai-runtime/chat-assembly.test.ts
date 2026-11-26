@@ -853,6 +853,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       // [T-271] 制作封面链(创作产出工具;'context.*' < 'cover.*' < 'knowledge.*')。
       "cover.generate",
       "creatoros.guide",
+      "everyinfra.query",
       "knowledge.distill",
       "learning.capture",
       // [T-253] 本机文件读取(素材类,全场景保留;'lo' > 'le')。
@@ -869,7 +870,6 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       "positioning.generate",
       // [T-350a] 发布物料生成(创作产出工具,dispatch publish.package;排序:'po' < 'pu' < 's')。
       "publish.package",
-      "redfox.query",
       "research.autonomous",
       // [T-240③] review.analyze / review.script 被场景砍掉:选题页无单条作品的复盘/审核语境。
       "script.draft",
@@ -924,7 +924,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     expect(names).toContain("positioning.generate");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("review.analyze");
-    expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+    expect(names).toEqual(expect.arrayContaining(["everyinfra.query","research.autonomous"]));
     expect(names.length).toBe(29);
   });
 
@@ -979,7 +979,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     expect(names).toContain("context.metrics");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("script.draft");
-    expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+    expect(names).toEqual(expect.arrayContaining(["everyinfra.query","research.autonomous"]));
     expect(names.length).toBe(30); // [T-691] + 生命周期/历史检索/审核报告三个只读工具
   });
 
@@ -1046,7 +1046,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+    expect(names).toEqual(expect.arrayContaining(["everyinfra.query","research.autonomous"]));
     expect(names.length).toBe(40);
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
@@ -1156,7 +1156,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("project.transcribe");
       expect(names).not.toContain("context.projects"); // [T-642] 已绑定项目不再暴露全量库
       expect(names).toContain("video.edit.render");
-      expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+      expect(names).toEqual(expect.arrayContaining(["everyinfra.query","research.autonomous"]));
       expect(names.length).toBe(42);
     });
 
@@ -1600,7 +1600,7 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
     expect(a.tools["topic.generate"]!.description).toContain("trend");
-    expect(a.tools["redfox.query"]).toBeDefined();
+    expect(a.tools["everyinfra.query"]).toBeDefined();
     expect(a.tools["research.autonomous"]).toBeDefined();
     expect(a.system).toContain("不得伪造来源、数字、案例或操作结果");
     expect(a.system).toContain("未装配浏览器搜索端口");
@@ -1878,7 +1878,7 @@ it.each(['topics','canvas'])('T1074 %s 的Codex真实准备仅冻结已审宿主
  const {deps}=makeDeps();
  const prepared=await prepareChatTurn(ctx,{executionEngine:'codex',messages:[{id:'source',role:'user',parts:[{type:'text',text:'读取真实状态后帮我调整'}]}],chatContext:{surface,...(surface==='canvas'?{selection:{kind:'canvas',ids:['canvas-1']}}:{functionKey:'web.read'})}},deps,{workerWebRead:true,workerResearch:true,workerScriptDraft:true,workerStructuredNodes:true});
  const read=prepared.toolDefinitions.find(t=>t.name==='web.read');expect(read).toMatchObject({effect:'committed',execution:'worker.web-read'});
- const permittedNonRead=surface==='topics'?[['topic.generate','proposal','worker.structured-node'],['topic.enrich','proposal','worker.structured-node'],['script.draft','committed','worker.script-draft'],['material.gather','none','worker.research'],['positioning.generate','proposal','worker.structured-node'],['knowledge.distill','proposal','worker.structured-node'],['calibration.diagnose','proposal','worker.structured-node'],['redfox.query','committed','worker.redfox'],['material.screenshot','committed','host'],['local.read','committed','host']]:[['material.gather','none','worker.research'],['redfox.query','committed','worker.redfox'],['material.screenshot','committed','host'],['local.read','committed','host']];
+ const permittedNonRead=surface==='topics'?[['topic.generate','proposal','worker.structured-node'],['topic.enrich','proposal','worker.structured-node'],['script.draft','committed','worker.script-draft'],['material.gather','none','worker.research'],['positioning.generate','proposal','worker.structured-node'],['knowledge.distill','proposal','worker.structured-node'],['calibration.diagnose','proposal','worker.structured-node'],['everyinfra.query','committed','worker.everyinfra'],['material.screenshot','committed','host'],['local.read','committed','host']]:[['material.gather','none','worker.research'],['everyinfra.query','committed','worker.everyinfra'],['material.screenshot','committed','host'],['local.read','committed','host']];
  expect(prepared.toolDefinitions.filter(t=>t.name!=='web.read'&&((t.execution??'host')!=='host'||!['none','proposal'].includes(t.effect))).map(t=>[t.name,t.effect,t.execution??'host']).sort()).toEqual(permittedNonRead.sort());
  expect(prepared.toolDefinitions.every(t=>Boolean(t.version)&&t.parameters.additionalProperties===false)).toBe(true);
  if(surface==='canvas')expect(prepared.toolDefinitions.map(t=>t.name)).toEqual(expect.arrayContaining(['canvas.read','canvas.propose']));

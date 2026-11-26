@@ -62,7 +62,7 @@ describe("contract module initialization from every real entry", () => {
       if (root.defineEndpoint !== legacy.defineEndpoint) throw new Error("legacy export changed");
       // T1382：新增五个项目准备入口、退役一个雷达 producer，保留精确清单规模检查。
       // 442→444：839d7f280（10-26）新增 pages.groupWorkspace.get（组工作区页聚合读），de74ac72d（11-09）新增 accountGroups.bindingStatus（各平台绑定与最近登录验证状态）；两者均已接后端 transport、CLI 策略与观测清单。
-      if (Object.keys(root.ENDPOINTS).length !== 444) throw new Error("registry surface changed");
+      if (Object.keys(root.ENDPOINTS).length !== 447) throw new Error("registry surface changed");
       for (const id of ["pages.groupWorkspace.get","accountGroups.bindingStatus"]) if (!Object.values(root.ENDPOINTS).some(op=>op.id===id)) throw new Error("registered operation missing: "+id);
       for (const id of ["projects.ensure","projects.preparation.get","projects.preparation.start","projects.preparation.transcript.provide","projects.preparation.candidate.accept"]) if (!Object.values(root.ENDPOINTS).some(op=>op.id===id)) throw new Error("project intake operation missing");
       if (Object.values(root.ENDPOINTS).some(op=>op.id==="intelligence.projects.enqueue")) throw new Error("retired radar producer registered");

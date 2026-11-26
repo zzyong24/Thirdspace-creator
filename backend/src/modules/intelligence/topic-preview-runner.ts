@@ -2,6 +2,7 @@ import type {ProjectPreparationGenerationTarget} from '@creatoros/contract/execu
 import {findModelEngineUnavailable} from '../execution/model-engine-error';
 import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
 import type { RequestContext } from "@creatoros/contract";
+import { MissingGeneratedDraftBodyError } from "@creatoros/contract/internal/generated-draft";
 import type {
   PersistentTaskClaim,
   PersistentTaskService,
@@ -104,6 +105,7 @@ export type TopicPreviewFailureCategory =
   | "credential"
   | "positioning"
   | "timeout"
+  | "empty_draft"
   | "output_invalid"
   | "network"
   | "unknown";
@@ -117,6 +119,9 @@ export function classifyTopicPreviewFailure(error: unknown): {
   message: string;
   errorCode?: string;
 } {
+  if (error instanceof MissingGeneratedDraftBodyError) {
+    return { category: "empty_draft", message: error.message, errorCode: "TOPIC_PREVIEW_DRAFT_EMPTY" };
+  }
   const engine=findModelEngineUnavailable(error);
   if(engine)return {category:'engine_unavailable',message:engine.message,errorCode:engine.code};
   const parts: string[] = [];

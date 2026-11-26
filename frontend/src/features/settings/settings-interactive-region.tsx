@@ -190,7 +190,7 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
 // /settings?highlight=<stepKey>,弹窗据此先切到对应页签、再滚动+高亮那张卡。未列出的
 // stepKey(或缺省 highlight)→ 无副作用(不切页签、不报错)。
 const HIGHLIGHT_TAB: Record<string, string> = {
-  "redfox": "models",
+  "everyinfra": "models",
   "ai-credits": "models",
   "assistant-engine": "models",
   "text-model": "models",
@@ -231,7 +231,8 @@ export function SettingsDialog({
   const settingsReturn=useSettingsReturn();
   const closing=React.useRef(false),entryGeneration=settingsReturn?.generation??0;
   const searchParams = useSearchParams();
-  const highlight = searchParams?.get("highlight") ?? null;
+  const requestedHighlight = searchParams?.get("highlight") ?? null;
+  const highlight = requestedHighlight === "redfox" ? "everyinfra" : requestedHighlight;
   const [open, setOpen] = React.useState(true);
   const [tab, setTab] = React.useState<string>(
     () =>

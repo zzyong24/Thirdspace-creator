@@ -1,6 +1,8 @@
 import {intelligenceWorkspaceFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
+import { everyInfraEvidenceUrl } from "./everyinfra-item-import";
+import { publicXiaohongshuWorkUrl } from "@creatoros/contract/internal/everyinfra";
 
 import {
   and,
@@ -431,12 +433,12 @@ export function createProjectIntelligenceReferenceService(
           item: {
             id: item.id,
             title: item.title,
-            canonicalUrl: item.canonicalUrl,
+            canonicalUrl: item.captureChannel === "everyinfra" ? everyInfraEvidenceUrl(item.canonicalUrl) : publicXiaohongshuWorkUrl(item.canonicalUrl),
             authorName: item.authorName,
           },
           snapshot: {
             id: snapshot.id,
-            finalUrl: snapshot.finalUrl,
+            finalUrl: publicXiaohongshuWorkUrl(snapshot.finalUrl),
             capturedAt: snapshot.capturedAt,
             contentHash: snapshot.contentHash,
             safeExtract: snapshot.safeExtract,

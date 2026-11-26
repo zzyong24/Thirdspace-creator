@@ -2,6 +2,7 @@ import {sql} from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
+  check,
   integer,
   index,
   jsonb,
@@ -81,6 +82,7 @@ export const intelligenceItems = pgTable("intelligence_items", {
   groupId: text("group_id"),
   type: text("type").notNull(),
   platform: text("platform").notNull(),
+  captureChannel: text("capture_channel", { enum: ["legacy-douyin-cdp", "everyinfra"] }).notNull().default("legacy-douyin-cdp"),
   externalId: text("external_id"),
   canonicalUrl: text("canonical_url").notNull(),
   canonicalUrlHash: text("canonical_url_hash").notNull(),
@@ -96,7 +98,15 @@ export const intelligenceItems = pgTable("intelligence_items", {
   availability: text("availability").notNull().default("available"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
-});
+}, (table) => [
+  check("intelligence_items_capture_channel_ck", sql`(${table.captureChannel} = 'everyinfra'
+    AND ${table.platform} IN ('douyin', 'xiaohongshu', 'wechatVideo'))
+    OR (${table.captureChannel} = 'legacy-douyin-cdp'
+    AND (${table.platform} NOT IN ('xiaohongshu', 'wechatVideo') OR ${table.type} <> 'video'))`),
+  uniqueIndex("intelligence_items_platform_external_ux")
+    .on(table.userId, sql`coalesce(${table.groupId}, 'grp_legacy_' || ${table.accountId})`, table.platform, table.externalId)
+    .where(sql`${table.externalId} IS NOT NULL`),
+]);
 
 export const itemMetricSnapshots = pgTable(
   "intelligence_item_metric_snapshots",

@@ -65,7 +65,7 @@ function waitForUiOperation(page: Page, id: string) {
 }
 
 async function selectCategory(page: Page, name: string, id: string) {
-  await page.getByRole("navigation", { name: "设置分类导航" }).getByRole("tab", { name, exact: true }).click();
+  await page.getByRole("tablist", { name: "设置分类导航" }).getByRole("tab", { name, exact: true }).click();
   await expect(page.getByRole("tab", { name, exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(panel(page, id)).toBeVisible();
 }
@@ -172,7 +172,7 @@ test.describe("Settings page", () => {
     await expect(page.locator('main[data-page="settings"]')).toHaveCount(1);
     await expect(page.getByRole("dialog", { name: "设置", exact: true })).toHaveCount(1);
     await expect(slot(page, "settings-dialog")).toContainText("账号、偏好与系统");
-    await expect(page.getByRole("navigation", { name: "设置分类导航" })).toBeVisible();
+    await expect(page.getByRole("tablist", { name: "设置分类导航" })).toBeVisible();
 
     // 验证每项实际功能，不把当前分类数或排列顺序补签为 IA 全集。
     const categories = [
@@ -180,7 +180,6 @@ test.describe("Settings page", () => {
       { name: "偏好", id: "preferences", cards: ["preference-settings-card"] },
       { name: "外观", id: "appearance", cards: ["system-settings-card"] },
       { name: "模型配置", id: "models", cards: ["model-configuration-card"] },
-      { name: "数据服务", id: "data-services", cards: [] },
       { name: "技能", id: "skills", cards: [] },
       { name: "存储", id: "storage", cards: ["storage-usage-card"] },
     ];
@@ -193,9 +192,9 @@ test.describe("Settings page", () => {
         await expect(slot(page, "activation-status-card")).toContainText("激活为桌面端功能");
         await expect(slot(page, "check-update-card")).toContainText("软件更新为桌面端功能");
         await expect(slot(page, "diagnostic-logs-card")).toContainText("诊断日志为桌面端功能");
-      } else if (category.id === "data-services") {
-        await expect(panel(page, category.id)).toContainText("RedFox 数据服务");
-        await expect(page.locator("#redfox-key")).toHaveAttribute("type", "password");
+      } else if (category.id === "models") {
+        await expect(panel(page, category.id)).toContainText("万有引擎");
+        await expect(page.locator("#everyinfra-key")).toHaveAttribute("type", "password");
       } else if (category.id === "skills") {
         await expect(slot(page, "skills-section").or(slot(page, "skills-empty"))).toBeVisible();
         const toggle = slot(page, "skill-row-toggle").first();
@@ -365,35 +364,40 @@ test.describe("Settings page", () => {
     } finally { await fixture.close(); }
   });
 
-  test("[T-1232] RedFox 密钥真实保存及移除公开脱敏读回并刷新", async ({ page }, info) => {
-    const fakeSecret = "t1232-redfox-neutral-key";
+  test("[T-1232] 万有引擎密钥真实保存及移除公开脱敏读回并刷新", async ({ page }, info) => {
+    const fakeSecret = "t1232-everyinfra-fixture";
     await page.goto("/settings");
-    await selectCategory(page, "数据服务", "data-services");
-    const input = page.locator("#redfox-key");
+    await selectCategory(page, "模型配置", "models");
+    const input = page.locator("#everyinfra-key");
     await expect(input).toHaveAttribute("type", "password");
+    const host = page.getByLabel("主机", { exact: true });
+    await expect(host).toHaveValue("https://api.everyinfra.com");
+    await host.selectOption("https://api-cn.everyinfra.com");
     await input.fill(fakeSecret);
-    const saved = waitForUiOperation(page, "settings.redfox.put");
-    await page.getByRole("button", { name: "保存密钥", exact: true }).click();
-    const result = ENDPOINTS.putRedfox.response.parse(await responseData(await saved, [fakeSecret]));
-    expect(result.provider).toBe("redfox");
+    const saved = waitForUiOperation(page, "settings.everyinfra.put");
+    await page.getByRole("button", { name: "保存配置", exact: true }).click();
+    const result = ENDPOINTS.putEveryInfra.response.parse(await responseData(await saved, [fakeSecret]));
+    expect(result.provider).toBe("everyinfra");
     expect(result.configured).toBe(true);
+    expect(result.baseUrl).toBe("https://api-cn.everyinfra.com");
     expect(result.updatedAt).not.toBeNull();
     await expect(input).toHaveValue("");
-    expect((await readPublic(page, ENDPOINTS.getRedfox, [fakeSecret])).configured).toBe(true);
+    expect((await readPublic(page, ENDPOINTS.getEveryInfra, [fakeSecret])).configured).toBe(true);
     await page.reload();
-    await selectCategory(page, "数据服务", "data-services");
-    await expect(panel(page, "data-services")).toContainText("已保存密钥");
+    await selectCategory(page, "模型配置", "models");
+    await expect(panel(page, "models")).toContainText("已保存密钥");
+    await expect(host).toHaveValue("https://api-cn.everyinfra.com");
     await expect(input).toHaveValue("");
-    await captureBoth(page, info, "redfox-saved", "settings-panel");
-    const removed = waitForUiOperation(page, "settings.redfox.delete");
+    await captureBoth(page, info, "everyinfra-saved", "everyinfra-configuration");
+    const removed = waitForUiOperation(page, "settings.everyinfra.delete");
     await page.getByRole("button", { name: "移除密钥", exact: true }).click();
-    expect(ENDPOINTS.deleteRedfox.response.parse(await responseData(await removed, [fakeSecret])).configured).toBe(false);
-    expect((await readPublic(page, ENDPOINTS.getRedfox, [fakeSecret])).configured).toBe(false);
+    expect(ENDPOINTS.deleteEveryInfra.response.parse(await responseData(await removed, [fakeSecret])).configured).toBe(false);
+    expect((await readPublic(page, ENDPOINTS.getEveryInfra, [fakeSecret])).configured).toBe(false);
     await page.reload();
-    await selectCategory(page, "数据服务", "data-services");
-    await expect(panel(page, "data-services")).toContainText("尚未配置");
+    await selectCategory(page, "模型配置", "models");
+    await expect(panel(page, "models")).toContainText("尚未配置");
     await expect(input).toHaveValue("");
     await expect(page.getByRole("button", { name: "移除密钥", exact: true })).toHaveCount(0);
-    await captureBoth(page, info, "redfox-removed", "settings-panel");
+    await captureBoth(page, info, "everyinfra-removed", "everyinfra-configuration");
   });
 });

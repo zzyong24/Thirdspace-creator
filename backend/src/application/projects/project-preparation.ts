@@ -56,6 +56,11 @@ export function createProjectPreparationApplication(db:Db,deps:ServiceDeps&{
      if(reference?.sourceKind==='intelligence_item'){
       const detail=await deps.intelligence.getItem(ctx,reference.itemId);
       if(detail.transcript.status==='done'&&detail.transcript.text?.trim())return {status:'done',reasonCode:'TRANSCRIPT_ALREADY_AVAILABLE'};
+      if(detail.item.captureChannel==='everyinfra'){
+       if(detail.item.type==='article')return notRequired('NO_SUPPORTED_TRANSCRIPTION_SOURCE');
+       if(detail.transcript.errorCode==='CHANNELS_DECRYPT_UNSPECIFIED')return waiting('CHANNELS_DECRYPT_UNSPECIFIED','视频号原片解密尚未验证，请手工补充逐字稿');
+       if(!detail.transcript.executionTaskId)return waiting('TRANSCRIPT_REQUIRES_INPUT','请在内容雷达点击「转写」，或在项目内补充逐字稿');
+      }
       if(detail.transcript.executionTaskId){await states.reuseTranscript(ctx,{parentClaim:claim,referenceId:reference.id,childTaskId:detail.transcript.executionTaskId,now:deps.now()});return {status:'child',childTaskId:detail.transcript.executionTaskId,businessTaskId:null,shared:true,sourceDigest:reference.sourceDigest??projectIntakeDigest(reference)};}
       const queued=await deps.intelligence.enqueueTranscripts(ctx,{itemIds:[reference.itemId],idempotencyKey:`preparation:${claim.task.id}:transcript:${revision}`},parent),child=queued.tasks[0];
       if(!child)return waiting('TRANSCRIPT_REQUIRES_INPUT','来源转写无法启动，请在项目内补充逐字稿');

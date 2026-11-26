@@ -4,7 +4,7 @@ import type {createExecutionAsrPorts} from './execution-asr-ports.service';
 import {isDeepStrictEqual} from 'node:util';
 import {eq,executionTasks,executionCalls,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
-import {transcribeAsrPreparationSchema,transcribeTaskInputSchema,transcribeAsrPlanSchema,transcribeAudioReceiptSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
+import {transcribeAsrPreparationSchema,transcribeWorkerTaskInputSchema,transcribeAsrPlanSchema,transcribeAudioReceiptSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import {asrExecutionIdentity} from '@creatoros/ai-worker/asr-identity';
 import {isAsrExecutionControlError,type MultimodalSpec} from '@creatoros/ai-worker';
 import {transcribeConfiguration,frozenTranscribeLocalSpec,isFrozenAsrRoutingError,type TranscribeModelOwner} from '../ai-runtime/transcribe-business-execution.service';
@@ -21,7 +21,7 @@ export function createExecutionTranscribePreparationService(db:Db,deps:{
 }){
  const leases=createExecutionLeaseService(db,deps);
  async function read(scope:TranscribeExecutionScope,awemeId:string){
-  const bound=await (deps.bindResource??bindTranscribeAudioExecution)(scope,awemeId),input=transcribeTaskInputSchema.parse(deps.bindResource?bound.input:bound.payload.modelInput);
+  const bound=await (deps.bindResource??bindTranscribeAudioExecution)(scope,awemeId),input=transcribeWorkerTaskInputSchema.parse(deps.bindResource?bound.input:bound.payload.modelInput);
   const {plans,plan}=readTranscribeAsrPlan(bound.payload,awemeId);
   if(!plan){
    const calls=await scope.tx.select({operationKey:executionCalls.operationKey}).from(executionCalls).where(eq(executionCalls.executionTaskId,scope.task.id));

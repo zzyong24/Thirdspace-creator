@@ -129,9 +129,10 @@ describe("defineChatTool 错误信封", () => {
     ).toThrow(/未登记 CHAT_TOOL_ERROR_ENVELOPES/);
   });
 
-  it("信封真值表 guard:keys 与 ALL_CHAT_TOOL_NAMES 完全一致(新增工具不登记信封 = 红)", () => {
+  it("信封真值表覆盖新回合工具和历史 RedFox，新工具必须登记信封", () => {
+    expect(ALL_CHAT_TOOL_NAMES).not.toContain("redfox.query");
     expect(Object.keys(CHAT_TOOL_ERROR_ENVELOPES).sort()).toEqual(
-      [...ALL_CHAT_TOOL_NAMES].sort(),
+      [...ALL_CHAT_TOOL_NAMES, "redfox.query"].sort(),
     );
   });
 });

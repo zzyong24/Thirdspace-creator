@@ -7,7 +7,7 @@ import {createDb,executionTasks,executionCalls,eq,type Db} from "@creatoros/back
 import {createServer} from "node:http";
 import {execFileSync} from "node:child_process";
 import {resolve} from "node:path";
-import {buildChatTools,type ChatToolDeps} from "../modules/ai-runtime/chat-tools";
+import {buildRedfoxTool} from "../modules/ai-runtime/chat-redfox-tool";
 import {prepareChatToolDefinitions} from "../modules/ai-runtime/chat-tool-definitions";
 import {createChatRedfoxTaskToolHost} from "../modules/ai-runtime/chat-redfox-tool-host";
 import {createChatHostContextReader} from "../modules/ai/chat-host-context.service";
@@ -25,7 +25,7 @@ async function submit(searchConfigured=true,queryContext=true){
  const ctx={userId:"research-user",accountId:`research-${++sequence}`,requestId:"test",source:"user" as const};
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++sequence}`});
  const conversation=await repo.createConversation({title:"搜索",projectId:null,scope:"global"}),message=await repo.createMessage(conversation.id,{role:"user",content:"寻找资料",attachments:[],modelMetadata:{}});
- const tools=(await prepareChatToolDefinitions(buildChatTools(["redfox.query"],{searchConfigured} as ChatToolDeps),{workerResearch:true})).definitions;
+ const tools=(await prepareChatToolDefinitions({"redfox.query":buildRedfoxTool()},{workerResearch:true})).definitions;
  const hostContext={schemaVersion:1 as const,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],researchContext:{selectionTitle:queryContext?"原主题":"",userMaterialQueryTerms:queryContext?["原材料"]:[],searchConfigured},skillSnapshot:{snapshotVersion:1 as const,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"事实",skills:[{skillId:"chatbox.topic",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"事实",template:"",tools:["redfox.query"],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
  const modelInput={capability:"copilot.assist",system:"依据搜索结果继续",messages:[{role:"user" as const,content:"寻找资料"}],tools,maxSteps:6,maxOutputTokens:128,hostContext};
  const submitted=await createChatTurnSubmissionService(db,{now,assemble:async()=>modelInput}).submit(ctx,{conversationId:conversation.id,sourceMessageId:message.id});

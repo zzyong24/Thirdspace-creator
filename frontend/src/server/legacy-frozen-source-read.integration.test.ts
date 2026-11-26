@@ -30,10 +30,11 @@ import {prepareChatReply} from './prepare-chat-reply';
 
 // 这是明确旧版本的合成 fixture producer，不是历史用户库实测。
 const oldProducerCommit='6e4689b3180f91189110208267708ad72b03ae64';
-// 原111项与止于0140的114项身份继续逐字节锁定；追加0138–0141逐条核SQL，不按新last动态接受库存。
+// 原111、114、115项身份继续逐字节锁定；追加0138–0142逐条核SQL，不按新last动态接受库存。
 const oldMigrationInventory={entries:111,journalSha256:'d72d1f1b459d5d35695ac6671d49bf8959551d09ebe647972163f82a4dea69eb',ledgerSha256:'78c9c4af5305a709cd9fdab6367cd9e3a0b0dd6dacd51b97470e20b6b2d585af'} as const;
 const previousMigrationInventory={entries:114,journalSha256:'340e182882cbf4bc4c27dde8e96d0e8a58bb35ed5be62da2869d1d9b02206cd2',ledgerSha256:'c6af0e97e55089f0e196065b53f52af88bf402e0464c276c6fee031af22a80fd'} as const;
-const currentMigrationInventory={entries:115,journalSha256:'0d99e426b306c8108ce275cfb4df005877059a4e51b21494d4acd38dae313eb6',ledgerSha256:'ffa3cee2abc8ee8d80ac8aefd293cb452c50d2700926b4d8b4d2f13df4a73328'} as const;
+const preEveryInfraMigrationInventory={entries:115,journalSha256:'0d99e426b306c8108ce275cfb4df005877059a4e51b21494d4acd38dae313eb6',ledgerSha256:'ffa3cee2abc8ee8d80ac8aefd293cb452c50d2700926b4d8b4d2f13df4a73328'} as const;
+const currentMigrationInventory={entries:116,journalSha256:'f476eae7fc1d3b1a67731ea3919147ef301b626aef9c726a813fc11d9726f7b3',ledgerSha256:'28885b2a773234df2379581855a3400c4680b5b7493c0631f5d6793c254939ed'} as const;
 let oldProducerRoot:string,oldProducerModule:string,oldPiCoreBinding:{version:string;agentPath:string;sha256:string};
 beforeAll(async()=>{
  const projectRoot=fileURLToPath(new URL('../../../',import.meta.url));
@@ -322,14 +323,17 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
    const currentJournal=JSON.parse(currentJournalRaw) as {entries:Array<{tag:string;when:number}>};
    expect(createHash('sha256').update(JSON.stringify({...currentJournal,entries:currentJournal.entries.slice(0,oldMigrationInventory.entries)},null,2)+'\n').digest('hex')).toBe(oldMigrationInventory.journalSha256);
    expect(createHash('sha256').update(JSON.stringify({...currentJournal,entries:currentJournal.entries.slice(0,previousMigrationInventory.entries)},null,2)+'\n').digest('hex')).toBe(previousMigrationInventory.journalSha256);
+   expect(createHash('sha256').update(JSON.stringify({...currentJournal,entries:currentJournal.entries.slice(0,preEveryInfraMigrationInventory.entries)},null,2)+'\n').digest('hex')).toBe(preEveryInfraMigrationInventory.journalSha256);
    const expectedLedger=await Promise.all(currentJournal.entries.map(async entry=>({hash:createHash('sha256').update(await readFile(join(migrationFolder,entry.tag+'.sql'),'utf8')).digest('hex'),created_at:entry.when})));
    expect(createHash('sha256').update(JSON.stringify(expectedLedger.slice(0,oldMigrationInventory.entries))).digest('hex')).toBe(oldMigrationInventory.ledgerSha256);
    expect(createHash('sha256').update(JSON.stringify(expectedLedger.slice(0,previousMigrationInventory.entries))).digest('hex')).toBe(previousMigrationInventory.ledgerSha256);
+   expect(createHash('sha256').update(JSON.stringify(expectedLedger.slice(0,preEveryInfraMigrationInventory.entries))).digest('hex')).toBe(preEveryInfraMigrationInventory.ledgerSha256);
    expect(expectedLedger.slice(oldMigrationInventory.entries)).toEqual([
     {hash:'f6ad9f365d35f144a46b2fb370bf502a24a4e265de07dceb2fb88fd49b185a6f',created_at:1791043200011},
     {hash:'74c2288c5ae979c5f84820181602708c182da3a0408faac181ce7a25009e22a8',created_at:1791043200012},
     {hash:'7e1856d6c6ea24f0ad559aab94f1354b7fb5607733082ec3cb1c88e0ff54a2bf',created_at:1791043200013},
     {hash:'369bab227e661865bd2b855ce3d67c788c1a80531eea144e1df93b5458807416',created_at:1791043200014},
+    {hash:'d18f2a832c557b4988692ffb215a011c14a03fc113a95d453b2ca520b3203095',created_at:1791043200015},
    ]);
    expect(createHash('sha256').update(JSON.stringify(expectedLedger)).digest('hex')).toBe(currentMigrationInventory.ledgerSha256);
    expect(migrationLedger.map((row:{hash:string;created_at:number})=>({...row,created_at:Number(row.created_at)}))).toEqual(expectedLedger);
@@ -343,6 +347,7 @@ it.each(['null-frozen','canonical-null-conversation','canonical-null-anchors'] a
     {idx:112,version:'7',when:1791043200012,tag:'0139_unified_project_intake',breakpoints:true},
     {idx:113,version:'7',when:1791043200013,tag:'0140_unified_project_intake_retirement_timestamps',breakpoints:true},
     {idx:114,version:'7',when:1791043200014,tag:'0141_review_rule_group_scope',breakpoints:true},
+    {idx:115,version:'7',when:1791043200015,tag:'0142_everyinfra',breakpoints:true},
    ]);
    expect((await upgraded.client.query<{column_name:string}>("SELECT column_name FROM information_schema.columns WHERE table_name='user_preferences' AND column_name='assistant_execution_engine'")).rows).toEqual([{column_name:'assistant_execution_engine'}]);
    expect((await db.execute(sql.raw('SELECT group_id FROM ai_conversations'))).rows).toEqual([{group_id:canonical}]);

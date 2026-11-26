@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {assetCredentialSchema} from './asset-generation';
 import {asrIdentitySchema,asrTranscriptSchema} from './execution-asr';
+import {transcribeAudioKey,transcribePlatformSourceSchema} from './transcribe-source';
 /** 只保留识别和受管音频校验实际消费的配置；密钥不能进入任务。 */
 export const transcribeConfigurationSchema=z.object({
  kind:z.literal('audio'),provider:z.string().min(1).max(128),model:z.string().min(1).max(512),baseUrl:assetCredentialSchema.shape.baseUrl,
@@ -8,6 +9,18 @@ export const transcribeConfigurationSchema=z.object({
  settings:z.object({maxDurationSeconds:z.union([z.number(),z.string()]).optional(),maxBytes:z.union([z.number(),z.string()]).optional()}).strict().optional(),
 }).strict();
 export const transcribeTaskInputSchema=z.object({kind:z.literal('transcribe.douyin'),awemeIds:z.array(z.string().min(1).max(128)).min(1).max(10000),language:z.string().min(1).max(128),configuration:transcribeConfigurationSchema}).strict().refine(input=>new Set(input.awemeIds).size===input.awemeIds.length,'作品不能重复');
+export const transcribePlatformTaskInputSchema = z.object({
+ kind: z.literal('transcribe.platform'),
+ sources: z.tuple([transcribePlatformSourceSchema]),
+ language: z.literal('zh'),
+ configuration: transcribeConfigurationSchema,
+}).strict();
+export const transcribeWorkerTaskInputSchema = z.discriminatedUnion('kind', [transcribeTaskInputSchema, transcribePlatformTaskInputSchema]);
+export type TranscribeWorkerTaskInput = z.infer<typeof transcribeWorkerTaskInputSchema>;
+
+export function transcribeTaskAudioKeys(input: TranscribeWorkerTaskInput): string[] {
+ return input.kind === 'transcribe.platform' ? input.sources.map(transcribeAudioKey) : input.awemeIds;
+}
 export const transcribeAsrPlanSchema=z.object({schemaVersion:z.literal(1),identity:asrIdentitySchema,audioDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/),audioByteLength:z.number().int().positive().max(2147483647)}).strict();
 export type TranscribeConfiguration=z.infer<typeof transcribeConfigurationSchema>;
 

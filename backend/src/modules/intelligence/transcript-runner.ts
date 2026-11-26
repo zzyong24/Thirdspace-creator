@@ -7,6 +7,7 @@ import type {
   PersistentTaskService,
 } from "../execution";
 import type { IntelligenceService } from "./intelligence.service";
+import { everyInfraMediaErrorCode } from "./everyinfra-media-resolver";
 
 export interface IntelligenceTranscriptPort {
   transcribe(
@@ -46,6 +47,11 @@ function classify(error: unknown): {
   transcriptStatus: "failed" | "blocked";
   errorCode: string;
 } {
+  const mediaCode=everyInfraMediaErrorCode(error);
+  if(mediaCode){
+    const status=mediaCode==='EVERYINFRA_NOT_CONFIGURED'||mediaCode==='EVERYINFRA_AUTH_INVALID'||mediaCode==='EVERYINFRA_QUOTA_EXHAUSTED'?'blocked':'failed';
+    return {taskStatus:status,transcriptStatus:status,errorCode:mediaCode};
+  }
   const name = error instanceof Error ? error.name : "UnknownError";
   const message = error instanceof Error ? error.message : String(error);
   const text = `${name}:${message}`;
@@ -142,7 +148,7 @@ export async function runIntelligenceTranscriptTask(
       ...lease,
       status: classified.taskStatus,
       errorCode: classified.errorCode,
-      errorMessage: error instanceof Error ? error.name : "UnknownError",
+      errorMessage: everyInfraMediaErrorCode(error) ?? (error instanceof Error ? error.name : "UnknownError"),
     });
   }
 }

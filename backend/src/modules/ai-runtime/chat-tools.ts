@@ -1,6 +1,6 @@
 import {ChatHostKnownReadFailure} from "./chat-host-tool-adapter";
 import {workEditorOwnerSchemas,workEditorReadInput,workEditorReadInputV1,workEditorProposeInputV1,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,workCreationDraftProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput,type WorkCreationDraftProposalInput} from "@creatoros/contract";
-import {buildRedfoxTool} from "./chat-redfox-tool";
+import { buildEveryInfraTool } from "./chat-everyinfra-tool";
 import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
 import { buildChatSkillReadTool, type ChatSkillLibrary } from "./chat-skill-library";
@@ -3377,7 +3377,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
   return {
     "history.read": buildChatHistoryReader(deps.readHistory),
     "tool.result.read": buildChatToolResultReader(deps.readToolResult),
-    "redfox.query": buildRedfoxTool(),
+    "everyinfra.query": buildEveryInfraTool(),
     "skill.read": buildChatSkillReadTool(deps.skillLibrary),
     "creatoros.guide": defineChatTool("creatoros.guide", {
       description:
@@ -5065,7 +5065,7 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   // [T-385] 复盘无稿时对话内一键抓逐字稿(复用 projects.transcribe 链,dispatch 单条 transcribe.douyin)。
   "project.transcribe",
   "material.gather",
-  "redfox.query",
+  "everyinfra.query",
   "research.autonomous",
   "material.screenshot",
   "web.read",
@@ -5143,7 +5143,7 @@ export const CONTEXT_TOOL_NAMES: readonly string[] = ALL_CHAT_TOOL_NAMES.filter(
 /** 素材类工具 —— 全场景保留(任何场景都可能中途搜素材/读网页/截图/生成)。 */
 const MATERIAL_TOOL_NAMES: readonly string[] = [
   "material.gather",
-  "redfox.query",
+  "everyinfra.query",
   "research.autonomous",
   "material.screenshot",
   "web.read",

@@ -18,6 +18,7 @@ const CODEX_EXECUTION_TOOLS:Readonly<Record<string,{execution:string;effect:stri
   'plan.update':{execution:'host',effect:'committed'},
   'web.read':{execution:'worker.web-read',effect:'committed'},
   'redfox.query':{execution:'worker.redfox',effect:'committed'},
+  'everyinfra.query':{execution:'worker.everyinfra',effect:'committed'},
   'project.transcribe':{execution:'host',effect:'committed'},
   'material.screenshot':{execution:'host',effect:'committed'},
   'intelligence.douyin.share':{execution:'host',effect:'committed'},

@@ -1,0 +1,32 @@
+{
+  "id": "fixture-xiaohongshu-search",
+  "platform": "xiaohongshu",
+  "action": "search",
+  "results": [
+    {
+      "id": "0123456789abcdef01234567",
+      "url": "https://www.xiaohongshu.com/explore/0123456789abcdef01234567",
+      "text": "冰手冲萃取示范。",
+      "author_id": "89abcdef0123456701234567",
+      "author_name": "咖啡实验样例",
+      "images": ["https://media.example.test/xiaohongshu-cover.jpg"],
+      "is_video": true,
+      "duration_sec": 31.25,
+      "like_count": 99,
+      "collect_count": 31
+    },
+    {
+      "id": "0123456789abcdef01234568",
+      "url": "https://www.xiaohongshu.com/explore/0123456789abcdef01234568",
+      "title": "粉水比图解",
+      "is_video": false
+    },
+    {
+      "id": "0123456789abcdef01234569",
+      "url": "https://www.xiaohongshu.com/explore/0123456789abcdef01234569",
+      "title": "未标记媒体类型"
+    }
+  ],
+  "billing": {},
+  "quota": {}
+}

@@ -20,7 +20,7 @@ it('开场、脚本与浏览器搜索仅开放已登记原宿主边界',()=>{
  expect(isAssistantEngineToolAllowed('codex',{name:'files.delete',execution:'host',effect:'committed'})).toBe(false);
  expect(isAssistantEngineToolAllowed('pi',{name:'existing.pi.tool',execution:'host',effect:'committed'})).toBe(true);
 });
-it.each([['web.read','worker.web-read'],['redfox.query','worker.redfox']])('Codex既有%s只复用精确已登记提交边界', (name,execution)=>{
+it.each([['web.read','worker.web-read'],['redfox.query','worker.redfox'],['everyinfra.query','worker.everyinfra']])('Codex既有%s只复用精确已登记提交边界', (name,execution)=>{
  expect(isAssistantEngineToolAllowed('codex',{name:name!,execution:execution!,effect:'committed'})).toBe(true);
  expect(isAssistantEngineToolAllowed('codex',{name:name!,execution:'host',effect:'committed'})).toBe(false);
  expect(isAssistantEngineToolAllowed('codebuddy',{name:name!,execution:execution!,effect:'committed'})).toBe(false);

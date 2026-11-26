@@ -1,5 +1,6 @@
 import {it, expect, vi, afterEach} from "vitest";
 import {createHash} from 'node:crypto';
+import type { LanguageModelV4 } from "@ai-sdk/provider";
 import {createExecutionWorker} from "./worker-runtime";
 import * as providerFactory from "../runtime/provider-factory";
 import {generateIntelligenceInWorker} from "./intelligence-generation-worker";
@@ -88,6 +89,86 @@ it("[T-1017] 显式 strategy_backed 旧链协议仍能到达模型预留", async
  const messages = await run(original);
  expect(messages.filter(m => m.type === "call").map(m => m.port)).toContain("reserveGenerationCall");
  expect(messages.find(m => m.type === "call" && m.port === "commitResult")).toMatchObject({ data: { errorCode: "MODEL_CALL_REQUIRES_RECONCILIATION" } });
+});
+
+function topicDraftRun(text: string, generationMode: "strategy_backed" | "rewrite_only") {
+  const context = input();
+  const skillId = "intelligence.topic-adapted-draft";
+  context.skillSnapshot.skills = [{
+    ...context.skillSnapshot.skills[0]!,
+    skillId,
+    effective: { ...context.skillSnapshot.skills[0]!.effective, outputSchema: null },
+  }];
+  context.facets = {
+    mode: "topic_preview",
+    continuousRecovery: "true",
+    target: JSON.stringify({
+      generationMode,
+      item: { title: "样例作品", platform: "xiaohongshu", canonicalUrl: "https://example.test/item" },
+      transcript: { text: "样例转写正文。" },
+      reusableDecomposition: {
+        hook: "开场问题",
+        structureSteps: ["描述场景", "给出做法"],
+        coreClaims: ["做法有据可查"],
+        reusablePattern: "场景与做法",
+      },
+      reusableCandidate: { title: "已拆解的样例选题" },
+    }),
+  };
+  const doGenerate = vi.fn<LanguageModelV4["doGenerate"]>()
+    .mockResolvedValueOnce({
+      content: [{ type: "text", text }],
+      finishReason: { unified: "stop", raw: "stop" },
+      usage: {
+        inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
+        outputTokens: { total: 1, text: 1, reasoning: 0 },
+      },
+      warnings: [],
+    })
+    .mockRejectedValue(new Error("样例只允许调用模型一次"));
+  vi.spyOn(providerFactory, "modelFor").mockReturnValue({
+    specificationVersion: "v4",
+    provider: "fixture",
+    modelId: "fixture",
+    supportedUrls: {},
+    doStream: async () => { throw new Error("正文生成不走流式请求"); },
+    doGenerate,
+  });
+  const saved: unknown[] = [];
+  const result = generateIntelligenceInWorker(context, spec, new AbortController().signal, async (port, data) => {
+    switch (port) {
+      case "reserveGenerationCall": return { callId: "draft-fixture", status: "reserved" };
+      case "startCall": return { callId: "draft-fixture", status: "started" };
+      case "settleGenerationCall": return {};
+      case "saveGenerationResult":
+        saved.push(JSON.parse((data as { text: string }).text));
+        return {};
+      default: throw new Error(`未预期的测试端口：${port}`);
+    }
+  });
+  return { result, saved, doGenerate };
+}
+
+it.each(["strategy_backed", "rewrite_only"] as const)("%s 保存的初稿正文剥离模型思考段", async (mode) => {
+  const body = "这里是讲给观众的思考方法。\n\n再讲第二点。";
+  const { result, saved, doGenerate } = topicDraftRun(`<THINK class="fixture">隐藏过程</THINK>\n${body}`, mode);
+
+  await result;
+
+  expect(doGenerate).toHaveBeenCalledTimes(1);
+  expect(saved).toEqual([
+    expect.objectContaining({ kind: "checkpoint", stage: "draft", value: expect.objectContaining({ contentText: body }) }),
+    expect.objectContaining({ kind: "result", value: expect.objectContaining({ adaptedDraft: body }) }),
+  ]);
+});
+
+it.each(["strategy_backed", "rewrite_only"] as const)("%s 只有未闭合的思考段时明确失败且不重发生成", async (mode) => {
+  const { result, saved, doGenerate } = topicDraftRun("<think>没有可用正文", mode);
+
+  await expect(result).rejects.toMatchObject({ outcome: "failed", errorCode: "STRUCTURED_OUTPUT_INVALID" });
+
+  expect(doGenerate).toHaveBeenCalledTimes(1);
+  expect(saved).toEqual([]);
 });
 
 it.each(['timeout','cancel','late'] as const)('T1413真实普通正文入口%s中止provider且迟到正文不保存或结算',async mode=>{

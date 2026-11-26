@@ -61,7 +61,7 @@ test('T1294 fresh默认官方，设置无向量/独立图片理解与数据服�
  for(const family of ['text','image','video','audio'])await expect(page.locator(`#model-source-${family}`)).toHaveValue('official');
  await expect(page.locator('#model-source-vision')).toHaveCount(0);await expect(page.locator('#model-source-embed')).toHaveCount(0);
  await expect(page.getByRole('tab',{name:'数据服务',exact:true})).toHaveCount(0);
- await expect(page.getByText('RedFox 数据服务',{exact:true})).toBeVisible();await expect(page.locator('#redfox-key')).toHaveAttribute('type','password');
+ await expect(page.getByText('万有引擎',{exact:true})).toBeVisible();await expect(page.locator('#everyinfra-key')).toHaveAttribute('type','password');
  await expect(slot(page,'global-ai-credit-entry')).toHaveCount(1);
  await expect(slot(page,'ai-credit-center-card')).toHaveCount(1);
  expect((await routing(page,groupId)).choices).toBeNull();await capture(page,info,'official-default-model-settings');
@@ -87,14 +87,14 @@ test('T1294 实际CAS冲突不覆盖其它窗口保存，原草稿与失败提�
  await capture(page,info,'real-cas-conflict-preserved');await saveChoices(page,groupId,official);
 });
 
-test('T1294 RedFox在模型页实际保存/掩码/重开/删除，旧深链仍可达且零查询费用',async({page,groupId},info)=>{
+test('T1294 万有引擎在模型页实际保存/掩码/重开/删除，旧深链仍可达且零查询费用',async({page,groupId},info)=>{
  const fake=`t1294-fake-${randomUUID()}`;await page.goto('/settings?highlight=redfox');await expect(page.getByRole('tab',{name:'模型配置',exact:true})).toHaveAttribute('aria-selected','true');
- const key=page.locator('#redfox-key');await expect(key).toHaveAttribute('type','password');await key.fill(fake);
- const save=page.waitForResponse(r=>operationId(r)==='settings.redfox.put',{timeout:requestMs});await page.getByRole('button',{name:'保存密钥',exact:true}).click();
+ const key=page.locator('#everyinfra-key');await expect(key).toHaveAttribute('type','password');await key.fill(fake);
+ const save=page.waitForResponse(r=>operationId(r)==='settings.everyinfra.put',{timeout:requestMs});await page.getByRole('button',{name:'保存配置',exact:true}).click();
  const response=await save;expect(response.status()).toBe(200);expect(await response.text()).not.toContain(fake);await expect(key).toHaveValue('');
- await page.reload();await expect(page.getByText(/已保存密钥/)).toBeVisible();expect(JSON.stringify(await op(page,'settings.redfox.get',{},groupId))).not.toContain(fake);
- await capture(page,info,'redfox-saved-masked');const remove=page.waitForResponse(r=>operationId(r)==='settings.redfox.delete',{timeout:requestMs});await page.getByRole('button',{name:'移除密钥',exact:true}).click();expect((await remove).status()).toBe(200);
- expect(await op(page,'settings.redfox.get',{},groupId)).toMatchObject({configured:false});
+ await page.reload();await expect(page.getByText(/已保存密钥/)).toBeVisible();expect(JSON.stringify(await op(page,'settings.everyinfra.get',{},groupId))).not.toContain(fake);
+ await capture(page,info,'everyinfra-saved-masked');const remove=page.waitForResponse(r=>operationId(r)==='settings.everyinfra.delete',{timeout:requestMs});await page.getByRole('button',{name:'移除密钥',exact:true}).click();expect((await remove).status()).toBe(200);
+ expect(await op(page,'settings.everyinfra.get',{},groupId)).toMatchObject({configured:false});
 });
 
 test('T1294 旧向量测试明确停用，真实资料创建/修订/搜索保原文与组隔离',async({page,groupId},info)=>{

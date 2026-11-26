@@ -1,8 +1,8 @@
-import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {act,cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react';
 import {afterEach,beforeEach,describe,it,expect,vi} from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import type {ModelRoutingChoices,ModelRoutingResource} from '@creatoros/contract';
-const api=vi.hoisted(()=>({getRedfox:vi.fn().mockResolvedValue({configured:false}),getModelRouting:vi.fn(),putModelRouting:vi.fn(),getPreferences:vi.fn(),patchPreferences:vi.fn(),putModel:vi.fn(),putChannelModelCredential:vi.fn(),testModelConnection:vi.fn()}));
+const api=vi.hoisted(()=>({getEveryInfra:vi.fn().mockResolvedValue({configured:false,baseUrl:"https://api.everyinfra.com"}),getModelRouting:vi.fn(),putModelRouting:vi.fn(),getPreferences:vi.fn(),patchPreferences:vi.fn(),putModel:vi.fn(),putChannelModelCredential:vi.fn(),testModelConnection:vi.fn()}));
 vi.mock('@/lib/contract-client',()=>({client:api}));
 vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn(),push:vi.fn(),replace:vi.fn()}),useSearchParams:()=>new URLSearchParams()}));
 import {buildSettingsViewModel} from '@/fixtures/selectors/settings';
@@ -20,7 +20,7 @@ afterEach(()=>{cleanup();vi.restoreAllMocks();});
 describe('T1278 模型区域按用途展示原配置（迁移旧 Codex 全局隐藏断言）',()=>{
  it.each(['self','codex'] as const)('GET pending 不伪造已保存配置，读回 text=%s 后按需打开原控件',{timeout:180_000,retry:0},async text=>{
   vi.resetModules();let resolve!:(value:ModelRoutingResource)=>void;api.getModelRouting.mockReturnValue(new Promise(r=>{resolve=r;}));const Pending=(await import('./settings-model-region')).SettingsModelRegion;const {container}=render(<Pending viewModel={viewModel()} highlight={null}/>);
-  await waitFor(()=>expect(api.getModelRouting).toHaveBeenCalled(),{timeout:120_000});expect(screen.getByRole('status')).toHaveTextContent('正在读取设置');expect(screen.getAllByRole('combobox')).toHaveLength(4);expect(container.querySelector('#model-name')).toBeNull();expect(container.querySelector('#multimodal-image-model')).toBeNull();expect(api.putModel).not.toHaveBeenCalled();expect(api.testModelConnection).not.toHaveBeenCalled();expect(api.patchPreferences).not.toHaveBeenCalled();
+  await waitFor(()=>expect(api.getModelRouting).toHaveBeenCalled(),{timeout:120_000});const modelCard=within(screen.getByRole('region',{name:'按用途选择模型'}));expect(modelCard.getByRole('status')).toHaveTextContent('正在读取设置');expect(modelCard.getAllByRole('combobox')).toHaveLength(4);expect(container.querySelector('#model-name')).toBeNull();expect(container.querySelector('#multimodal-image-model')).toBeNull();expect(api.putModel).not.toHaveBeenCalled();expect(api.testModelConnection).not.toHaveBeenCalled();expect(api.patchPreferences).not.toHaveBeenCalled();
   await act(async()=>resolve(dto({...choices,text})));config('文本创作与结构化');if(text==='self')expect(container.querySelector('#model-name')).toHaveValue('saved-pi-text');else {expect(container.querySelector('#model-name')).toBeNull();expect(screen.getByText(/无需填写本用途的 API 密钥/)).toBeInTheDocument();}
  });
  it.each(['self','codex'] as const)('text=%s 不按同名服务或 global engine 清掉其它 serviceId 凭据',{timeout:180_000,retry:0},async text=>{

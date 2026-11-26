@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   act,
   cleanup,
@@ -198,13 +199,119 @@ function api(): RadarApi {
       hasMore: false,
     }),
     getItem: vi.fn().mockResolvedValue(detail),
-    enqueueTranscript: vi.fn().mockResolvedValue({}),
+    enqueueTranscript: vi.fn().mockResolvedValue({ tasks: [], skipped: [] }),
     uploadTranscript: vi.fn().mockResolvedValue(detail.transcript),
     previewTopic: vi.fn().mockResolvedValue({}),
     confirmTopic: vi.fn().mockResolvedValue({}),
     promoteCandidate: vi.fn().mockResolvedValue({ projectId: "project-1" }),
   };
 }
+
+describe("万有引擎内容雷达", () => {
+  it("禁用视频号关键词结果加入；账号作品加入后只由用户点击转写，内部地址都不可点击", async () => {
+    const user = userEvent.setup();
+    const itemId = "everyinfra-channels-item";
+    const internalUrl = "https://creatoros.local/sources/wechatVideo/15039881603147501275";
+    const imported: RadarItemDetail = {
+      ...detail,
+      item: { ...detail.item, id: itemId, platform: "wechatVideo", captureChannel: "everyinfra", canonicalUrl: internalUrl },
+      transcript: { ...detail.transcript, itemId },
+      snapshots: [{ id: "channels-fixture", title: "合成来源", capturedAt: detail.item.capturedAt, finalUrl: internalUrl }],
+    };
+    const stub = api();
+    const add = vi.fn(async () => ({ itemId }));
+    const enqueue = vi.fn(async () => ({ tasks: [], skipped: [] }));
+    stub.addEveryInfraItem = add;
+    stub.enqueueTranscript = enqueue;
+    stub.queryEveryInfra = vi.fn()
+      .mockResolvedValueOnce({ hits: [{ platform: "wechatVideo", action: "search", title: "合成搜索结果", metrics: {}, addable: false }] })
+      .mockResolvedValueOnce({ hits: [{ platform: "wechatVideo", action: "user_posts", title: "合成账号作品", metrics: {}, addable: true, importId: "fixture-action" }] });
+    stub.getItem = vi.fn().mockResolvedValue(imported);
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]} initialDetail={null} api={stub} />);
+    const sourceSidebar = screen.getByRole("complementary", { name: "内容雷达分类和来源" });
+    const searchButton = within(sourceSidebar).getByRole("button", { name: "搜索平台内容" });
+    expect(within(screen.getByRole("main")).queryByRole("button", { name: "搜索平台内容" })).not.toBeInTheDocument();
+    await user.click(searchButton);
+    await user.selectOptions(screen.getByLabelText("平台"), "wechatVideo");
+    await user.type(screen.getByLabelText("关键词"), "样本");
+    await user.click(screen.getByRole("button", { name: "查询" }));
+    expect(await screen.findByRole("button", { name: "搜索结果没有作品 ID，不能加入" })).toBeDisabled();
+    expect(add).not.toHaveBeenCalled();
+
+    await user.selectOptions(screen.getByLabelText("查询方式"), "user_posts");
+    await user.type(screen.getByLabelText("视频号账号 ID"), "sphFixture");
+    await user.click(screen.getByRole("button", { name: "查询" }));
+    await user.click(await screen.findByRole("button", { name: "加入内容雷达" }));
+    expect(await screen.findByRole("button", { name: "已加入" })).toBeDisabled();
+    expect(add).toHaveBeenCalledExactlyOnceWith("fixture-action");
+    expect(enqueue).not.toHaveBeenCalled();
+
+    await user.keyboard("{Escape}");
+    const button = await screen.findByRole("button", { name: "转写" });
+    expect(document.querySelector(`a[href="${internalUrl}"]`)).toBeNull();
+    await user.click(button);
+    expect(enqueue).toHaveBeenCalledExactlyOnceWith({ itemId, idempotencyKey: expect.any(String) });
+  });
+
+  it("已加入的小红书图文没有转写按钮", () => {
+    const stub = api();
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]}
+      initialDetail={{ ...detail, item: { ...detail.item, platform: "xiaohongshu", captureChannel: "everyinfra", type: "article" } }} api={stub} />);
+    expect(screen.getByText("图文内容没有口播可转写。")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "转写" })).toBeNull();
+  });
+
+  it("旧缓存的小红书作品和快照只链接到无查询串的公开笔记页", () => {
+    const noteUrl = "https://www.xiaohongshu.com/explore/123456789abc123456789abc";
+    const privateUrl = new URL(noteUrl);
+    privateUrl.searchParams.set("xsec_token", randomUUID());
+    privateUrl.searchParams.set("xsec_source", "fixture");
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]} api={api()}
+      initialDetail={{
+        ...detail,
+        item: { ...detail.item, platform: "xiaohongshu", captureChannel: "everyinfra", canonicalUrl: privateUrl.href },
+        snapshots: [{ id: "stale-note", title: "来源快照", capturedAt: detail.item.capturedAt, finalUrl: privateUrl.href }],
+      }} />);
+    expect(screen.getByRole("link", { name: "原链接" })).toHaveAttribute("href", noteUrl);
+    expect(screen.getByRole("link", { name: /来源快照/ })).toHaveAttribute("href", noteUrl);
+    expect(document.querySelector("[href*='xsec_token']")).toBeNull();
+  });
+
+  it("用户转写点击后用现有轮询读取完成回执，首读失败也不需要刷新页面", async () => {
+    vi.useFakeTimers();
+    const stub = api();
+    const imported = { ...detail, item: { ...detail.item, captureChannel: "everyinfra" as const } };
+    const task = executionTaskResourceV2.parse({
+      id: "fixture-transcript-task", userId: "user-1", accountId: "account-1",
+      kind: "transcribe", ownerType: "item", ownerId: imported.item.id, status: "queued",
+      priority: 0, idempotencyKey: "fixture-transcript", checkpoint: null, leaseOwner: null,
+      leaseExpiresAt: null, heartbeatAt: null, attempt: 0, maxAttempts: 3, errorCode: null,
+      errorMessage: null, costEstimate: null, createdAt: "2026-09-20T00:00:00.000Z", updatedAt: "2026-09-20T00:00:00.000Z",
+    });
+    vi.mocked(stub.enqueueTranscript).mockResolvedValue({ tasks: [task], skipped: [] });
+    vi.mocked(stub.getItem).mockRejectedValueOnce(new Error("fixture offline")).mockResolvedValue({
+      ...imported, transcript: { ...imported.transcript, status: "done", text: "万有引擎来源的 ASR 逐字稿" },
+    });
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace}
+      items={[{ item: imported.item, latestMetric: null, sourceCount: 1 }]} initialDetail={imported} api={stub} />);
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "转写" })); });
+    expect(screen.getByText("排队中")).toBeInTheDocument();
+    await act(async () => { await vi.advanceTimersByTimeAsync(4100); });
+    expect(screen.getByText("万有引擎来源的 ASR 逐字稿")).toBeInTheDocument();
+    expect(stub.getItem).toHaveBeenCalledTimes(2);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("转写失败按万有引擎固定错误码显示余额提示", () => {
+    const stub = api();
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]} api={stub}
+      initialDetail={{
+        ...detail, item: { ...detail.item, captureChannel: "everyinfra" },
+        transcript: { ...detail.transcript, status: "failed", errorCode: "EVERYINFRA_QUOTA_EXHAUSTED" },
+      }} />);
+    expect(screen.getByText("万有引擎余额不足。")).toBeInTheDocument();
+  });
+});
 
 afterEach(() => {
   vi.useRealTimers();

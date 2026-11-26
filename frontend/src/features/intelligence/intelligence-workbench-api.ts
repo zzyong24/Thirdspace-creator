@@ -9,6 +9,12 @@ export function defaultApi(scope?:RadarScope): RadarApi {
   const radarTransport=createHttpTransport("/api/v1",scope?.groupId?{groupId:scope.groupId}:scope);
   const client=createClient(ENDPOINTS,radarTransport);
   return {
+    queryEveryInfra: (query, idempotencyKey) => client.queryEveryInfraRadar({
+      params: undefined, query: undefined, body: { query, idempotencyKey },
+    }),
+    addEveryInfraItem: (importId) => client.addEveryInfraRadarItem({
+      params: undefined, query: undefined, body: { importId },
+    }),
     ensureProject: input=>client.ensureProject({params:undefined,query:undefined,body:input}),
     getProjectPreparation: projectId=>client.getProjectPreparation({params:{projectId},query:undefined,body:undefined}),
     async listShareImportTasks(input) {

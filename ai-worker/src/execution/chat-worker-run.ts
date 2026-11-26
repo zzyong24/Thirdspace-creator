@@ -1,3 +1,4 @@
+import { runChatEveryInfraInWorker } from "./chat-everyinfra-worker";
 import {runChatRedfoxInWorker} from "./chat-redfox-worker";
 import {createChatWebReadResources} from "./chat-web-read-resources";
 import {runChatResearchInWorker,createChatResearchResources} from "./chat-research-worker";
@@ -176,6 +177,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         },execute:async(_reservedName,reservationInput)=>{
           if(!reservedCallId)throw Error("tool reservation missing");
           if(definition.execution==="worker.web-read"){if(!webRead)throw Error("网页读取尚未装配");return webRead.run(reservedCallId,signal);}
+          if(definition.execution==="worker.everyinfra")return runChatEveryInfraInWorker(reservedCallId,signal,ports.call);
           if(definition.execution==="worker.redfox")return runChatRedfoxInWorker(reservedCallId,signal,ports.call);
           if(definition.execution==="worker.research"){if(!research)throw Error("浏览器搜索尚未装配");return runChatResearchInWorker(reservedCallId,signal,ports.call,research);}
           if(definition.execution==="worker.structured-node")return runChatGenerationInWorker(reservedCallId,signal,ports.call);

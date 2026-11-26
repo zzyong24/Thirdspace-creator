@@ -53,9 +53,9 @@ vi.mock("@tauri-apps/plugin-opener", () => ({
 }));
 
 const mockClient = {
-  getRedfox:vi.fn().mockResolvedValue({configured:false}),
-  putRedfox:vi.fn().mockResolvedValue({configured:true}),
-  deleteRedfox:vi.fn().mockResolvedValue({configured:false}),
+  getEveryInfra:vi.fn().mockResolvedValue({configured:false,baseUrl:"https://api.everyinfra.com"}),
+  putEveryInfra:vi.fn().mockResolvedValue({configured:true}),
+  deleteEveryInfra:vi.fn().mockResolvedValue({configured:false,baseUrl:"https://api.everyinfra.com"}),
   getModelRouting: vi.fn().mockResolvedValue({schemaVersion:1,revision:0,choices:null,legacyExecutionEngine:'pi',effectiveChoices:{},capabilities:[]}),
   putModelRouting: vi.fn(),
   getPreferences: vi.fn().mockResolvedValue({assistantExecutionEngine:"pi"}),
@@ -93,9 +93,9 @@ const mockClient = {
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
-    getRedfox: () => mockClient.getRedfox(),
-    putRedfox: (input:unknown) => mockClient.putRedfox(input),
-    deleteRedfox: () => mockClient.deleteRedfox(),
+    getEveryInfra: () => mockClient.getEveryInfra(),
+    putEveryInfra: (input:unknown) => mockClient.putEveryInfra(input),
+    deleteEveryInfra: () => mockClient.deleteEveryInfra(),
     getModelRouting: () => mockClient.getModelRouting(),
     putModelRouting: (input:unknown) => mockClient.putModelRouting(input),
     getPreferences: () => mockClient.getPreferences(),
@@ -2364,11 +2364,11 @@ describe("T1278 原资金等待只继承原900000截止，unknown保原idem（�
 
 
 it('T1294 redfox旧deep link切到模型并只有一份真实密钥入口，额度卡无旧license条件',{timeout:180_000,retry:0},async()=>{
- mockSearchParams=new URLSearchParams('highlight=redfox');mockClient.getRedfox.mockClear();const scroll=vi.fn();const original=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=scroll;
+ mockSearchParams=new URLSearchParams('highlight=redfox');mockClient.getEveryInfra.mockClear();const scroll=vi.fn();const original=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=scroll;
  try{
   const doc=renderDialog();await act(async()=>{await new Promise(resolve=>requestAnimationFrame(()=>resolve(null)));await new Promise(resolve=>setTimeout(resolve,0));});
   expect(doc.querySelector('[data-slot="settings-panel"][data-tab-id="models"]')).toHaveAttribute('data-active','true');expect(screen.queryByRole('button',{name:'数据服务'})).toBeNull();expect(doc.querySelector('[data-slot="settings-panel"][data-tab-id="data-services"]')).toBeNull();
-  const card=doc.querySelector('[data-highlight="redfox"]');expect(card).not.toBeNull();expect(scroll).toHaveBeenCalled();await waitFor(()=>expect(mockClient.getRedfox).toHaveBeenCalledTimes(1),{timeout:120_000});expect(doc.querySelectorAll('#redfox-key')).toHaveLength(1);expect(doc.querySelector('[data-slot="ai-credit-center-card"]')).not.toBeNull();
+  const card=doc.querySelector('[data-highlight="everyinfra"]');expect(card).not.toBeNull();expect(scroll).toHaveBeenCalled();await waitFor(()=>expect(mockClient.getEveryInfra).toHaveBeenCalledTimes(1),{timeout:120_000});expect(doc.querySelectorAll('#everyinfra-key')).toHaveLength(1);expect(doc.querySelector('[data-slot="ai-credit-center-card"]')).not.toBeNull();
  }finally{Element.prototype.scrollIntoView=original;}
 });
 

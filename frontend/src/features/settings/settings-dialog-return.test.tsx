@@ -4,7 +4,7 @@ import {afterEach,beforeEach,expect,it,vi} from "vitest";
 const router=vi.hoisted(()=>({replace:vi.fn(),push:vi.fn(),back:vi.fn(),refresh:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>router,usePathname:()=>window.location.pathname,useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("@/lib/contract-client",()=>({client:{
- getRedfox:vi.fn().mockResolvedValue({configured:false}),
+ getEveryInfra:vi.fn().mockResolvedValue({configured:false,baseUrl:"https://api.everyinfra.com"}),
  getPreferences:vi.fn().mockResolvedValue({assistantExecutionEngine:"codex"}),
  getReportingStatus:vi.fn().mockResolvedValue({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
 }}));

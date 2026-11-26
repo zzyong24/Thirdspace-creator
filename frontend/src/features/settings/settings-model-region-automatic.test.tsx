@@ -21,7 +21,7 @@ vi.mock('./model-capability-source',()=>({ModelCapabilitySource:({renderConfigur
 vi.mock('./model-config-transfer-card',()=>({ModelConfigTransferCard:()=>null}));
 vi.mock('./multimodal-model-configuration',()=>({MultimodalModelCard:()=>null}));
 vi.mock('./text-model-configuration',()=>({ModelConfigurationCard:()=>null}));
-vi.mock('./redfox-configuration',()=>({RedfoxConfiguration:()=>null}));
+vi.mock('./everyinfra-configuration',()=>({EveryInfraConfiguration:()=>null}));
 vi.mock('./model-configuration-manual',()=>({ModelConfigurationManual:()=>null}));
 vi.mock('@/components/shell/channel-config-bootstrap',()=>({ChannelConfigRetryButton:()=>null}));
 

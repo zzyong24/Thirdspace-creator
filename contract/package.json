@@ -4,6 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./internal/everyinfra": {
+      "types": "./src/internal/everyinfra.ts",
+      "default": "./src/internal/everyinfra.ts"
+    },
+    "./internal/generated-draft": {
+      "types": "./src/internal/generated-draft.ts",
+      "default": "./src/internal/generated-draft.ts"
+    },
     "./agent-workbench": {
       "types": "./src/internal/agent-workbench.ts",
       "default": "./src/internal/agent-workbench.ts"
