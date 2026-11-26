@@ -228,7 +228,10 @@ describe("万有引擎内容雷达", () => {
       .mockResolvedValueOnce({ hits: [{ platform: "wechatVideo", action: "user_posts", title: "合成账号作品", metrics: {}, addable: true, importId: "fixture-action" }] });
     stub.getItem = vi.fn().mockResolvedValue(imported);
     render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]} initialDetail={null} api={stub} />);
-    await user.click(screen.getByRole("button", { name: "搜索平台内容" }));
+    const sourceSidebar = screen.getByRole("complementary", { name: "内容雷达分类和来源" });
+    const searchButton = within(sourceSidebar).getByRole("button", { name: "搜索平台内容" });
+    expect(within(screen.getByRole("main")).queryByRole("button", { name: "搜索平台内容" })).not.toBeInTheDocument();
+    await user.click(searchButton);
     await user.selectOptions(screen.getByLabelText("平台"), "wechatVideo");
     await user.type(screen.getByLabelText("关键词"), "样本");
     await user.click(screen.getByRole("button", { name: "查询" }));

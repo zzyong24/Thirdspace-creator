@@ -1025,6 +1025,12 @@ function IntelligenceWorkbenchScope({
               {sourceDialogs.collection}
               {sourceDialogs.import}
               {sourceDialogs.add}
+              {api.queryEveryInfra && api.addEveryInfraItem ? (
+                <EveryInfraSearchPanel key={scopeKey} query={api.queryEveryInfra} add={api.addEveryInfraItem}
+                  onAdded={(itemId) => {
+                    void selectItemScope(null, null).then(() => selectItem(itemId));
+                  }} />
+              ) : null}
             </div>
           </div>
           </> : null}
@@ -1167,14 +1173,8 @@ function IntelligenceWorkbenchScope({
           aria-busy={itemsLoading}
           className={cn("flex min-h-0 min-w-0 flex-col bg-canvas/55", layoutStyles.itemsPane)}
         >
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/70 px-4 py-2">
+          <div className="shrink-0 border-b border-border/70 px-4 py-2">
             <h2 className="flex items-center gap-2 text-sm font-semibold"><span className="text-primary">02</span> 挑选内容</h2>
-            {api.queryEveryInfra && api.addEveryInfraItem ? (
-              <EveryInfraSearchPanel key={scopeKey} query={api.queryEveryInfra} add={api.addEveryInfraItem}
-                onAdded={(itemId) => {
-                  void selectItemScope(null, null).then(() => selectItem(itemId));
-                }} />
-            ) : null}
           </div>
           <div className={layoutStyles.filterBar}>
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
